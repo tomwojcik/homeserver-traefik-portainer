@@ -1,0 +1,224 @@
+{
+    "version": "2",
+    "templates": [
+        {
+            "type": 3,
+            "name": "Nextcloud",
+            "title": "Nextcloud",
+            "description": "Google drive/Dropbox alternative.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                },
+                {
+                    "label": "MYSQL_USER",
+                    "name": "MYSQL_USER"
+                },
+                {
+                    "label": "MYSQL_PASSWORD",
+                    "name": "MYSQL_PASSWORD"
+                },
+                {
+                    "label": "MYSQL_ROOT_PASSWORD",
+                    "name": "MYSQL_ROOT_PASSWORD"
+                },
+                {
+                    "label": "MYSQL_DATABASE",
+                    "name": "MYSQL_DATABASE"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/nextcloud/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/nextcloud/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "Gogs",
+            "title": "Gogs",
+            "description": "Self-hosted git. Sync external git repos.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/gogs/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/gogs/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "PyPI Server",
+            "title": "PyPI Server",
+            "description": "Private PyPI.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/62ca45165603bdd6991c5684993ecb94ee631915/stacks/pypiserver/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/pypiserver/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "Traefik",
+            "title": "Traefik",
+            "description": "Reverse proxy for all homeserver services. Once it's working, you can forget it exists.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                },
+                {
+                    "label": "ACME_EMAIL",
+                    "name": "ACME_EMAIL"
+                },
+                {
+                    "label": "DNS_CHALLENGE_PROVIDER",
+                    "name": "DNS_CHALLENGE_PROVIDER"
+                },
+                {
+                    "label": "CF_DNS_API_TOKEN",
+                    "name": "CF_DNS_API_TOKEN"
+                }
+            ],
+            "note": "First you will need a domain.",
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/9185fa3c58efc61e4eadcb9aaf00232c2cc046b1/stacks/traefik/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/traefik/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "docker registry",
+            "title": "Docker registry",
+            "description": "Docker registry and UI docker hub.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/8ee5120e19031d8f02b13e7975f6ccfa015377e8/stacks/registry/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/registry/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "MinIO",
+            "title": "MinIO",
+            "description": "S3 alternative.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                },
+                {
+                    "label": "MINIO_ROOT_USER",
+                    "name": "MINIO_ROOT_USER"
+                },
+                {
+                    "label": "MINIO_ROOT_PASSWORD",
+                    "name": "MINIO_ROOT_PASSWORD"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/minio/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/minio/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "Dozzle",
+            "title": "Dozzle",
+            "description": "All docker logs in one place.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/768751405404ca3b36cf73cdd1ca8c699b26a5f0/stacks/dozzle/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/dozzle/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "Heimdall",
+            "title": "Heimdall",
+            "description": "Landing page for the homeserver.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/heimdall/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/heimdall/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "PhotoPrism",
+            "title": "PhotoPrism",
+            "description": "Photos.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                },
+                {
+                    "label": "PHOTOPRISM_ADMIN_PASSWORD",
+                    "name": "PHOTOPRISM_ADMIN_PASSWORD"
+                },
+                {
+                    "label": "MYSQL_USER",
+                    "name": "MYSQL_USER"
+                },
+                {
+                    "label": "MYSQL_PASSWORD",
+                    "name": "MYSQL_PASSWORD"
+                },
+                {
+                    "label": "MYSQL_ROOT_PASSWORD",
+                    "name": "MYSQL_ROOT_PASSWORD"
+                },
+                {
+                    "label": "MYSQL_DATABASE",
+                    "name": "MYSQL_DATABASE"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/55ef28fa9b5cbe817f5f4135251d2183e85b24f9/stacks/photoprism/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/photoprism/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        }
+    ]
+}

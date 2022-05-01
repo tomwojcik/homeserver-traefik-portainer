@@ -1,0 +1,18 @@
+{
+  "type": 3,
+  "name": "PyPI Server",
+  "title": "PyPI Server",
+  "description": "Private PyPI.",
+  "env": [
+    {
+      "label": "SERVER_DOMAIN",
+      "name": "SERVER_DOMAIN"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/62ca45165603bdd6991c5684993ecb94ee631915/stacks/pypiserver/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/pypiserver/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  }
+}

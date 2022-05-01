@@ -1,0 +1,38 @@
+{
+  "type": 3,
+  "name": "PhotoPrism",
+  "title": "PhotoPrism",
+  "description": "Photos.",
+  "env": [
+    {
+      "label": "SERVER_DOMAIN",
+      "name": "SERVER_DOMAIN"
+    },
+        {
+      "label": "PHOTOPRISM_ADMIN_PASSWORD",
+      "name": "PHOTOPRISM_ADMIN_PASSWORD"
+    },
+    {
+      "label": "MYSQL_USER",
+      "name": "MYSQL_USER"
+    },
+    {
+      "label": "MYSQL_PASSWORD",
+      "name": "MYSQL_PASSWORD"
+    },
+    {
+      "label": "MYSQL_ROOT_PASSWORD",
+      "name": "MYSQL_ROOT_PASSWORD"
+    },
+    {
+      "label": "MYSQL_DATABASE",
+      "name": "MYSQL_DATABASE"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/55ef28fa9b5cbe817f5f4135251d2183e85b24f9/stacks/photoprism/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/photoprism/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  }
+}

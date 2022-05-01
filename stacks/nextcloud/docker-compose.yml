@@ -1,0 +1,74 @@
+version: "3.6"
+services:
+  nextcloud:
+    image: nextcloud:apache
+    container_name: nextcloud
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - REDIS_HOST=nextcloud-redis
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - nextcloud-mariadb
+      - nextcloud-redis
+    networks:
+      - traefik
+    volumes:
+      - nextcloud:/var/www/html
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.nextcloud.rule: Host(`nextcloud.${SERVER_DOMAIN}`)
+      traefik.http.routers.nextcloud.entrypoints: websecure
+      traefik.http.services.nextcloud.loadbalancer.server.port: 80
+
+  nextcloud-mariadb:
+    image: mariadb:10.5
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    container_name: nextcloud-mariadb
+    networks:
+      - traefik
+    volumes:
+      - nextcloud-db:/var/lib/mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+
+  nextcloud-redis:
+    image: redis:alpine
+    restart: always
+    container_name: nextcloud-redis
+    networks:
+      - traefik
+    volumes:
+      - nextcloud-redis:/data
+
+  nextcloud-cron:
+    image: nextcloud:apache
+    restart: always
+    container_name: nextcloud-cron
+    volumes:
+      - nextcloud:/var/www/html
+    entrypoint: /cron.sh
+    depends_on:
+      - nextcloud-mariadb
+      - nextcloud-redis
+
+networks:
+  traefik:
+    name: homeserver
+    external: true
+
+volumes:
+  nextcloud:
+  nextcloud-db:
+  nextcloud-redis:

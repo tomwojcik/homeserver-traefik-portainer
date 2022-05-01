@@ -1,0 +1,34 @@
+version: "3.6"
+
+services:
+  portainer:
+    image: portainer/portainer-ce:2.11.1
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - 9000:9000
+    expose:
+      - 9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    env_file:
+      - .env
+    container_name: portainer
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.portainer.rule: Host(`portainer.${SERVER_DOMAIN}`)
+      traefik.http.routers.portainer.entrypoints: websecure
+      traefik.http.services.portainer.loadbalancer.server.port: 9000
+
+networks:
+  traefik:
+    name: homeserver
+
+volumes:
+  portainer_data:

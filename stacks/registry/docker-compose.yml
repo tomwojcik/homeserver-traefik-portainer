@@ -1,0 +1,48 @@
+version: '3.7'
+
+services:
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - registry-volume:/var/lib/registry/
+    environment:
+      STORAGE_PATH: /var/lib/registry/
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.registry.rule: Host(`registry.${SERVER_DOMAIN}`)
+      traefik.http.routers.registry.entrypoints: websecure
+      traefik.http.routers.registry.service: registry
+      traefik.http.services.registry.loadbalancer.server.port: 5000
+
+  dockerhub:
+    image: konradkleine/docker-registry-frontend:v2
+    restart: always
+    container_name: dockerhub
+    environment:
+      ENV_DOCKER_REGISTRY_HOST: registry.${SERVER_DOMAIN}
+      ENV_DOCKER_REGISTRY_USE_SSL: 1
+      ENV_DOCKER_REGISTRY_PORT: 443
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.dockerhub.rule: Host(`dockerhub.${SERVER_DOMAIN}`)
+      traefik.http.routers.dockerhub.entrypoints: websecure
+      traefik.http.routers.dockerhub.service: dockerhub
+      traefik.http.services.dockerhub.loadbalancer.server.port: 80
+
+networks:
+  traefik:
+    name: homeserver
+    external: true
+
+volumes:
+  registry-volume:

@@ -1,0 +1,23 @@
+version: "3"
+services:
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.dozzle.rule: Host(`dozzle.${SERVER_DOMAIN}`)
+      traefik.http.routers.dozzle.entrypoints: websecure
+      traefik.http.services.dozzle.loadbalancer.server.port: 8080
+
+networks:
+  traefik:
+    name: homeserver
+    external: true

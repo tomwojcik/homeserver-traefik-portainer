@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+  pypi-server:
+    image: pypiserver/pypiserver:latest
+    container_name: pypiserver
+    volumes:
+      - type: volume
+        source: pypi-server
+        target: /data/packages
+    command: -P . -a . /data/packages
+    restart: always
+    user: root
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.pypiserver.rule: Host(`pypi.${SERVER_DOMAIN}`)
+      traefik.http.routers.pypiserver.entrypoints: websecure
+      traefik.http.services.pypiserver.loadbalancer.server.port: 8080
+
+volumes:
+  pypi-server:
+
+networks:
+  traefik:
+    name: homeserver
+    external: true

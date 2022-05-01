@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  gogs:
+    restart: always
+    image: gogs/gogs:0.12
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - gogs-volume:/data
+    container_name: gogs
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.gogs.rule: Host(`gogs.${SERVER_DOMAIN}`)
+      traefik.http.routers.gogs.entrypoints: websecure
+      traefik.http.services.gogs.loadbalancer.server.port: 3000
+
+networks:
+  traefik:
+    name: homeserver
+    external: true
+
+volumes:
+  gogs-volume:

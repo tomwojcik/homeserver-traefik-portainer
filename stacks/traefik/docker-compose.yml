@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  traefik:
+    restart: always
+    image: "traefik:2.6"
+    container_name: traefik
+    command:
+      - "--log.level=DEBUG"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls.certResolver=myresolver"
+      - "--certificatesresolvers.myresolver.acme.storage=letsencrypt/acme.json"
+      - "--certificatesResolvers.myresolver.acme.email=${ACME_EMAIL}"
+      # Let's Encrypt has a limit: 5 certs generated a week. Use staging when breaking things.
+      # see https://doc.traefik.io/traefik/https/acme/#caserver
+      #- "--certificatesResolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesResolvers.myresolver.acme.dnsChallenge=true"
+      - "--certificatesResolvers.myresolver.acme.dnschallenge.provider=${DNS_CHALLENGE_PROVIDER}"
+      - "--certificatesResolvers.myresolver.acme.dnschallenge.resolvers=8.8.4.4:53,8.8.8.8:53"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.delayBeforeCheck=0"
+      - --api.dashboard=true
+      - --providers.docker.constraints=Label(`my.zone`, `homeserver`)
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - traefik
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik-letsencrypt:/letsencrypt
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.traefik.entrypoints: web
+      traefik.http.routers.traefik.tls: true
+      traefik.http.routers.traefik.tls.domains[0].main: ${SERVER_DOMAIN}
+      traefik.http.routers.traefik.tls.domains[0].sans: "*.${SERVER_DOMAIN}"
+      traefik.http.routers.dashboard.rule: Host(`traefik.${SERVER_DOMAIN}`)
+      traefik.http.routers.dashboard.service: api@internal
+      traefik.http.routers.traefik.tls.certresolver: myresolver
+      traefik.http.routers.traefik.service: api@internal
+      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: https
+      traefik.http.middlewares.redirect-to-https.redirectscheme.permanent: true
+      traefik.http.routers.redirs.rule: hostregexp(`{host:.+}`)
+      traefik.http.routers.redirs.entrypoints: web
+      traefik.http.routers.redirs.middlewares: redirect-to-https
+
+  whoami:
+    image: containous/whoami
+    container_name: whoami
+    restart: always
+    networks:
+      - traefik
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.whoami.rule: Host(`whoami.${SERVER_DOMAIN}`)
+      traefik.http.routers.whoami.entrypoints: websecure
+
+networks:
+  traefik:
+    name: homeserver
+    external: true
+
+volumes:
+  traefik-letsencrypt:

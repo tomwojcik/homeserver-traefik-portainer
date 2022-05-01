@@ -1,0 +1,18 @@
+{
+  "type": 3,
+  "name": "Heimdall",
+  "title": "Heimdall",
+  "description": "Landing page for the homeserver.",
+  "env": [
+    {
+      "label": "SERVER_DOMAIN",
+      "name": "SERVER_DOMAIN"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/heimdall/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/heimdall/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  }
+}
