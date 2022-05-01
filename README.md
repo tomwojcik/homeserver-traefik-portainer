@@ -11,6 +11,8 @@ Features:
 
 # How to
 
+### Warning! If a docker-compose doesn't work for you out of the box, it's probably because I use docker mapping for synology, like `/volume1/@docker:/var/lib/docker`. If that's the case, you will have to change it yourself.
+
 1. Buy a domain. For this to work you will need to be able to create one DNS A record with a wildcard. Cloudflare offers domains at no cost (they don't make profit off it) and are great overall so I recommend them as a domain registrar.
 2. You will need an ACME provider for the ACME challenge. Here's the [list of providers](https://doc.traefik.io/traefik/https/acme/#providers) supported by Traefik. If you're using Cloudflare, head over to [API Tokens](https://dash.cloudflare.com/profile/api-tokens) and create one with `Edit zone DNS` permission. Save it. You will use it for `CF_DNS_API_TOKEN` in a moment.
 3. Copy `.env.example` to `.env`. Overwrite `SERVER_DOMAIN` with your domain name.

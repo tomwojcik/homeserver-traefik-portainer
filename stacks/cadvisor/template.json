@@ -1,0 +1,18 @@
+{
+  "type": 3,
+  "name": "cadvisor",
+  "title": "cadvisor",
+  "description": "Resources monitor.",
+  "env": [
+    {
+      "label": "SERVER_DOMAIN",
+      "name": "SERVER_DOMAIN"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/768751405404ca3b36cf73cdd1ca8c699b26a5f0/stacks/dozzle/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/cadvisor/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  }
+}
