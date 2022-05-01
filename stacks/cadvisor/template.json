@@ -9,7 +9,7 @@
       "name": "SERVER_DOMAIN"
     }
   ],
-  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/768751405404ca3b36cf73cdd1ca8c699b26a5f0/stacks/dozzle/logo.png",
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cadvisor/logo.png",
   "platform": "linux",
   "repository": {
     "stackfile": "stacks/cadvisor/docker-compose.yml",

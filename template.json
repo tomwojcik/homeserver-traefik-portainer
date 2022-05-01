@@ -37,6 +37,42 @@
         },
         {
             "type": 3,
+            "name": "CyberChef",
+            "title": "CyberChef",
+            "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cyberchef/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/cyberchef/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "cadvisor",
+            "title": "cadvisor",
+            "description": "Resources monitor.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cadvisor/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/cadvisor/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
             "name": "Gogs",
             "title": "Gogs",
             "description": "Self-hosted git. Sync external git repos.",
