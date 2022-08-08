@@ -202,6 +202,24 @@
         },
         {
             "type": 3,
+            "name": "Cloudflared",
+            "title": "Cloudflared",
+            "description": "Cloudflare Tunnel between Cloudflare stack and docker container.",
+            "env": [
+                {
+                    "label": "TOKEN",
+                    "name": "TOKEN"
+                }
+            ],
+            "logo": "https://avatars.githubusercontent.com/u/314135?s=200&v=4",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/cloudflared/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
             "name": "Heimdall",
             "title": "Heimdall",
             "description": "Landing page for the homeserver.",
