@@ -53,15 +53,17 @@ services:
       - nextcloud-redis:/data
 
   nextcloud-cron:
-    image: nextcloud:apache
+    image: rcdailey/nextcloud-cronjob
     restart: always
-    container_name: nextcloud-cron
-    volumes:
-      - nextcloud:/var/www/html
-    entrypoint: /cron.sh
+    network_mode: none
     depends_on:
-      - nextcloud-mariadb
-      - nextcloud-redis
+      - nextcloud
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - NEXTCLOUD_CONTAINER_NAME=nextcloud
+      - NEXTCLOUD_EXEC_SHELL=sh
 
 networks:
   traefik:
