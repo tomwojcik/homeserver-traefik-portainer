@@ -91,6 +91,21 @@
         },
         {
             "type": 3,
+            "name": "Uptime Kuma",
+            "title": "Uptime Kuma",
+            "description": "A fancy self-hosted monitoring tool.",
+            "env": {
+                "label": "SERVER_DOMAIN",
+                "name": "SERVER_DOMAIN"
+            },
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/uptime-kuma/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
             "name": "PyPI Server",
             "title": "PyPI Server",
             "description": "Private PyPI.",
