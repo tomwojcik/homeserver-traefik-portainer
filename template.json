@@ -140,6 +140,51 @@
         },
         {
             "type": 3,
+            "name": "n8n",
+            "title": "n8n",
+            "description": "Free and source-available fair-code licensed workflow automation tool. Easily automate tasks across different services.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                },
+                {
+                    "label": "POSTGRES_USER",
+                    "name": "POSTGRES_USER"
+                },
+                {
+                    "label": "POSTGRES_PASSWORD",
+                    "name": "POSTGRES_PASSWORD"
+                },
+                {
+                    "label": "POSTGRES_DB",
+                    "name": "POSTGRES_DB"
+                },
+                {
+                    "label": "POSTGRES_NON_ROOT_USER",
+                    "name": "POSTGRES_NON_ROOT_USER"
+                },
+                {
+                    "label": "POSTGRES_NON_ROOT_PASSWORD",
+                    "name": "POSTGRES_NON_ROOT_PASSWORD"
+                },
+                {
+                    "label": "N8N_BASIC_AUTH_USER",
+                    "name": "N8N_BASIC_AUTH_USER"
+                },
+                {
+                    "label": "N8N_BASIC_AUTH_PASSWORD",
+                    "name": "N8N_BASIC_AUTH_PASSWORD"
+                }
+            ],
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/n8n/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
             "name": "docker registry",
             "title": "Docker registry",
             "description": "Docker registry and UI docker hub.",
