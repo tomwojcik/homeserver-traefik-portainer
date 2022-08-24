@@ -101,6 +101,7 @@
                 }
             ],
             "platform": "linux",
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/ffcc9ee7aed06102d724e45850b24ad8d9f80bde/stacks/uptime-kuma/logo.png",
             "repository": {
                 "stackfile": "stacks/uptime-kuma/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
