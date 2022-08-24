@@ -94,10 +94,12 @@
             "name": "Uptime Kuma",
             "title": "Uptime Kuma",
             "description": "A fancy self-hosted monitoring tool.",
-            "env": {
-                "label": "SERVER_DOMAIN",
-                "name": "SERVER_DOMAIN"
-            },
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
             "platform": "linux",
             "repository": {
                 "stackfile": "stacks/uptime-kuma/docker-compose.yml",
