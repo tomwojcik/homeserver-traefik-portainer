@@ -1,0 +1,51 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql:8.0.27
+    container_name: wordpress-db
+    command: '--default-authentication-plugin=mysql_native_password'
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=somewordpress
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER=wordpress
+      - MYSQL_PASSWORD=wordpress
+    networks:
+      - traefik
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    depends_on:
+      - db
+    volumes:
+      - wp_data:/var/www/html
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=wordpress
+      - WORDPRESS_DB_NAME=wordpress
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.wordpress.rule: Host(`wordpress.${SERVER_DOMAIN}`)
+      traefik.http.routers.wordpress.entrypoints: websecure
+      traefik.http.routers.wordpress.service: wordpress
+      traefik.http.services.wordpress.loadbalancer.server.port: 80
+
+networks:
+  traefik:
+    name: homeserver
+    external: true
+
+volumes:
+  db_data:
+  wp_data:

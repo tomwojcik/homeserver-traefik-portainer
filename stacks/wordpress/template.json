@@ -1,0 +1,18 @@
+{
+  "type": 3,
+  "name": "Wordpress",
+  "title": "Wordpress",
+  "description": "WordPress is a free and open-source content management system.",
+  "env": [
+    {
+      "label": "SERVER_DOMAIN",
+      "name": "SERVER_DOMAIN"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/9185fa3c58efc61e4eadcb9aaf00232c2cc046b1/stacks/traefik/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/wordpress/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  }
+}
