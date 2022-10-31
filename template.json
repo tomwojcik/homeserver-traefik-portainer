@@ -149,26 +149,6 @@
                     "name": "SERVER_DOMAIN"
                 },
                 {
-                    "label": "POSTGRES_USER",
-                    "name": "POSTGRES_USER"
-                },
-                {
-                    "label": "POSTGRES_PASSWORD",
-                    "name": "POSTGRES_PASSWORD"
-                },
-                {
-                    "label": "POSTGRES_DB",
-                    "name": "POSTGRES_DB"
-                },
-                {
-                    "label": "POSTGRES_NON_ROOT_USER",
-                    "name": "POSTGRES_NON_ROOT_USER"
-                },
-                {
-                    "label": "POSTGRES_NON_ROOT_PASSWORD",
-                    "name": "POSTGRES_NON_ROOT_PASSWORD"
-                },
-                {
                     "label": "N8N_BASIC_AUTH_USER",
                     "name": "N8N_BASIC_AUTH_USER"
                 },
