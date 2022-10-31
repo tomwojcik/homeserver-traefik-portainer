@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # uses sqlite which is fine by me
+  # https://docs.n8n.io/hosting/databases/supported-databases-settings/#sqlite
+
+  # potentially todo: add cloudflared with a custom subdomain with a tunnel for webhooks
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - WEBHOOK_URL=https://n8n.${SERVER_DOMAIN}
+      - N8N_LOG_OUTPUT=console,file
+      - N8N_LOG_LEVEL=debug
+    volumes:
+      - n8n_storage:/home/node/
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.n8n.rule: Host(`n8n.${SERVER_DOMAIN}`)
+      traefik.http.routers.n8n.entrypoints: websecure
+      traefik.http.services.n8n.loadbalancer.server.port: 5678
+
+volumes:
+  n8n_storage:
+
+networks:
+  traefik:
+    name: homeserver
+    external: true
