@@ -17,6 +17,8 @@ services:
     environment:
       - TZ=Europe/Warsaw
       - GUNICORN_WORKERS=1
+      - PUID=1000
+      - PGID=1000
     labels:
       my.zone: homeserver
       traefik.enable: true

@@ -14,6 +14,9 @@ services:
       - no-new-privileges:true
     networks:
       - traefik
+    environment:
+      - PUID=1000
+      - PGID=1000
     labels:
       my.zone: homeserver
       traefik.enable: true
