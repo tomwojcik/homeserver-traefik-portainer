@@ -1,0 +1,12 @@
+{
+  "type": 3,
+  "name": "metube",
+  "title": "metube",
+  "description": "Web GUI for youtube-dl (using the yt-dlp fork) with playlist support. Allows you to download videos from YouTube and dozens of other sites.",
+  "env": [],
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/metube/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  }
+}
