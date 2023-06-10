@@ -20,9 +20,9 @@ services:
     labels:
       my.zone: homeserver
       traefik.enable: true
-      traefik.http.routers.cadvisor.rule: Host(`tubesync.${SERVER_DOMAIN}`)
-      traefik.http.routers.cadvisor.entrypoints: websecure
-      traefik.http.services.cadvisor.loadbalancer.server.port: 4848
+      traefik.http.routers.tubesync.rule: Host(`tubesync.${SERVER_DOMAIN}`)
+      traefik.http.routers.tubesync.entrypoints: websecure
+      traefik.http.services.tubesync.loadbalancer.server.port: 4848
 
 volumes:
   tubesync_storage:

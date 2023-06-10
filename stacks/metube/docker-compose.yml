@@ -17,9 +17,9 @@ services:
     labels:
       my.zone: homeserver
       traefik.enable: true
-      traefik.http.routers.cadvisor.rule: Host(`metube.${SERVER_DOMAIN}`)
-      traefik.http.routers.cadvisor.entrypoints: websecure
-      traefik.http.services.cadvisor.loadbalancer.server.port: 8081
+      traefik.http.routers.metube.rule: Host(`metube.${SERVER_DOMAIN}`)
+      traefik.http.routers.metube.entrypoints: websecure
+      traefik.http.services.metube.loadbalancer.server.port: 8081
 
 volumes:
   metube_storage:
