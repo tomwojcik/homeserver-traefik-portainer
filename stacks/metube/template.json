@@ -4,6 +4,7 @@
   "title": "metube",
   "description": "Web GUI for youtube-dl (using the yt-dlp fork) with playlist support. Allows you to download videos from YouTube and dozens of other sites.",
   "env": [],
+  "logo": "https://github.com/tomwojcik/homeserver-traefik-portainer/blob/fed96b34414d8fc6fdac0f1b7a4ad336204d4773/stacks/metube/logo.png?raw=true",
   "platform": "linux",
   "repository": {
     "stackfile": "stacks/metube/docker-compose.yml",
