@@ -16,6 +16,7 @@ def merge_templates():
             templates.extend(template)
         else:
             raise TypeError("Only dict and list are supported")
+    templates.sort(key=lambda x: x['name'])
     final_json = {
         "version": "2",
         "templates": templates
