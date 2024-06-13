@@ -5,7 +5,7 @@ services:
     image: minio/minio:latest
     container_name: minio
     volumes:
-      - minio-volume/:/data
+      - minio-volume:/data
     command: server --address ":9000" --console-address ":9001" /data
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
