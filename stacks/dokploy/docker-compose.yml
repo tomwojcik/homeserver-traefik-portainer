@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  dokploy:
+    image: dokploy/dokploy:latest
+    container_name: dokploy
+    depends_on:
+      - postgres
+      - redis
+      - traefik
+    environment:
+      - TZ=UTC
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+    volumes:
+      - dokploy_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - dokploy_network
+      - traefik
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.dokploy.rule: Host(`dokploy.${SERVER_DOMAIN}`)
+      traefik.http.routers.dokploy.entrypoints: websecure
+      traefik.http.services.dokploy.loadbalancer.server.port: 3000
+
+  
+  postgres:
+    image: postgres:16
+    container_name: dokploy-postgres
+    environment:
+      - POSTGRES_USER=dokploy
+      - POSTGRES_PASSWORD=dokploy
+      - POSTGRES_DB=dokploy
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - dokploy_network
+
+  redis:
+    image: redis:7
+    container_name: dokploy-redis
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - dokploy_network
+
+  traefik:
+    image: traefik:v3.1.2
+    container_name: dokploy-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_data:/letsencrypt
+    restart: unless-stopped
+    networks:
+      - dokploy_network
+      - traefik
+
+networks:
+  dokploy_network:
+    driver: bridge
+  traefik:
+    name: homeserver
+    external: true
+
+volumes:
+  dokploy_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  traefik_data:
+    driver: local
