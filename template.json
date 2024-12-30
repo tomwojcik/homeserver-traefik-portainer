@@ -3,6 +3,122 @@
     "templates": [
         {
             "type": 3,
+            "name": "Cloudflared",
+            "title": "Cloudflared",
+            "description": "Cloudflare Tunnel between Cloudflare stack and docker container.",
+            "env": [
+                {
+                    "label": "TOKEN",
+                    "name": "TOKEN"
+                }
+            ],
+            "logo": "https://avatars.githubusercontent.com/u/314135?s=200&v=4",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/cloudflared/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "CyberChef",
+            "title": "CyberChef",
+            "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cyberchef/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/cyberchef/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "Dozzle",
+            "title": "Dozzle",
+            "description": "All docker logs in one place.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/768751405404ca3b36cf73cdd1ca8c699b26a5f0/stacks/dozzle/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/dozzle/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "Gogs",
+            "title": "Gogs",
+            "description": "Self-hosted git. Sync external git repos.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/gogs/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/gogs/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "Heimdall",
+            "title": "Heimdall",
+            "description": "Landing page for the homeserver.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/heimdall/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/heimdall/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "MinIO",
+            "title": "MinIO",
+            "description": "S3 alternative.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                },
+                {
+                    "label": "MINIO_ROOT_USER",
+                    "name": "MINIO_ROOT_USER"
+                },
+                {
+                    "label": "MINIO_ROOT_PASSWORD",
+                    "name": "MINIO_ROOT_PASSWORD"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/minio/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/minio/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
             "name": "Nextcloud",
             "title": "Nextcloud",
             "description": "Google drive/Dropbox alternative.",
@@ -32,78 +148,6 @@
             "platform": "linux",
             "repository": {
                 "stackfile": "stacks/nextcloud/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "CyberChef",
-            "title": "CyberChef",
-            "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis.",
-            "env": [
-                {
-                    "label": "SERVER_DOMAIN",
-                    "name": "SERVER_DOMAIN"
-                }
-            ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cyberchef/logo.png",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/cyberchef/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "cadvisor",
-            "title": "cadvisor",
-            "description": "Resources monitor.",
-            "env": [
-                {
-                    "label": "SERVER_DOMAIN",
-                    "name": "SERVER_DOMAIN"
-                }
-            ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cadvisor/logo.png",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/cadvisor/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "Gogs",
-            "title": "Gogs",
-            "description": "Self-hosted git. Sync external git repos.",
-            "env": [
-                {
-                    "label": "SERVER_DOMAIN",
-                    "name": "SERVER_DOMAIN"
-                }
-            ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/gogs/logo.png",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/gogs/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "Uptime Kuma",
-            "title": "Uptime Kuma",
-            "description": "A fancy self-hosted monitoring tool.",
-            "env": [
-                {
-                    "label": "SERVER_DOMAIN",
-                    "name": "SERVER_DOMAIN"
-                }
-            ],
-            "platform": "linux",
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/ffcc9ee7aed06102d724e45850b24ad8d9f80bde/stacks/uptime-kuma/logo.png",
-            "repository": {
-                "stackfile": "stacks/uptime-kuma/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             }
         },
@@ -158,6 +202,78 @@
         },
         {
             "type": 3,
+            "name": "Uptime Kuma",
+            "title": "Uptime Kuma",
+            "description": "A fancy self-hosted monitoring tool.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "platform": "linux",
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/ffcc9ee7aed06102d724e45850b24ad8d9f80bde/stacks/uptime-kuma/logo.png",
+            "repository": {
+                "stackfile": "stacks/uptime-kuma/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "cadvisor",
+            "title": "cadvisor",
+            "description": "Resources monitor.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cadvisor/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/cadvisor/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "docker registry",
+            "title": "Docker registry",
+            "description": "Docker registry and UI docker hub.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/8ee5120e19031d8f02b13e7975f6ccfa015377e8/stacks/registry/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/registry/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
+            "name": "metube",
+            "title": "metube",
+            "description": "Web GUI for youtube-dl (using the yt-dlp fork) with playlist support. Allows you to download videos from YouTube and dozens of other sites.",
+            "env": [
+                {
+                    "label": "SERVER_DOMAIN",
+                    "name": "SERVER_DOMAIN"
+                }
+            ],
+            "logo": "https://github.com/tomwojcik/homeserver-traefik-portainer/blob/fed96b34414d8fc6fdac0f1b7a4ad336204d4773/stacks/metube/logo.png?raw=true",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/metube/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            }
+        },
+        {
+            "type": 3,
             "name": "n8n",
             "title": "n8n",
             "description": "Free and source-available fair-code licensed workflow automation tool. Easily automate tasks across different services.",
@@ -183,99 +299,19 @@
         },
         {
             "type": 3,
-            "name": "docker registry",
-            "title": "Docker registry",
-            "description": "Docker registry and UI docker hub.",
+            "name": "tubesync",
+            "title": "tubesync",
+            "description": "TubeSync is a PVR (personal video recorder) for YouTube. Or, like Sonarr but for YouTube (with a built-in download client). It is designed to synchronize channels and playlists from YouTube to local directories and update your media server once media is downloaded.",
             "env": [
                 {
                     "label": "SERVER_DOMAIN",
                     "name": "SERVER_DOMAIN"
                 }
             ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/8ee5120e19031d8f02b13e7975f6ccfa015377e8/stacks/registry/logo.png",
+            "logo": "https://github.com/tomwojcik/homeserver-traefik-portainer/blob/fed96b34414d8fc6fdac0f1b7a4ad336204d4773/stacks/tubesync/logo.png?raw=true",
             "platform": "linux",
             "repository": {
-                "stackfile": "stacks/registry/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "MinIO",
-            "title": "MinIO",
-            "description": "S3 alternative.",
-            "env": [
-                {
-                    "label": "SERVER_DOMAIN",
-                    "name": "SERVER_DOMAIN"
-                },
-                {
-                    "label": "MINIO_ROOT_USER",
-                    "name": "MINIO_ROOT_USER"
-                },
-                {
-                    "label": "MINIO_ROOT_PASSWORD",
-                    "name": "MINIO_ROOT_PASSWORD"
-                }
-            ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/minio/logo.png",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/minio/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "Dozzle",
-            "title": "Dozzle",
-            "description": "All docker logs in one place.",
-            "env": [
-                {
-                    "label": "SERVER_DOMAIN",
-                    "name": "SERVER_DOMAIN"
-                }
-            ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/768751405404ca3b36cf73cdd1ca8c699b26a5f0/stacks/dozzle/logo.png",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/dozzle/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "Cloudflared",
-            "title": "Cloudflared",
-            "description": "Cloudflare Tunnel between Cloudflare stack and docker container.",
-            "env": [
-                {
-                    "label": "TOKEN",
-                    "name": "TOKEN"
-                }
-            ],
-            "logo": "https://avatars.githubusercontent.com/u/314135?s=200&v=4",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/cloudflared/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
-            "name": "Heimdall",
-            "title": "Heimdall",
-            "description": "Landing page for the homeserver.",
-            "env": [
-                {
-                    "label": "SERVER_DOMAIN",
-                    "name": "SERVER_DOMAIN"
-                }
-            ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/heimdall/logo.png",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/heimdall/docker-compose.yml",
+                "stackfile": "stacks/tubesync/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             }
         }

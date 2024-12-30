@@ -1,0 +1,33 @@
+# https://github.com/alexta69/metube#configuration-via-environment-variables
+
+version : '3.7'
+services:
+  metube:
+    image: ghcr.io/alexta69/metube
+    container_name: metube
+    restart: always
+    ports:
+      - "8081:8081"
+    volumes:
+      - metube_storage:/downloads
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - traefik
+    environment:
+      - PUID=1000
+      - PGID=1000
+    labels:
+      my.zone: homeserver
+      traefik.enable: true
+      traefik.http.routers.metube.rule: Host(`metube.${SERVER_DOMAIN}`)
+      traefik.http.routers.metube.entrypoints: websecure
+      traefik.http.services.metube.loadbalancer.server.port: 8081
+
+volumes:
+  metube_storage:
+
+networks:
+  traefik:
+    name: homeserver
+    external: true
