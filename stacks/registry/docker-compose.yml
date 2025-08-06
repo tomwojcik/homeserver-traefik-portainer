@@ -19,7 +19,6 @@ services:
     restart: always
     container_name: dockerhub
     environment:
-      ENV_DOCKER_REGISTRY_HOST: registry.${SERVER_DOMAIN}
       ENV_DOCKER_REGISTRY_USE_SSL: 1
       ENV_DOCKER_REGISTRY_PORT: 443
     networks:

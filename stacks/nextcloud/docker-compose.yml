@@ -12,7 +12,6 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
-      - NEXTCLOUD_TRUSTED_DOMAINS=nextcloud.${SERVER_DOMAIN}
       - OVERWRITEPROTOCOL=https
     security_opt:
       - no-new-privileges:true

@@ -3,12 +3,7 @@
   "name": "PyPI Server",
   "title": "PyPI Server",
   "description": "Private PyPI.",
-  "env": [
-    {
-      "label": "SERVER_DOMAIN",
-      "name": "SERVER_DOMAIN"
-    }
-  ],
+  "env": [],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/62ca45165603bdd6991c5684993ecb94ee631915/stacks/pypiserver/logo.png",
   "platform": "linux",
   "repository": {

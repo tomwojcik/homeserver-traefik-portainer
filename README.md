@@ -83,10 +83,52 @@ After setup, your services will be available at:
 
 ## Adding New Services
 
+### Method 1: Using App Templates (Predefined Services)
 1. Deploy service through Portainer App Templates
 2. In Cloudflare Zero Trust, add new public hostname
 3. Point it to `http://service-name:port`
 4. Service instantly available at `https://service.yourdomain.com`
+
+### Method 2: External Repository (Side Projects)
+Perfect for deploying your own applications or projects from GitHub:
+
+1. **In Portainer**: Go to **Stacks** → **Add Stack** → **Repository**
+2. **Enter your GitHub repo URL**: `https://github.com/yourusername/your-project`
+3. **Specify docker-compose.yml path** (if not in root)
+4. **Deploy the stack**
+5. **Add Cloudflare route**: `my-app.yourdomain.com` → `http://container-name:port`
+
+**Requirements for your project repository:**
+- Must have a `docker-compose.yml` file
+- Services must connect to the `homeserver` network:
+  ```yaml
+  networks:
+    homeserver:
+      name: homeserver
+      external: true
+  ```
+- Don't expose ports (Cloudflare Tunnel handles routing)
+
+**Example docker-compose.yml for your side project:**
+```yaml
+version: "3.8"
+services:
+  my-app:
+    build: .
+    container_name: my-app
+    environment:
+      - NODE_ENV=production
+    networks:
+      - homeserver
+    restart: unless-stopped
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true
+```
+
+This method lets you deploy any custom application directly from your GitHub repository!
 
 ## Network Architecture
 

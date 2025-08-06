@@ -11,7 +11,6 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_REGION_NAME: us-east-1
-      MINIO_BROWSER_REDIRECT_URL: "https://minio.${SERVER_DOMAIN}"
     restart: always
     security_opt:
       - no-new-privileges:true

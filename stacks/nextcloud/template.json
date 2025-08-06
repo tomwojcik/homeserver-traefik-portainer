@@ -5,10 +5,6 @@
   "description": "Google drive/Dropbox alternative.",
   "env": [
     {
-      "label": "SERVER_DOMAIN",
-      "name": "SERVER_DOMAIN"
-    },
-    {
       "label": "MYSQL_USER",
       "name": "MYSQL_USER"
     },
