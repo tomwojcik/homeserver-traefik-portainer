@@ -20,18 +20,12 @@ services:
     security_opt:
       - no-new-privileges:true
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.n8n.rule: Host(`n8n.${SERVER_DOMAIN}`)
-      traefik.http.routers.n8n.entrypoints: websecure
-      traefik.http.services.n8n.loadbalancer.server.port: 5678
+      - homeserver
 
 volumes:
   n8n_storage:
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true

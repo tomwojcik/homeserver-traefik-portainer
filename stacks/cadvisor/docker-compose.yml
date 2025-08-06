@@ -1,4 +1,4 @@
-version : '3.7'
+version: "3.8"
 services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor@sha256:ddadf3e2fd880deb4e0f3606d34a0d9da1165e3801116075d98a1901635dc9e8
@@ -10,15 +10,11 @@ services:
       - /sys:/sys:ro
       - /volume1/@docker:/var/lib/docker:ro
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.cadvisor.rule: Host(`cadvisor.${SERVER_DOMAIN}`)
-      traefik.http.routers.cadvisor.entrypoints: websecure
-      traefik.http.services.cadvisor.loadbalancer.server.port: 8080
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true

@@ -1,4 +1,4 @@
-version: "3.6"
+version: "3.8"
 services:
   nextcloud:
     image: nextcloud:apache
@@ -20,22 +20,16 @@ services:
       - nextcloud-mariadb
       - nextcloud-redis
     networks:
-      - traefik
+      - homeserver
     volumes:
       - nextcloud:/var/www/html
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.nextcloud.rule: Host(`nextcloud.${SERVER_DOMAIN}`)
-      traefik.http.routers.nextcloud.entrypoints: websecure
-      traefik.http.services.nextcloud.loadbalancer.server.port: 80
 
   nextcloud-mariadb:
     image: mariadb:10.5
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     container_name: nextcloud-mariadb
     networks:
-      - traefik
+      - homeserver
     volumes:
       - nextcloud-db:/var/lib/mysql
     restart: always
@@ -50,7 +44,7 @@ services:
     restart: always
     container_name: nextcloud-redis
     networks:
-      - traefik
+      - homeserver
     volumes:
       - nextcloud-redis:/data
 
@@ -68,7 +62,7 @@ services:
       - NEXTCLOUD_EXEC_SHELL=sh
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true
 

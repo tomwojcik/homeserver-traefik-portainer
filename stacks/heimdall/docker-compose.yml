@@ -1,10 +1,11 @@
-version: "3.6"
+version: "3.8"
 services:
   heimdall:
-    image: lscr.io/linuxserver/heimdall
+    image: lscr.io/linuxserver/heimdall:latest
     environment:
       - PUID=1000
       - PGID=1000
+      - TZ=Etc/UTC
     volumes:
       - heimdall-volume:/config
     container_name: heimdall
@@ -12,16 +13,10 @@ services:
     security_opt:
       - no-new-privileges:true
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.heimdall.rule: Host(`homeserver.${SERVER_DOMAIN}`)
-      traefik.http.routers.heimdall.entrypoints: websecure
-      traefik.http.services.heimdall.loadbalancer.server.port: 80
+      - homeserver
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true
 

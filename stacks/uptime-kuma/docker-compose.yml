@@ -1,4 +1,4 @@
-version : '3.7'
+version: "3.8"
 
 volumes:
   kuma:
@@ -11,15 +11,11 @@ services:
     volumes:
       - kuma:/app/data
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.kuma.rule: Host(`kuma.${SERVER_DOMAIN}`)
-      traefik.http.routers.kuma.entrypoints: websecure
-      traefik.http.services.kuma.loadbalancer.server.port: 3001
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true
