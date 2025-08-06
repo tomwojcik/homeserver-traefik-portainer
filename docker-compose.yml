@@ -24,37 +24,6 @@ services:
     networks:
       - homeserver
 
-  # Cloudflare Tunnel - Public (side projects, no auth required)
-  cloudflared-public:
-    image: cloudflare/cloudflared:2024.6.1
-    container_name: cloudflared-public
-    restart: always
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN_PUBLIC}
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN_PUBLIC}
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    user: "65532:65532"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    networks:
-      - homeserver
-      - public-projects
-
-networks:
-  homeserver:
-    name: homeserver
-    driver: bridge
-  public-projects:
-    name: public-projects
-    driver: bridge
 
   # Portainer for container management
   portainer:

@@ -14,27 +14,17 @@ A complete homeserver setup using **Cloudflare Tunnel** and **Portainer** for ea
 
 ## Quick Start
 
-### 1. Setup Cloudflare Tunnels
-This setup uses **two separate tunnels** for better security:
-
-**Private Tunnel (Homeserver Services):**
+### 1. Setup Cloudflare Tunnel
 1. Go to [Cloudflare Zero Trust Dashboard](https://one.dash.cloudflare.com/)
 2. Navigate to **Networks** > **Tunnels**
 3. Click **Create a tunnel**, name it "homeserver-private"
-4. Copy the tunnel token
-
-**Public Tunnel (Side Projects):**
-1. Create another tunnel named "homeserver-public"  
-2. Copy this second tunnel token
-3. This tunnel will be for public side projects without authentication
+4. Copy the tunnel token (this will be for your homeserver services)
 
 ### 2. Configure Environment
 ```bash
 cp .env.example .env
 # Edit .env and add:
-# SERVER_DOMAIN=yourdomain.com
 # CLOUDFLARE_TUNNEL_TOKEN_PRIVATE=your_private_tunnel_token
-# CLOUDFLARE_TUNNEL_TOKEN_PUBLIC=your_public_tunnel_token
 ```
 
 ### 3. Start Core Services
@@ -44,8 +34,7 @@ docker-compose up -d
 
 This starts:
 - **Portainer 2.32.0** (container management) - accessible at `http://server-ip:9000`
-- **Cloudflared-Private** (tunnel for homeserver services)
-- **Cloudflared-Public** (tunnel for side projects)
+- **Cloudflared-Private** (tunnel for homeserver services with authentication)
 
 ### 4. Configure Tunnel Routes in Cloudflare
 
@@ -56,11 +45,6 @@ In the Cloudflare Zero Trust dashboard, add these public hostnames:
 | Portainer | `portainer` | `http://portainer:9000` |
 | Dozzle | `dozzle` | `http://dozzle:8080` |
 | Heimdall | `heimdall` | `http://heimdall:80` |
-| MeTube | `metube` | `http://metube:8081` |
-| Nextcloud | `nextcloud` | `http://nextcloud:80` |
-| MinIO Console | `minio` | `http://minio:9001` |
-| MinIO API | `minio-api` | `http://minio:9000` |
-| Uptime Kuma | `uptime` | `http://uptime-kuma:3001` |
 | CyberChef | `cyberchef` | `http://cyberchef:8000` |
 
 ### 5. Deploy Services via Portainer
@@ -127,22 +111,37 @@ networks:
     external: true
 ```
 
-**For Public Projects (no auth required):**
+**For Public Projects (with their own tunnel):**
 ```yaml
 version: "3.8"
 services:
+  # Your public application
   my-public-app:
     build: .
     container_name: my-public-app
-    networks:
-      - public-projects  # Routes through public tunnel
     restart: unless-stopped
 
-networks:
-  public-projects:
-    name: public-projects
-    external: true
+  # Each public project manages its own tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:2024.6.1
+    container_name: my-project-tunnel
+    restart: always
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: "65532:65532"
 ```
+
+**Benefits of separate tunnels per project:**
+- Each project is completely isolated
+- Independent deployment and management
+- Different authentication/access policies per project
+- No shared infrastructure dependencies
+
+**📁 See complete example**: Check the `examples/public-side-project/` directory for a working example with whoami service and dedicated tunnel.
 
 ### Method 3: Configure Authentication
 **Set up Cloudflare Access for Private Services:**
@@ -177,10 +176,6 @@ All services communicate through the `homeserver` Docker network.
 **Need direct access?**
 - Portainer always available at `http://server-ip:9000`
 - Other services available on their internal ports within the Docker network
-
-## Credits
-
-Based on [SimonHaas/homeserver](https://github.com/SimonHaas/homeserver) - big kudos to Simon Haas for sharing his stack.
 
 ## References
 

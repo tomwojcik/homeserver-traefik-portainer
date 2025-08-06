@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  # Example public application - simple whoami service
+  whoami:
+    image: traefik/whoami:latest
+    container_name: public-whoami
+    restart: unless-stopped
+    environment:
+      - WHOAMI_NAME=My Public Side Project
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: "65534:65534"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 16M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Each public project manages its own Cloudflare tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:2024.6.1
+    container_name: public-project-tunnel
+    restart: always
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: "65532:65532"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
+    healthcheck:
+      test: ["CMD-SHELL", "cloudflared tunnel info || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
