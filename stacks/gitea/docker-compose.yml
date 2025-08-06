@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  gitea:
+    image: gitea/gitea:1.21.5
+    container_name: gitea
+    restart: always
+    environment:
+      - USER_UID=${PUID:-1000}
+      - USER_GID=${PGID:-1000}
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=gitea-db:5432
+      - GITEA__database__NAME=${GITEA_DB_NAME:-gitea}
+      - GITEA__database__USER=${GITEA_DB_USER:-gitea}
+      - GITEA__database__PASSWD=${GITEA_DB_PASS:-gitea}
+      - GITEA__server__DOMAIN=${GITEA_DOMAIN:-git.localhost}
+      - GITEA__server__SSH_DOMAIN=${GITEA_DOMAIN:-git.localhost}
+      - GITEA__server__ROOT_URL=https://${GITEA_DOMAIN:-git.localhost}/
+    volumes:
+      - /volume1/docker/gitea/data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "2222:22"  # SSH for Git operations
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - gitea-db
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  gitea-db:
+    image: postgres:15.5-alpine
+    container_name: gitea-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${GITEA_DB_USER:-gitea}
+      - POSTGRES_PASSWORD=${GITEA_DB_PASS:-gitea}
+      - POSTGRES_DB=${GITEA_DB_NAME:-gitea}
+    volumes:
+      - /volume1/docker/gitea/postgres:/var/lib/postgresql/data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    user: "70:70"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GITEA_DB_USER:-gitea} -d ${GITEA_DB_NAME:-gitea}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true

@@ -1,0 +1,20 @@
+{
+  "type": 3,
+  "name": "Home Assistant",
+  "title": "Home Assistant",
+  "description": "Open source home automation platform. Control lights, switches, sensors, and more from a unified interface.",
+  "env": [
+    {
+      "label": "Timezone",
+      "name": "TZ",
+      "default": "UTC"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/homeassistant/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/homeassistant/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "Uses host networking for device discovery. Includes optional MQTT broker. Access via port 8123."
+}

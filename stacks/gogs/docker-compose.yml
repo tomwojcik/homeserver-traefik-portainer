@@ -8,23 +8,14 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - gogs-volume:/data
+      - /volume1/docker/gogs/data:/data
     container_name: gogs
     security_opt:
       - no-new-privileges:true
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.gogs.rule: Host(`gogs.${SERVER_DOMAIN}`)
-      traefik.http.routers.gogs.entrypoints: websecure
-      traefik.http.services.gogs.loadbalancer.server.port: 3000
+      - homeserver
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true
-
-volumes:
-  gogs-volume:

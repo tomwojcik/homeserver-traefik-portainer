@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 services:
   cyberchef:
     container_name: cyberchef
@@ -7,15 +7,9 @@ services:
     security_opt:
       - no-new-privileges:true
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.cyberchef.rule: Host(`cyberchef.${SERVER_DOMAIN}`)
-      traefik.http.routers.cyberchef.entrypoints: websecure
-      traefik.http.services.cyberchef.loadbalancer.server.port: 8000
+      - homeserver
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true

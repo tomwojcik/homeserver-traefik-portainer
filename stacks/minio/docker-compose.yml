@@ -1,35 +1,21 @@
-version: '3.7'
+version: "3.8"
 
 services:
   minio:
     image: minio/minio:latest
     container_name: minio
     volumes:
-      - minio-volume/:/data
+      - /volume1/docker/minio/data:/data
     command: server --address ":9000" --console-address ":9001" /data
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_REGION_NAME: us-east-1
-      MINIO_BROWSER_REDIRECT_URL: "https://minio.${SERVER_DOMAIN}"
     restart: always
     security_opt:
       - no-new-privileges:true
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      # console (web app with UI)
-      traefik.http.routers.minio.rule: Host(`minio.${SERVER_DOMAIN}`)
-      traefik.http.routers.minio.entrypoints: websecure
-      traefik.http.routers.minio.service: minio
-      traefik.http.services.minio.loadbalancer.server.port: 9001
-      # api
-      traefik.http.routers.s3.rule: Host(`s3.${SERVER_DOMAIN}`)
-      traefik.http.routers.s3.entrypoints: websecure
-      traefik.http.routers.s3.service: s3
-      traefik.http.services.s3.loadbalancer.server.port: 9000
+      - homeserver
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -47,9 +33,6 @@ services:
 #    entrypoint: ["tail", "-f", "/dev/null"]
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true
-
-volumes:
-  minio-volume:

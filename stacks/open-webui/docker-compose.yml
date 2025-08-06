@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:0.1.121
+    container_name: open-webui
+    restart: always
+    environment:
+      # API Configuration
+      - OPENAI_API_BASE_URL=${OPENAI_API_BASE_URL:-https://api.openai.com/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      
+      # Anthropic Configuration
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      
+      # General Configuration
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:-your-secret-key-here}
+      - WEBUI_JWT_SECRET_KEY=${WEBUI_JWT_SECRET_KEY:-your-jwt-secret-here}
+      - DEFAULT_USER_ROLE=${DEFAULT_USER_ROLE:-user}
+      - ENABLE_SIGNUP=${ENABLE_SIGNUP:-true}
+      - WEBUI_AUTH=${WEBUI_AUTH:-true}
+      
+      # Database
+      - DATABASE_URL=sqlite:///data/webui.db
+      
+      # Security & Privacy
+      - WEBUI_NAME=Private AI Chat
+      - WEBUI_URL=https://chat.${DOMAIN:-localhost}
+    volumes:
+      - /volume1/docker/open-webui/data:/app/backend/data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/backend/static/cache
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true

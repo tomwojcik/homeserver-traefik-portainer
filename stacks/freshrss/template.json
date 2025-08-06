@@ -1,0 +1,18 @@
+{
+  "type": 3,
+  "name": "FreshRSS",
+  "title": "FreshRSS",
+  "description": "Self-hosted RSS feed reader with PostgreSQL database.",
+  "env": [
+    {
+      "label": "POSTGRES_PASSWORD",
+      "name": "POSTGRES_PASSWORD"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/freshrss/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/freshrss/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  }
+}

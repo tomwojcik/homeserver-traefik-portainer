@@ -1,0 +1,196 @@
+version: "3.8"
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - /volume1/docker/media-server/gluetun:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-surfshark}
+      - VPN_TYPE=${VPN_TYPE:-wireguard}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - TZ=${TZ:-UTC}
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # Torrent Client (through VPN)
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: service:gluetun
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - WEBUI_PORT=8080
+    volumes:
+      - /volume1/docker/media-server/qbittorrent:/config
+      - /volume1/docker/media-server/downloads:/downloads
+      - /volume1/docker/media-server/media:/data
+    depends_on:
+      - gluetun
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # Usenet Client
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/media-server/sabnzbd:/config
+      - /volume1/docker/media-server/downloads:/downloads
+      - /volume1/docker/media-server/media:/data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # Indexer Manager
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/media-server/prowlarr:/config
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # TV Show Manager
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/media-server/sonarr:/config
+      - /volume1/docker/media-server/downloads:/downloads
+      - /volume1/docker/media-server/media:/data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # Movie Manager
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/media-server/radarr:/config
+      - /volume1/docker/media-server/downloads:/downloads
+      - /volume1/docker/media-server/media:/data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    
+  # Subtitle Manager
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/media-server/bazarr:/config
+      - /volume1/docker/media-server/media:/data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # Jellyfin Media Server
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/media-server/jellyfin:/config
+      - /volume1/docker/media-server/media:/data
+      - /volume1/docker/media-server/jellyfin-cache:/cache
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    # GPU support (uncomment if you have Intel/AMD GPU)
+    # devices:
+    #   - /dev/dri:/dev/dri
+
+  # Plex Media Server
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    volumes:
+      - /volume1/docker/media-server/plex:/config
+      - /volume1/docker/media-server/media:/data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    # GPU support (uncomment if you have Intel/AMD GPU)
+    # devices:
+    #   - /dev/dri:/dev/dri
+
+  # Media Request Manager
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - LOG_LEVEL=info
+    volumes:
+      - /volume1/docker/media-server/jellyseerr:/app/config
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true
+

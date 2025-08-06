@@ -1,0 +1,30 @@
+{
+  "type": 3,
+  "name": "YT-DLP Material",
+  "title": "YouTube Downloader",
+  "description": "Web-based YouTube downloader with material design. Download videos, playlists, and audio with subscription management.",
+  "env": [
+    {
+      "label": "PUID (User ID)",
+      "name": "PUID",
+      "default": "1000"
+    },
+    {
+      "label": "PGID (Group ID)",
+      "name": "PGID",
+      "default": "1000"
+    },
+    {
+      "label": "Timezone",
+      "name": "TZ",
+      "default": "UTC"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/ytdlp/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/ytdlp/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "Includes MongoDB for data persistence. Modern alternative to MeTube with better UI and features."
+}

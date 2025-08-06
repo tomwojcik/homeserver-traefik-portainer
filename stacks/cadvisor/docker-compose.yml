@@ -1,24 +1,36 @@
-version : '3.7'
+version: "3.8"
 services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor@sha256:ddadf3e2fd880deb4e0f3606d34a0d9da1165e3801116075d98a1901635dc9e8
     container_name: cadvisor
     restart: always
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/cgroup:ro
       - /volume1/@docker:/var/lib/docker:ro
+      - /proc:/rootfs/proc:ro
+      - /sys:/rootfs/sys:ro
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.cadvisor.rule: Host(`cadvisor.${SERVER_DOMAIN}`)
-      traefik.http.routers.cadvisor.entrypoints: websecure
-      traefik.http.services.cadvisor.loadbalancer.server.port: 8080
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: "65534:65534"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true

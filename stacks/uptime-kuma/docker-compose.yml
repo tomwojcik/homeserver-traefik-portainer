@@ -1,7 +1,4 @@
-version : '3.7'
-
-volumes:
-  kuma:
+version: "3.8"
 
 services:
   kuma:
@@ -9,17 +6,13 @@ services:
     container_name: kuma
     restart: always
     volumes:
-      - kuma:/app/data
+      - /volume1/docker/uptime-kuma/data:/app/data
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.kuma.rule: Host(`kuma.${SERVER_DOMAIN}`)
-      traefik.http.routers.kuma.entrypoints: websecure
-      traefik.http.services.kuma.loadbalancer.server.port: 3001
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true

@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:2.0.6
+    container_name: duplicati
+    restart: always
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - CLI_ARGS=--webservice-interface=any --webservice-port=8200
+    volumes:
+      - /volume1/docker/duplicati/config:/config
+      - /volume1/docker/duplicati/backups:/backups
+      - /volume1:/source:ro  # Read-only access to NAS data
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true

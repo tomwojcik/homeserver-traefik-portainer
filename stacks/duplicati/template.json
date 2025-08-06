@@ -1,0 +1,30 @@
+{
+  "type": 3,
+  "name": "Duplicati",
+  "title": "Duplicati Backup",
+  "description": "Encrypted backup solution with support for cloud storage (Google Drive, AWS S3, OneDrive, etc.)",
+  "env": [
+    {
+      "label": "PUID (User ID)",
+      "name": "PUID",
+      "default": "1000"
+    },
+    {
+      "label": "PGID (Group ID)",
+      "name": "PGID",
+      "default": "1000"
+    },
+    {
+      "label": "Timezone",
+      "name": "TZ",
+      "default": "UTC"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/duplicati/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/duplicati/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "After deployment, configure cloud storage backends and backup schedules via web interface."
+}

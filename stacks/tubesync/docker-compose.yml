@@ -1,35 +1,26 @@
 # https://github.com/meeb/tubesync
 
-version : '3.7'
+version: "3.8"
 services:
   tubesync:
     image: ghcr.io/meeb/tubesync:latest
     container_name: tubesync
     restart: always
-    ports:
-      - "4848:4848"
     volumes:
-      - tubesync_storage:/downloads
+      - /volume1/docker/tubesync/downloads:/downloads
+      - /volume1/docker/tubesync/config:/config
     security_opt:
       - no-new-privileges:true
     networks:
-      - traefik
+      - homeserver
     environment:
       - TZ=Europe/Warsaw
       - GUNICORN_WORKERS=1
       - PUID=1000
       - PGID=1000
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.tubesync.rule: Host(`tubesync.${SERVER_DOMAIN}`)
-      traefik.http.routers.tubesync.entrypoints: websecure
-      traefik.http.services.tubesync.loadbalancer.server.port: 4848
 
-volumes:
-  tubesync_storage:
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true

@@ -12,26 +12,16 @@ services:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
-      - WEBHOOK_URL=https://n8n.${SERVER_DOMAIN}
       - N8N_LOG_OUTPUT=console,file
       - N8N_LOG_LEVEL=debug
     volumes:
-      - n8n_storage:/home/node/
+      - /volume1/docker/n8n/storage:/home/node/
     security_opt:
       - no-new-privileges:true
     networks:
-      - traefik
-    labels:
-      my.zone: homeserver
-      traefik.enable: true
-      traefik.http.routers.n8n.rule: Host(`n8n.${SERVER_DOMAIN}`)
-      traefik.http.routers.n8n.entrypoints: websecure
-      traefik.http.services.n8n.loadbalancer.server.port: 5678
-
-volumes:
-  n8n_storage:
+      - homeserver
 
 networks:
-  traefik:
+  homeserver:
     name: homeserver
     external: true

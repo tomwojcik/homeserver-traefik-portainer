@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:2024.1.6
+    container_name: homeassistant
+    restart: always
+    environment:
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host  # Required for device discovery
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Optional: MQTT Broker for IoT communication
+  mosquitto:
+    image: eclipse-mosquitto:2.0.18
+    container_name: homeassistant-mqtt
+    restart: always
+    volumes:
+      - /volume1/docker/homeassistant/mosquitto/config:/mosquitto/config
+      - /volume1/docker/homeassistant/mosquitto/data:/mosquitto/data
+      - /volume1/docker/homeassistant/mosquitto/log:/mosquitto/log
+    ports:
+      - 1883:1883  # MQTT
+      - 9001:9001  # WebSocket
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    user: "1883:1883"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$SYS/#' -C 1 | grep -v Error || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true
