@@ -14,18 +14,27 @@ A complete homeserver setup using **Cloudflare Tunnel** and **Portainer** for ea
 
 ## Quick Start
 
-### 1. Setup Cloudflare Tunnel
+### 1. Setup Cloudflare Tunnels
+This setup uses **two separate tunnels** for better security:
+
+**Private Tunnel (Homeserver Services):**
 1. Go to [Cloudflare Zero Trust Dashboard](https://one.dash.cloudflare.com/)
 2. Navigate to **Networks** > **Tunnels**
-3. Click **Create a tunnel**, name it (e.g., "homeserver")
+3. Click **Create a tunnel**, name it "homeserver-private"
 4. Copy the tunnel token
+
+**Public Tunnel (Side Projects):**
+1. Create another tunnel named "homeserver-public"  
+2. Copy this second tunnel token
+3. This tunnel will be for public side projects without authentication
 
 ### 2. Configure Environment
 ```bash
 cp .env.example .env
 # Edit .env and add:
 # SERVER_DOMAIN=yourdomain.com
-# CLOUDFLARE_TUNNEL_TOKEN=your_actual_token_here
+# CLOUDFLARE_TUNNEL_TOKEN_PRIVATE=your_private_tunnel_token
+# CLOUDFLARE_TUNNEL_TOKEN_PUBLIC=your_public_tunnel_token
 ```
 
 ### 3. Start Core Services
@@ -35,7 +44,8 @@ docker-compose up -d
 
 This starts:
 - **Portainer 2.32.0** (container management) - accessible at `http://server-ip:9000`
-- **Cloudflared** (tunnel client)
+- **Cloudflared-Private** (tunnel for homeserver services)
+- **Cloudflared-Public** (tunnel for side projects)
 
 ### 4. Configure Tunnel Routes in Cloudflare
 
@@ -96,30 +106,19 @@ Perfect for deploying your own applications or projects from GitHub:
 2. **Enter your GitHub repo URL**: `https://github.com/yourusername/your-project`
 3. **Specify docker-compose.yml path** (if not in root)
 4. **Deploy the stack**
-5. **Add Cloudflare route**: `my-app.yourdomain.com` → `http://container-name:port`
+5. **Choose the appropriate tunnel**:
+   - **Private projects** → Use `homeserver` network → Route via private tunnel
+   - **Public projects** → Use `public-projects` network → Route via public tunnel
 
-**Requirements for your project repository:**
-- Must have a `docker-compose.yml` file
-- Services must connect to the `homeserver` network:
-  ```yaml
-  networks:
-    homeserver:
-      name: homeserver
-      external: true
-  ```
-- Don't expose ports (Cloudflare Tunnel handles routing)
-
-**Example docker-compose.yml for your side project:**
+**For Private Projects (requires auth):**
 ```yaml
 version: "3.8"
 services:
-  my-app:
+  my-private-app:
     build: .
-    container_name: my-app
-    environment:
-      - NODE_ENV=production
+    container_name: my-private-app
     networks:
-      - homeserver
+      - homeserver  # Routes through private tunnel
     restart: unless-stopped
 
 networks:
@@ -128,7 +127,32 @@ networks:
     external: true
 ```
 
-This method lets you deploy any custom application directly from your GitHub repository!
+**For Public Projects (no auth required):**
+```yaml
+version: "3.8"
+services:
+  my-public-app:
+    build: .
+    container_name: my-public-app
+    networks:
+      - public-projects  # Routes through public tunnel
+    restart: unless-stopped
+
+networks:
+  public-projects:
+    name: public-projects
+    external: true
+```
+
+### Method 3: Configure Authentication
+**Set up Cloudflare Access for Private Services:**
+1. Go to **Zero Trust** → **Access** → **Applications**
+2. Click **Add an application** → **Self-hosted**
+3. Set application domain: `*.yourdomain.com` (or specific subdomain)
+4. Add policy: **Allow** → **Emails** → Add your email addresses
+5. Now all homeserver services require email authentication!
+
+**Public tunnel services bypass authentication automatically.**
 
 ## Network Architecture
 
