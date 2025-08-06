@@ -1,0 +1,53 @@
+version: "3.8"
+services:
+  freshrss-db:
+    container_name: freshrss-db
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: freshrss
+      POSTGRES_USER: freshrss
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - /volume1/docker/freshrss/db:/var/lib/postgresql/data
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - homeserver
+
+  freshrss:
+    container_name: freshrss
+    image: freshrss/freshrss:latest
+    environment:
+      CRON_MIN: '1,31'
+      TZ: ${TZ}
+    volumes:
+      - /volume1/docker/freshrss/data:/var/www/FreshRSS/data
+      - /volume1/docker/freshrss/extensions:/var/www/FreshRSS/extensions
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: "${PUID}:${PGID}"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+    depends_on:
+      - freshrss-db
+    networks:
+      - homeserver
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true
