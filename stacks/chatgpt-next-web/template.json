@@ -1,0 +1,52 @@
+{
+  "type": 3,
+  "name": "ChatGPT Next Web",
+  "title": "ChatGPT Web Interface", 
+  "description": "Lightweight ChatGPT web interface supporting OpenAI, Anthropic, Google AI. Simple deployment with access code protection.",
+  "env": [
+    {
+      "label": "OpenAI API Key",
+      "name": "OPENAI_API_KEY", 
+      "description": "Your OpenAI API key"
+    },
+    {
+      "label": "Anthropic API Key",
+      "name": "ANTHROPIC_API_KEY",
+      "description": "Your Anthropic Claude API key (optional)"
+    },
+    {
+      "label": "Google API Key", 
+      "name": "GOOGLE_API_KEY",
+      "description": "Your Google AI API key (optional)"
+    },
+    {
+      "label": "Access Code",
+      "name": "ACCESS_CODE",
+      "description": "Password to access the interface (leave empty for no protection)"
+    },
+    {
+      "label": "Hide User API Key Input",
+      "name": "HIDE_USER_API_KEY", 
+      "default": "true",
+      "description": "Hide API key input from users (true/false)"
+    },
+    {
+      "label": "Default Model",
+      "name": "DEFAULT_MODEL",
+      "default": "gpt-3.5-turbo", 
+      "description": "Default AI model to use"
+    },
+    {
+      "label": "Custom Models",
+      "name": "CUSTOM_MODELS",
+      "description": "Comma-separated list of custom model names (optional)"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/chatgpt-next-web/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/chatgpt-next-web/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "Lightweight alternative to Open WebUI. Conversations stored in browser localStorage. Set ACCESS_CODE for protection."
+}

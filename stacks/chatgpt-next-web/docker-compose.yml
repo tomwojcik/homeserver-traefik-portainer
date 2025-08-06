@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  chatgpt-next-web:
+    image: yidadaa/chatgpt-next-web:v2.11.2
+    container_name: chatgpt-next-web
+    restart: always
+    environment:
+      # API Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      
+      # Access Control
+      - CODE=${ACCESS_CODE}
+      - HIDE_USER_API_KEY=${HIDE_USER_API_KEY:-true}
+      - DISABLE_GPT4=${DISABLE_GPT4:-false}
+      
+      # Base URLs for different providers
+      - BASE_URL=${OPENAI_API_BASE_URL:-https://api.openai.com}
+      - ANTHROPIC_URL=${ANTHROPIC_API_BASE_URL:-https://api.anthropic.com}
+      
+      # UI Configuration
+      - CUSTOM_MODELS=${CUSTOM_MODELS}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gpt-3.5-turbo}
+      
+      # Privacy & Security
+      - HIDE_BALANCE_QUERY=${HIDE_BALANCE_QUERY:-true}
+      - DISABLE_FAST_LINK=${DISABLE_FAST_LINK:-true}
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true

@@ -1,0 +1,30 @@
+{
+  "type": 3,
+  "name": "Syncthing",
+  "title": "Syncthing P2P Sync",
+  "description": "Continuous file synchronization between devices. Secure, private, and decentralized.",
+  "env": [
+    {
+      "label": "PUID (User ID)",
+      "name": "PUID",
+      "default": "1000"
+    },
+    {
+      "label": "PGID (Group ID)",
+      "name": "PGID",
+      "default": "1000"
+    },
+    {
+      "label": "Timezone",
+      "name": "TZ",
+      "default": "UTC"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/syncthing/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/syncthing/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "Requires ports 22000 (TCP/UDP) and 21027 (UDP) for device communication. Configure via web interface."
+}

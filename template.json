@@ -3,6 +3,58 @@
     "templates": [
         {
             "type": 3,
+            "name": "ChatGPT Next Web",
+            "title": "ChatGPT Web Interface",
+            "description": "Lightweight ChatGPT web interface supporting OpenAI, Anthropic, Google AI. Simple deployment with access code protection.",
+            "env": [
+                {
+                    "label": "OpenAI API Key",
+                    "name": "OPENAI_API_KEY",
+                    "description": "Your OpenAI API key"
+                },
+                {
+                    "label": "Anthropic API Key",
+                    "name": "ANTHROPIC_API_KEY",
+                    "description": "Your Anthropic Claude API key (optional)"
+                },
+                {
+                    "label": "Google API Key",
+                    "name": "GOOGLE_API_KEY",
+                    "description": "Your Google AI API key (optional)"
+                },
+                {
+                    "label": "Access Code",
+                    "name": "ACCESS_CODE",
+                    "description": "Password to access the interface (leave empty for no protection)"
+                },
+                {
+                    "label": "Hide User API Key Input",
+                    "name": "HIDE_USER_API_KEY",
+                    "default": "true",
+                    "description": "Hide API key input from users (true/false)"
+                },
+                {
+                    "label": "Default Model",
+                    "name": "DEFAULT_MODEL",
+                    "default": "gpt-3.5-turbo",
+                    "description": "Default AI model to use"
+                },
+                {
+                    "label": "Custom Models",
+                    "name": "CUSTOM_MODELS",
+                    "description": "Comma-separated list of custom model names (optional)"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/chatgpt-next-web/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/chatgpt-next-web/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Lightweight alternative to Open WebUI. Conversations stored in browser localStorage. Set ACCESS_CODE for protection."
+        },
+        {
+            "type": 3,
             "name": "CyberChef",
             "title": "CyberChef",
             "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis.",
@@ -29,6 +81,82 @@
         },
         {
             "type": 3,
+            "name": "Duplicati",
+            "title": "Duplicati Backup",
+            "description": "Encrypted backup solution with support for cloud storage (Google Drive, AWS S3, OneDrive, etc.)",
+            "env": [
+                {
+                    "label": "PUID (User ID)",
+                    "name": "PUID",
+                    "default": "1000"
+                },
+                {
+                    "label": "PGID (Group ID)",
+                    "name": "PGID",
+                    "default": "1000"
+                },
+                {
+                    "label": "Timezone",
+                    "name": "TZ",
+                    "default": "UTC"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/duplicati/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/duplicati/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "After deployment, configure cloud storage backends and backup schedules via web interface."
+        },
+        {
+            "type": 3,
+            "name": "Gitea",
+            "title": "Gitea Git Service",
+            "description": "Self-hosted Git service with web interface. Lightweight, modern alternative to GitHub with CI/CD, issues, pull requests, and more.",
+            "env": [
+                {
+                    "label": "PUID (User ID)",
+                    "name": "PUID",
+                    "default": "1000"
+                },
+                {
+                    "label": "PGID (Group ID)",
+                    "name": "PGID",
+                    "default": "1000"
+                },
+                {
+                    "label": "Gitea Domain",
+                    "name": "GITEA_DOMAIN",
+                    "default": "git.yourdomain.com",
+                    "description": "Domain where Gitea will be accessible"
+                },
+                {
+                    "label": "Database Name",
+                    "name": "GITEA_DB_NAME",
+                    "default": "gitea"
+                },
+                {
+                    "label": "Database User",
+                    "name": "GITEA_DB_USER",
+                    "default": "gitea"
+                },
+                {
+                    "label": "Database Password",
+                    "name": "GITEA_DB_PASS",
+                    "default": "changeme123"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/gitea/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/gitea/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Includes PostgreSQL database. SSH available on port 2222. Modern replacement for Gogs with more features."
+        },
+        {
+            "type": 3,
             "name": "Gogs",
             "title": "Gogs",
             "description": "Self-hosted git. Sync external git repos.",
@@ -52,6 +180,26 @@
                 "stackfile": "stacks/heimdall/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             }
+        },
+        {
+            "type": 3,
+            "name": "Home Assistant",
+            "title": "Home Assistant",
+            "description": "Open source home automation platform. Control lights, switches, sensors, and more from a unified interface.",
+            "env": [
+                {
+                    "label": "Timezone",
+                    "name": "TZ",
+                    "default": "UTC"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/homeassistant/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/homeassistant/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Uses host networking for device discovery. Includes optional MQTT broker. Access via port 8123."
         },
         {
             "type": 3,
@@ -164,6 +312,61 @@
         },
         {
             "type": 3,
+            "name": "Open WebUI",
+            "title": "Private AI Chat Interface",
+            "description": "Self-hosted ChatGPT-like interface supporting OpenAI, Anthropic Claude, Google, and more. All conversations stored locally with user management.",
+            "env": [
+                {
+                    "label": "OpenAI API Key",
+                    "name": "OPENAI_API_KEY",
+                    "description": "Your OpenAI API key (optional if using other providers)"
+                },
+                {
+                    "label": "Anthropic API Key",
+                    "name": "ANTHROPIC_API_KEY",
+                    "description": "Your Anthropic Claude API key (optional)"
+                },
+                {
+                    "label": "WebUI Secret Key",
+                    "name": "WEBUI_SECRET_KEY",
+                    "default": "generate-a-random-secret-key-here",
+                    "description": "Secret key for session management (change this!)"
+                },
+                {
+                    "label": "JWT Secret Key",
+                    "name": "WEBUI_JWT_SECRET_KEY",
+                    "default": "generate-a-different-jwt-secret-here",
+                    "description": "JWT secret for authentication (change this!)"
+                },
+                {
+                    "label": "Domain",
+                    "name": "DOMAIN",
+                    "default": "yourdomain.com",
+                    "description": "Your domain for proper URL configuration"
+                },
+                {
+                    "label": "Enable User Signup",
+                    "name": "ENABLE_SIGNUP",
+                    "default": "false",
+                    "description": "Allow new user registrations (true/false)"
+                },
+                {
+                    "label": "Default User Role",
+                    "name": "DEFAULT_USER_ROLE",
+                    "default": "user",
+                    "description": "Default role for new users (user/admin)"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/open-webui/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/open-webui/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Configure API keys for your preferred AI providers. All chat history stored locally. Create admin user on first visit."
+        },
+        {
+            "type": 3,
             "name": "PyPI Server",
             "title": "PyPI Server",
             "description": "Private PyPI.",
@@ -177,6 +380,36 @@
         },
         {
             "type": 3,
+            "name": "Syncthing",
+            "title": "Syncthing P2P Sync",
+            "description": "Continuous file synchronization between devices. Secure, private, and decentralized.",
+            "env": [
+                {
+                    "label": "PUID (User ID)",
+                    "name": "PUID",
+                    "default": "1000"
+                },
+                {
+                    "label": "PGID (Group ID)",
+                    "name": "PGID",
+                    "default": "1000"
+                },
+                {
+                    "label": "Timezone",
+                    "name": "TZ",
+                    "default": "UTC"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/syncthing/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/syncthing/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Requires ports 22000 (TCP/UDP) and 21027 (UDP) for device communication. Configure via web interface."
+        },
+        {
+            "type": 3,
             "name": "Uptime Kuma",
             "title": "Uptime Kuma",
             "description": "A fancy self-hosted monitoring tool.",
@@ -187,6 +420,36 @@
                 "stackfile": "stacks/uptime-kuma/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             }
+        },
+        {
+            "type": 3,
+            "name": "YT-DLP Material",
+            "title": "YouTube Downloader",
+            "description": "Web-based YouTube downloader with material design. Download videos, playlists, and audio with subscription management.",
+            "env": [
+                {
+                    "label": "PUID (User ID)",
+                    "name": "PUID",
+                    "default": "1000"
+                },
+                {
+                    "label": "PGID (Group ID)",
+                    "name": "PGID",
+                    "default": "1000"
+                },
+                {
+                    "label": "Timezone",
+                    "name": "TZ",
+                    "default": "UTC"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/ytdlp/logo.png",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/ytdlp/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Includes MongoDB for data persistence. Modern alternative to MeTube with better UI and features."
         },
         {
             "type": 3,

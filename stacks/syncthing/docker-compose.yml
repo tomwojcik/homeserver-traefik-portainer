@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:1.27.2
+    container_name: syncthing
+    restart: always
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /volume1/docker/syncthing/config:/config
+      - /volume1/docker/syncthing/data:/data
+      - /volume1/shared:/shared  # Shared folder for sync
+    ports:
+      - 22000:22000/tcp  # File transfers
+      - 22000:22000/udp  # File transfers  
+      - 21027:21027/udp  # Discovery
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    user: "1000:1000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8384"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true

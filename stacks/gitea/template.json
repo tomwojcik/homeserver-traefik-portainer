@@ -1,0 +1,46 @@
+{
+  "type": 3,
+  "name": "Gitea",
+  "title": "Gitea Git Service",
+  "description": "Self-hosted Git service with web interface. Lightweight, modern alternative to GitHub with CI/CD, issues, pull requests, and more.",
+  "env": [
+    {
+      "label": "PUID (User ID)",
+      "name": "PUID",
+      "default": "1000"
+    },
+    {
+      "label": "PGID (Group ID)",
+      "name": "PGID",
+      "default": "1000"
+    },
+    {
+      "label": "Gitea Domain",
+      "name": "GITEA_DOMAIN",
+      "default": "git.yourdomain.com",
+      "description": "Domain where Gitea will be accessible"
+    },
+    {
+      "label": "Database Name",
+      "name": "GITEA_DB_NAME",
+      "default": "gitea"
+    },
+    {
+      "label": "Database User",
+      "name": "GITEA_DB_USER",
+      "default": "gitea"
+    },
+    {
+      "label": "Database Password",
+      "name": "GITEA_DB_PASS",
+      "default": "changeme123"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/gitea/logo.png",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/gitea/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "Includes PostgreSQL database. SSH available on port 2222. Modern replacement for Gogs with more features."
+}
