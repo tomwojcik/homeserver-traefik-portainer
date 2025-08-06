@@ -7,7 +7,7 @@ services:
     container_name: metube
     restart: always
     volumes:
-      - metube_downloads:/downloads
+      - /volume1/docker/metube/downloads:/downloads
     security_opt:
       - no-new-privileges:true
     networks:
@@ -21,5 +21,3 @@ networks:
     name: homeserver
     external: true
 
-volumes:
-  metube_downloads:

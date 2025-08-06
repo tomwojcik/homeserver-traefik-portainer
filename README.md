@@ -138,16 +138,6 @@ Internet → Cloudflare → Tunnel → Docker Network (homeserver) → Services
 
 All services communicate through the `homeserver` Docker network.
 
-## Synology NAS Configuration
-
-If using Synology, you may need to change default ports:
-```bash
-sed -i -e 's/80/81/' -e 's/443/444/' /usr/syno/share/nginx/server.mustache /usr/syno/share/nginx/DSM.mustache /usr/syno/share/nginx/WWWService.mustache
-```
-
-Restart nginx:
-- **DSM < 7**: `synoservicecfg --restart nginx`
-- **DSM >= 7**: `sudo systemctl restart nginx`
 
 ## Troubleshooting
 

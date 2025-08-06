@@ -5,7 +5,7 @@ services:
     image: pypiserver/pypiserver:latest
     container_name: pypiserver
     volumes:
-      - pypi-server:/data/packages
+      - /volume1/docker/pypiserver/packages:/data/packages
     command: -P . -a . /data/packages
     restart: always
     user: root
@@ -13,9 +13,6 @@ services:
       - homeserver
     security_opt:
       - no-new-privileges:true
-
-volumes:
-  pypi-server:
 
 networks:
   homeserver:

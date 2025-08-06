@@ -7,8 +7,8 @@ services:
     container_name: tubesync
     restart: always
     volumes:
-      - tubesync_downloads:/downloads
-      - tubesync_config:/config
+      - /volume1/docker/tubesync/downloads:/downloads
+      - /volume1/docker/tubesync/config:/config
     security_opt:
       - no-new-privileges:true
     networks:
@@ -24,7 +24,3 @@ networks:
   homeserver:
     name: homeserver
     external: true
-
-volumes:
-  tubesync_downloads:
-  tubesync_config:

@@ -21,7 +21,7 @@ services:
     networks:
       - homeserver
     volumes:
-      - nextcloud:/var/www/html
+      - /volume1/docker/nextcloud/data:/var/www/html
 
   nextcloud-mariadb:
     image: mariadb:10.5
@@ -30,7 +30,7 @@ services:
     networks:
       - homeserver
     volumes:
-      - nextcloud-db:/var/lib/mysql
+      - /volume1/docker/nextcloud/db:/var/lib/mysql
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -45,7 +45,7 @@ services:
     networks:
       - homeserver
     volumes:
-      - nextcloud-redis:/data
+      - /volume1/docker/nextcloud/redis:/data
 
   nextcloud-cron:
     image: rcdailey/nextcloud-cronjob
@@ -64,8 +64,3 @@ networks:
   homeserver:
     name: homeserver
     external: true
-
-volumes:
-  nextcloud:
-  nextcloud-db:
-  nextcloud-redis:

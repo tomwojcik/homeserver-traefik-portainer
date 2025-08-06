@@ -7,7 +7,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - heimdall-volume:/config
+      - /volume1/docker/heimdall/config:/config
     container_name: heimdall
     restart: always
     security_opt:
@@ -19,6 +19,3 @@ networks:
   homeserver:
     name: homeserver
     external: true
-
-volumes:
-  heimdall-volume:

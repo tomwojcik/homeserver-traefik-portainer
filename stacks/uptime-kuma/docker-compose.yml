@@ -1,15 +1,12 @@
 version: "3.8"
 
-volumes:
-  kuma:
-
 services:
   kuma:
     image: louislam/uptime-kuma:1
     container_name: kuma
     restart: always
     volumes:
-      - kuma:/app/data
+      - /volume1/docker/uptime-kuma/data:/app/data
     networks:
       - homeserver
     security_opt:

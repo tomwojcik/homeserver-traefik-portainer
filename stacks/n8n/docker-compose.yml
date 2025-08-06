@@ -15,14 +15,11 @@ services:
       - N8N_LOG_OUTPUT=console,file
       - N8N_LOG_LEVEL=debug
     volumes:
-      - n8n_storage:/home/node/
+      - /volume1/docker/n8n/storage:/home/node/
     security_opt:
       - no-new-privileges:true
     networks:
       - homeserver
-
-volumes:
-  n8n_storage:
 
 networks:
   homeserver:
