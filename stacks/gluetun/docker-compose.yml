@@ -22,7 +22,7 @@ services:
       - TZ=${TZ:-Europe/Warsaw}
       - FIREWALL_OUTBOUND_SUBNETS=${FIREWALL_OUTBOUND_SUBNETS:-172.18.0.0/16}
       - FIREWALL_INPUT_PORTS=8081
-      - FIREWALL=off
+      - FIREWALL_VPN_INPUT_PORTS=8081
     networks:
       - homeserver
     security_opt:
