@@ -197,19 +197,25 @@
                     "description": "VPN connection type (wireguard or openvpn)"
                 },
                 {
-                    "label": "WireGuard Public Key",
-                    "name": "WIREGUARD_PUBLIC_KEY",
-                    "description": "Your VPN WireGuard public key"
-                },
-                {
                     "label": "WireGuard Private Key",
                     "name": "WIREGUARD_PRIVATE_KEY",
                     "description": "Your VPN WireGuard private key"
                 },
                 {
+                    "label": "WireGuard Public Key",
+                    "name": "WIREGUARD_PUBLIC_KEY",
+                    "description": "VPN server's WireGuard public key"
+                },
+                {
                     "label": "WireGuard Addresses",
                     "name": "WIREGUARD_ADDRESSES",
                     "description": "Your VPN WireGuard IP addresses (include /32 mask)"
+                },
+                {
+                    "label": "WireGuard DNS",
+                    "name": "WIREGUARD_DNS",
+                    "default": "1.1.1.1",
+                    "description": "DNS servers for WireGuard connection"
                 },
                 {
                     "label": "WireGuard SERVER_COUNTRIES",
