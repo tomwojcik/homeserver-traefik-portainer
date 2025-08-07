@@ -20,28 +20,6 @@
       "default": "UTC"
     },
     {
-      "label": "VPN Service Provider",
-      "name": "VPN_SERVICE_PROVIDER",
-      "default": "surfshark",
-      "description": "VPN provider (surfshark, nordvpn, expressvpn, etc.)"
-    },
-    {
-      "label": "VPN Type",
-      "name": "VPN_TYPE", 
-      "default": "wireguard",
-      "description": "VPN connection type (wireguard or openvpn)"
-    },
-    {
-      "label": "WireGuard Private Key",
-      "name": "WIREGUARD_PRIVATE_KEY",
-      "description": "Your VPN WireGuard private key"
-    },
-    {
-      "label": "WireGuard Addresses",
-      "name": "WIREGUARD_ADDRESSES",
-      "description": "Your VPN WireGuard IP addresses"
-    },
-    {
       "label": "Plex Claim Token",
       "name": "PLEX_CLAIM",
       "description": "Get from https://www.plex.tv/claim (optional, expires in 4 minutes)"
