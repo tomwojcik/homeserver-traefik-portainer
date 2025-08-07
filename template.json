@@ -197,6 +197,11 @@
                     "description": "VPN connection type (wireguard or openvpn)"
                 },
                 {
+                    "label": "WireGuard Public Key",
+                    "name": "WIREGUARD_PUBLIC_KEY",
+                    "description": "Your VPN WireGuard public key"
+                },
+                {
                     "label": "WireGuard Private Key",
                     "name": "WIREGUARD_PRIVATE_KEY",
                     "description": "Your VPN WireGuard private key"
@@ -204,7 +209,12 @@
                 {
                     "label": "WireGuard Addresses",
                     "name": "WIREGUARD_ADDRESSES",
-                    "description": "Your VPN WireGuard IP addresses"
+                    "description": "Your VPN WireGuard IP addresses (include /32 mask)"
+                },
+                {
+                    "label": "WireGuard SERVER_COUNTRIES",
+                    "name": "SERVER_COUNTRIES",
+                    "description": "Country name"
                 }
             ],
             "platform": "linux",
