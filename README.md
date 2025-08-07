@@ -50,9 +50,9 @@ In the Cloudflare Zero Trust dashboard, add these public hostnames:
 ### 5. Deploy Services via Portainer
 
 1. Access Portainer at `https://portainer.yourdomain.com`
-2. Go to **Settings** > **App Templates**
+2. Go to **Settings** > General > **App Templates**
 3. Set template URL: `https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/template.json`
-4. Go to **App Templates** and deploy any service
+4. Go to **Templates** > Application and deploy any service
 5. After deploying, add the corresponding route in Cloudflare Dashboard
 
 ## Available Services
@@ -61,10 +61,14 @@ Deploy any of these through Portainer's App Templates:
 
 - **Dashboard**: Heimdall (landing page)
 - **Monitoring**: Dozzle (logs), Uptime Kuma, cAdvisor (resources)
-- **Media**: MeTube (YouTube downloader), TubeSync (YouTube PVR)
-- **Storage**: Nextcloud, MinIO (S3-compatible)
-- **Development**: Gogs (Git), PyPI Server, Docker Registry
-- **Tools**: CyberChef, n8n (automation)
+- **Media**: MeTube (YouTube downloader), TubeSync (YouTube PVR), Media Server
+- **Storage**: Nextcloud, MinIO (S3-compatible), Duplicati (backups), Syncthing (file sync)
+- **Development**: Gogs (Git), Gitea (Git), PyPI Server, Docker Registry
+- **Automation**: n8n (workflow automation), Home Assistant (smart home)
+- **VPN/Security**: Gluetun (VPN client)
+- **AI/LLM**: ChatGPT Next Web, Open WebUI
+- **RSS/Reading**: FreshRSS (RSS reader)
+- **Tools**: CyberChef (data analysis), YTDLP (video downloader)
 
 ## Service URLs
 
@@ -94,62 +98,6 @@ Perfect for deploying your own applications or projects from GitHub:
    - **Private projects** → Use `homeserver` network → Route via private tunnel
    - **Public projects** → Use `public-projects` network → Route via public tunnel
 
-**For Private Projects (requires auth):**
-```yaml
-version: "3.8"
-services:
-  my-private-app:
-    build: .
-    container_name: my-private-app
-    networks:
-      - homeserver  # Routes through private tunnel
-    restart: unless-stopped
-
-networks:
-  homeserver:
-    name: homeserver
-    external: true
-```
-
-**For Public Projects (with their own tunnel):**
-```yaml
-version: "3.8"
-services:
-  # Your public application
-  my-public-app:
-    build: .
-    container_name: my-public-app
-    restart: unless-stopped
-
-  # Each public project manages its own tunnel
-  cloudflared:
-    image: cloudflare/cloudflared:2024.6.1
-    container_name: my-project-tunnel
-    restart: always
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    user: "65532:65532"
-```
-
-**Benefits of separate tunnels per project:**
-- Each project is completely isolated
-- Independent deployment and management
-- Different authentication/access policies per project
-- No shared infrastructure dependencies
-
-**📁 See complete example**: Check the `examples/public-side-project/` directory for a working example with whoami service and dedicated tunnel.
-
-### Method 3: Configure Authentication
-**Set up Cloudflare Access for Private Services:**
-1. Go to **Zero Trust** → **Access** → **Applications**
-2. Click **Add an application** → **Self-hosted**
-3. Set application domain: `*.yourdomain.com` (or specific subdomain)
-4. Add policy: **Allow** → **Emails** → Add your email addresses
-5. Now all homeserver services require email authentication!
 
 **Public tunnel services bypass authentication automatically.**
 
@@ -160,7 +108,7 @@ Internet → Cloudflare → Tunnel → Docker Network (homeserver) → Services
 ```
 
 All services communicate through the `homeserver` Docker network.
-
+You configure the rules/policy for each stack separately. Example, allow only specific countries, specific IPs and authenticate by whitelisted email (code type in). For other services you may not need any policy (public), like side projects.
 
 ## Troubleshooting
 
