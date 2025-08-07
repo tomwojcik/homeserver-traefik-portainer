@@ -8,6 +8,7 @@ services:
       - NET_ADMIN
     ports:
       - "8080:8080"
+      - "8081:80"
     volumes:
       - gluetun_data:/gluetun
     environment:
@@ -26,8 +27,6 @@ services:
   whoami:
     image: traefik/whoami:latest
     container_name: whoami-vpn
-    ports:
-      - "8081:80"
     network_mode: "service:gluetun"
 
 networks:
