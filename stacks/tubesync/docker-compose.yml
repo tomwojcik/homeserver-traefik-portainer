@@ -6,13 +6,12 @@ services:
     image: ghcr.io/meeb/tubesync:latest
     container_name: tubesync
     restart: always
+    network_mode: "container:gluetun"
     volumes:
       - /volume1/docker/tubesync/downloads:/downloads
       - /volume1/docker/tubesync/config:/config
     security_opt:
       - no-new-privileges:true
-    networks:
-      - homeserver
     environment:
       - TZ=Europe/Warsaw
       - GUNICORN_WORKERS=1

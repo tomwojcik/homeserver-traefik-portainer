@@ -6,12 +6,11 @@ services:
     image: ghcr.io/alexta69/metube
     container_name: metube
     restart: always
+    network_mode: "container:gluetun"
     volumes:
       - /volume1/docker/metube/downloads:/downloads
     security_opt:
       - no-new-privileges:true
-    networks:
-      - homeserver
     environment:
       - PUID=1000
       - PGID=1000

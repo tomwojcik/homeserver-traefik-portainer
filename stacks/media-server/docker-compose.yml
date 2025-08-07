@@ -1,32 +1,11 @@
 version: "3.8"
 
 services:
-  gluetun:
-    image: qmcgaw/gluetun:latest
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    volumes:
-      - /volume1/docker/media-server/gluetun:/gluetun
-    environment:
-      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-surfshark}
-      - VPN_TYPE=${VPN_TYPE:-wireguard}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - TZ=${TZ:-UTC}
-    networks:
-      - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-
   # Torrent Client (through VPN)
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
-    network_mode: service:gluetun
+    network_mode: "container:gluetun"
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -36,26 +15,6 @@ services:
       - /volume1/docker/media-server/qbittorrent:/config
       - /volume1/docker/media-server/downloads:/downloads
       - /volume1/docker/media-server/media:/data
-    depends_on:
-      - gluetun
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-
-  # Usenet Client
-  sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd:latest
-    container_name: sabnzbd
-    environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
-    volumes:
-      - /volume1/docker/media-server/sabnzbd:/config
-      - /volume1/docker/media-server/downloads:/downloads
-      - /volume1/docker/media-server/media:/data
-    networks:
-      - homeserver
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
