@@ -6,8 +6,6 @@ services:
     container_name: gluetun
     cap_add:
       - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
     ports:
       - "8080:8080"
     volumes:
@@ -17,7 +15,8 @@ services:
       - VPN_TYPE=${VPN_TYPE:-wireguard}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - TZ=${TZ:-UTC}
+      - SERVER_COUNTRIES=${VPN_SERVICE_PROVIDER:-Slovakia}
+      - TZ=${TZ:-Europe/Warsaw}
     networks:
       - homeserver
     security_opt:
