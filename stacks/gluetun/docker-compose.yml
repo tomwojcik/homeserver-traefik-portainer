@@ -20,6 +20,7 @@ services:
       - WIREGUARD_DNS=${WIREGUARD_DNS:-1.1.1.1}
       - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Slovakia}
       - TZ=${TZ:-Europe/Warsaw}
+      - FIREWALL_OUTBOUND_SUBNETS=${FIREWALL_OUTBOUND_SUBNETS:-172.18.0.0/16}
     networks:
       - homeserver
     security_opt:
@@ -28,7 +29,7 @@ services:
 
   whoami:
     image: traefik/whoami:latest
-    container_name: whoami-vpn
+    container_name: whoami
     network_mode: "service:gluetun"
 
 networks:

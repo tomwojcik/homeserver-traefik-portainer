@@ -221,6 +221,12 @@
                     "label": "WireGuard SERVER_COUNTRIES",
                     "name": "SERVER_COUNTRIES",
                     "description": "Country name"
+                },
+                {
+                    "label": "Firewall Outbound Subnets",
+                    "name": "FIREWALL_OUTBOUND_SUBNETS",
+                    "default": "172.18.0.0/16",
+                    "description": "Allowed outbound subnets for Docker network communication"
                 }
             ],
             "platform": "linux",
