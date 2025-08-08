@@ -13,8 +13,12 @@ import re
 from pathlib import Path
 
 
-def create_directory(path, description=""):
+def create_directory(path, description="", dry_run=False):
     """Create a directory if it doesn't exist."""
+    if dry_run:
+        print(f"[DRY RUN] Would create: {path} {description}")
+        return True
+    
     try:
         Path(path).mkdir(parents=True, exist_ok=True)
         print(f"✓ Created: {path} {description}")
@@ -39,23 +43,41 @@ def extract_volumes_from_compose(compose_file, stack_name):
             content = f.read()
         
         # Pattern to match volume entries like "- /path/on/host:/path/in/container"
-        volume_pattern = r'^\s*-\s+([^:]+):([^:\s]+)(?::([^\s]+))?'
+        # More specific pattern that requires the host path to start with / or be a named volume
+        volume_pattern = r'^\s*-\s+([/\w][\w\-_./]*):([^:\s]+)(?::([^\s]+))?$'
+        
+        # Look for volumes section in services
+        in_volumes_section = False
+        current_service = None
         
         for line in content.split('\n'):
-            match = re.match(volume_pattern, line)
-            if match:
-                host_path = match.group(1).strip()
-                container_path = match.group(2).strip()
-                options = match.group(3).strip() if match.group(3) else None
-                
-                # Skip system paths and already existing paths
-                if not is_system_path(host_path):
-                    volumes['bind_mounts'].append({
-                        'host_path': host_path,
-                        'container_path': container_path,
-                        'options': options,
-                        'stack': stack_name
-                    })
+            stripped_line = line.strip()
+            
+            # Track if we're in a volumes section of a service
+            if re.match(r'^\s*\w+:\s*$', line) and not line.startswith('  '):
+                current_service = stripped_line.rstrip(':')
+                in_volumes_section = False
+            elif stripped_line == 'volumes:' and current_service:
+                in_volumes_section = True
+                continue
+            elif in_volumes_section and not line.startswith('      ') and stripped_line and not line.startswith('    -'):
+                in_volumes_section = False
+            
+            if in_volumes_section:
+                match = re.match(volume_pattern, line)
+                if match:
+                    host_path = match.group(1).strip()
+                    container_path = match.group(2).strip()
+                    options = match.group(3).strip() if match.group(3) else None
+                    
+                    # Only process actual file system paths that need directory creation
+                    if (host_path.startswith('/volume1/docker') and not is_system_path(host_path)):
+                        volumes['bind_mounts'].append({
+                            'host_path': host_path,
+                            'container_path': container_path,
+                            'options': options,
+                            'stack': stack_name
+                        })
         
         # Extract named volumes from volumes section
         volumes_section_match = re.search(r'^volumes:\s*$(.+?)^(?=\w|\s*$)', content, re.MULTILINE | re.DOTALL)
@@ -113,6 +135,15 @@ def discover_stacks():
 
 def main():
     """Create all local volume directories for the stacks."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Create local volume directories for Docker stacks")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be created without actually creating directories")
+    args = parser.parse_args()
+    
+    if args.dry_run:
+        print("DRY RUN MODE - No directories will be created")
+    
     print("Discovering Docker stacks and extracting volumes...")
     print("=" * 60)
     
@@ -152,7 +183,7 @@ def main():
             unique_paths[host_path] = mount
     
     for host_path, mount in unique_paths.items():
-        if create_directory(host_path, f"({mount['stack']})"):
+        if create_directory(host_path, f"({mount['stack']})", dry_run=args.dry_run):
             success_count += 1
     
     # Report named volumes
