@@ -1,63 +1,56 @@
 {
-  "type": 3,
-  "name": "Gluetun VPN",
-  "title": "VPN Gateway",
-  "description": "VPN client gateway that other containers can use for secure internet access. Supports multiple VPN providers.",
+  "type": 1,
+  "title": "Gluetun VPN",
+  "description": "Secure VPN container for routing download services through VPN",
+  "categories": ["VPN", "Security"],
+  "platform": "linux",
+  "logo": "https://raw.githubusercontent.com/qdm12/gluetun/master/doc/logo.png",
+  "repository": {
+    "url": "https://github.com/qdm12/gluetun",
+    "stackfile": "stacks/gluetun/docker-compose.yml"
+  },
   "env": [
     {
-      "label": "Timezone",
-      "name": "TZ",
-      "default": "UTC"
-    },
-    {
-      "label": "VPN Service Provider",
       "name": "VPN_SERVICE_PROVIDER",
-      "default": "surfshark",
-      "description": "VPN provider (surfshark, nordvpn, expressvpn, etc.)"
+      "label": "VPN Service Provider",
+      "description": "VPN service provider (e.g., surfshark, nordvpn, expressvpn)",
+      "default": "surfshark"
     },
     {
-      "label": "VPN Type",
       "name": "VPN_TYPE", 
+      "label": "VPN Type",
+      "description": "VPN protocol type",
       "default": "wireguard",
-      "description": "VPN connection type (wireguard or openvpn)"
+      "select": [
+        {
+          "text": "WireGuard",
+          "value": "wireguard"
+        },
+        {
+          "text": "OpenVPN",
+          "value": "openvpn"
+        }
+      ]
     },
     {
-      "label": "WireGuard Private Key",
       "name": "WIREGUARD_PRIVATE_KEY",
-      "description": "Your VPN WireGuard private key"
+      "label": "WireGuard Private Key",
+      "description": "Your WireGuard private key"
     },
     {
-      "label": "WireGuard Public Key",
-      "name": "WIREGUARD_PUBLIC_KEY",
-      "description": "VPN server's WireGuard public key"
-    },
-    {
-      "label": "WireGuard Addresses",
       "name": "WIREGUARD_ADDRESSES",
-      "description": "Your VPN WireGuard IP addresses (include /32 mask)"
+      "label": "WireGuard Addresses", 
+      "description": "WireGuard IP addresses"
     },
     {
-      "label": "WireGuard DNS",
-      "name": "WIREGUARD_DNS",
-      "default": "1.1.1.1",
-      "description": "DNS servers for WireGuard connection"
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
     },
     {
-      "label": "WireGuard SERVER_COUNTRIES",
-      "name": "SERVER_COUNTRIES",
-      "description": "Country name"
-    },
-    {
-      "label": "Firewall Outbound Subnets",
-      "name": "FIREWALL_OUTBOUND_SUBNETS",
-      "default": "172.18.0.0/16",
-      "description": "Allowed outbound subnets for Docker network communication"
+      "name": "TZ",
+      "label": "Timezone",
+      "default": "UTC"
     }
-  ],
-  "platform": "linux",
-  "repository": {
-    "stackfile": "stacks/gluetun/docker-compose.yml",
-    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-  },
-  "note": "Deploy this stack first, then reference the gluetun container in other stacks that need VPN connectivity."
+  ]
 }
