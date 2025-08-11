@@ -3,7 +3,13 @@
   "name": "Gogs",
   "title": "Gogs",
   "description": "Self-hosted git. Sync external git repos.",
-  "env": [],
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/gogs/logo.png",
   "platform": "linux",
   "repository": {

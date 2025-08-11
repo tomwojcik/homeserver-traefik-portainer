@@ -5,6 +5,11 @@
   "description": "Open source home automation platform. Control lights, switches, sensors, and more from a unified interface.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "Timezone",
       "name": "TZ",
       "default": "UTC"
@@ -16,5 +21,5 @@
     "stackfile": "stacks/homeassistant/docker-compose.yml",
     "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
   },
-  "note": "Uses host networking for device discovery. Includes optional MQTT broker. Access via port 8123."
+  "note": "Includes optional MQTT broker for IoT communication. Device discovery works within Docker networks. Access via https://homeassistant.yourdomain.com"
 }

@@ -18,6 +18,13 @@ services:
       - GUNICORN_WORKERS=1
       - PUID=1000
       - PGID=1000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tubesync.rule=Host(`tubesync.${SERVER_DOMAIN}`)
+      - traefik.http.routers.tubesync.entrypoints=websecure
+      - traefik.http.routers.tubesync.tls.certresolver=myresolver
+      - traefik.http.services.tubesync.loadbalancer.server.port=4848
+      - traefik.docker.network=homeserver
 
 
 networks:

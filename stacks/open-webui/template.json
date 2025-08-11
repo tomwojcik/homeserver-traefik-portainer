@@ -5,12 +5,17 @@
   "description": "Self-hosted ChatGPT-like interface supporting OpenAI, Anthropic Claude, Google, and more. All conversations stored locally with user management.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "OpenAI API Key",
       "name": "OPENAI_API_KEY",
       "description": "Your OpenAI API key (optional if using other providers)"
     },
     {
-      "label": "Anthropic API Key", 
+      "label": "Anthropic API Key",
       "name": "ANTHROPIC_API_KEY",
       "description": "Your Anthropic Claude API key (optional)"
     },
@@ -22,7 +27,7 @@
     },
     {
       "label": "JWT Secret Key",
-      "name": "WEBUI_JWT_SECRET_KEY", 
+      "name": "WEBUI_JWT_SECRET_KEY",
       "default": "generate-a-different-jwt-secret-here",
       "description": "JWT secret for authentication (change this!)"
     },

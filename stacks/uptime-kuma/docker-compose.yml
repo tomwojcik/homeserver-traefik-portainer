@@ -11,6 +11,13 @@ services:
       - homeserver
     security_opt:
       - no-new-privileges:true
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
+      - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
+      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
 
 networks:
   homeserver:

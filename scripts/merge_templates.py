@@ -16,6 +16,14 @@ def merge_templates():
             templates.extend(template)
         else:
             raise TypeError("Only dict and list are supported")
+
+    for template in templates:
+        if 'title' not in template:
+            raise ValueError(f"Missing title in {template}")
+
+        if 'name' not in template:
+            template['name'] = template['title'].lower()
+
     templates.sort(key=lambda x: x['name'])
     final_json = {
         "version": "2",

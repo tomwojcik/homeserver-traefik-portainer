@@ -35,6 +35,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.duplicati.rule=Host(`duplicati.${SERVER_DOMAIN}`)
+      - traefik.http.routers.duplicati.entrypoints=websecure
+      - traefik.http.routers.duplicati.tls.certresolver=myresolver
+      - traefik.http.services.duplicati.loadbalancer.server.port=8200
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

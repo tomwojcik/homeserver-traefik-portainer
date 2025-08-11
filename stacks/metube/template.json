@@ -1,9 +1,15 @@
 {
   "type": 3,
-  "name": "metube",
+  "name": "metube", 
   "title": "metube",
-  "description": "Web GUI for youtube-dl (using the yt-dlp fork) with playlist support. Allows you to download videos from YouTube and dozens of other sites.",
-  "env": [],
+  "description": "Web GUI for youtube-dl (using the yt-dlp fork) with playlist support. Downloads videos from YouTube and dozens of other sites.",
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "logo": "https://github.com/tomwojcik/homeserver-traefik-portainer/blob/fed96b34414d8fc6fdac0f1b7a4ad336204d4773/stacks/metube/logo.png?raw=true",
   "platform": "linux",
   "repository": {

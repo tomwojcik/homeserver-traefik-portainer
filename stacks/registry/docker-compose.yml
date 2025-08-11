@@ -13,6 +13,13 @@ services:
       STORAGE_PATH: /var/lib/registry/
     networks:
       - homeserver
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.registry.rule=Host(`registry.${SERVER_DOMAIN}`)
+      - traefik.http.routers.registry.entrypoints=websecure
+      - traefik.http.routers.registry.tls.certresolver=myresolver
+      - traefik.http.services.registry.loadbalancer.server.port=5000
+      - traefik.docker.network=homeserver
 
   dockerhub:
     image: konradkleine/docker-registry-frontend:v2
@@ -25,6 +32,13 @@ services:
       - homeserver
     security_opt:
       - no-new-privileges:true
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dockerhub.rule=Host(`dockerhub.${SERVER_DOMAIN}`)
+      - traefik.http.routers.dockerhub.entrypoints=websecure
+      - traefik.http.routers.dockerhub.tls.certresolver=myresolver
+      - traefik.http.services.dockerhub.loadbalancer.server.port=80
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

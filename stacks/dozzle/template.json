@@ -3,7 +3,13 @@
   "name": "Dozzle",
   "title": "Dozzle",
   "description": "All docker logs in one place.",
-  "env": [],
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/768751405404ca3b36cf73cdd1ca8c699b26a5f0/stacks/dozzle/logo.png",
   "platform": "linux",
   "repository": {

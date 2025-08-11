@@ -5,6 +5,11 @@
   "description": "Self-hosted Git service with web interface. Lightweight, modern alternative to GitHub with CI/CD, issues, pull requests, and more.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "PUID (User ID)",
       "name": "PUID",
       "default": "1000"

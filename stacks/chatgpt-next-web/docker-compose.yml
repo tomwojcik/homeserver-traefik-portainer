@@ -49,6 +49,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.chatgpt-next-web.rule=Host(`chatgpt.${SERVER_DOMAIN}`)
+      - traefik.http.routers.chatgpt-next-web.entrypoints=websecure
+      - traefik.http.routers.chatgpt-next-web.tls.certresolver=myresolver
+      - traefik.http.services.chatgpt-next-web.loadbalancer.server.port=3000
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

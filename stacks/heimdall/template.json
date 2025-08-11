@@ -2,8 +2,14 @@
   "type": 3,
   "name": "Heimdall",
   "title": "Heimdall",
-  "description": "Landing page for the homeserver.",
-  "env": [],
+  "description": "Landing page dashboard for organizing links to your homeserver services.",
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain", 
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/heimdall/logo.png",
   "platform": "linux",
   "repository": {

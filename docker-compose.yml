@@ -1,7 +1,66 @@
 version: "3.8"
 
 services:
-  # Cloudflare Tunnel - Private (homeserver services with auth)
+  # Traefik Reverse Proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: always
+    command:
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=homeserver"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesResolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesResolvers.myresolver.acme.dnsChallenge=true"
+      - "--certificatesResolvers.myresolver.acme.dnschallenge.provider=${DNS_CHALLENGE_PROVIDER:-cloudflare}"
+      - "--certificatesResolvers.myresolver.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.delayBeforeCheck=30"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.propagationTimeout=300"
+      # Set and forget HTTPS reliability improvements
+      - "--serverstransport.insecureskipverify=true"
+      - "--providers.docker.constraints=Label(`my.zone`, `homeserver`)"
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--metrics.prometheus=true"
+      - "--ping=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - homeserver
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.dashboard.tls.domains[0].main=${SERVER_DOMAIN}"
+      - "traefik.http.routers.dashboard.tls.domains[0].sans=*.${SERVER_DOMAIN}"
+
+  # Cloudflare Tunnel - Private (selective external access)
   cloudflared-private:
     image: cloudflare/cloudflared:2024.6.1
     container_name: cloudflared-private
@@ -16,21 +75,18 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
           memory: 128M
         reservations:
-          cpus: '0.1'
           memory: 32M
     networks:
       - homeserver
-
 
   # Portainer for container management
   portainer:
     image: portainer/portainer-ce:2.32.0
     command: -H unix:///var/run/docker.sock
     ports:
-      - 9000:9000  # Keep for direct access if tunnel fails
+      - 9000:9000  # Keep for direct access if Traefik fails
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
@@ -42,6 +98,13 @@ services:
       - no-new-privileges:true
     networks:
       - homeserver
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls.certresolver=myresolver"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 
 networks:
   homeserver:
@@ -50,3 +113,4 @@ networks:
 
 volumes:
   portainer_data:
+  traefik-letsencrypt:

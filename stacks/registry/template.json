@@ -3,7 +3,13 @@
   "name": "docker registry",
   "title": "Docker registry",
   "description": "Docker registry and UI docker hub.",
-  "env": [],
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/8ee5120e19031d8f02b13e7975f6ccfa015377e8/stacks/registry/logo.png",
   "platform": "linux",
   "repository": {

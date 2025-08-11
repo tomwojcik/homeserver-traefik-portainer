@@ -5,6 +5,11 @@
   "description": "Encrypted backup solution with support for cloud storage (Google Drive, AWS S3, OneDrive, etc.)",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "PUID (User ID)",
       "name": "PUID",
       "default": "1000"

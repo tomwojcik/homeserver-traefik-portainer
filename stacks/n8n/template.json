@@ -5,6 +5,11 @@
   "description": "Free and source-available fair-code licensed workflow automation tool. Easily automate tasks across different services.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "N8N_BASIC_AUTH_USER",
       "name": "N8N_BASIC_AUTH_USER"
     },

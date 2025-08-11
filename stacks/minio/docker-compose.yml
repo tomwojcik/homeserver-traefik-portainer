@@ -21,6 +21,21 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    labels:
+      # MinIO Console (Web UI)
+      - traefik.enable=true
+      - traefik.http.routers.minio-console.rule=Host(`minio.${SERVER_DOMAIN}`)
+      - traefik.http.routers.minio-console.entrypoints=websecure
+      - traefik.http.routers.minio-console.tls.certresolver=myresolver
+      - traefik.http.routers.minio-console.service=minio-console
+      - traefik.http.services.minio-console.loadbalancer.server.port=9001
+      # MinIO API
+      - traefik.http.routers.minio-api.rule=Host(`s3.${SERVER_DOMAIN}`)
+      - traefik.http.routers.minio-api.entrypoints=websecure
+      - traefik.http.routers.minio-api.tls.certresolver=myresolver
+      - traefik.http.routers.minio-api.service=minio-api
+      - traefik.http.services.minio-api.loadbalancer.server.port=9000
+      - traefik.docker.network=homeserver
 
 # for Debugging:
 #  mc config host add s3 https://s3.<yourdomain>.<tld> <service account id> <service account secret> --api S3v4

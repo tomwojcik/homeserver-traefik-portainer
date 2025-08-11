@@ -50,6 +50,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.open-webui.rule=Host(`chat.${SERVER_DOMAIN}`)
+      - traefik.http.routers.open-webui.entrypoints=websecure
+      - traefik.http.routers.open-webui.tls.certresolver=myresolver
+      - traefik.http.services.open-webui.loadbalancer.server.port=8080
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

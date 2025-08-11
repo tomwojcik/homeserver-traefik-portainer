@@ -5,6 +5,11 @@
   "description": "Web-based YouTube downloader with material design. Download videos, playlists, and audio with subscription management.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "PUID (User ID)",
       "name": "PUID",
       "default": "1000"

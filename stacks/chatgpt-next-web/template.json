@@ -5,6 +5,11 @@
   "description": "Lightweight ChatGPT web interface supporting OpenAI, Anthropic, Google AI. Simple deployment with access code protection.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "OpenAI API Key",
       "name": "OPENAI_API_KEY", 
       "description": "Your OpenAI API key"

@@ -1,32 +1,13 @@
 version: "3.8"
 
 services:
-  gluetun:
-    image: qmcgaw/gluetun:latest
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    volumes:
-      - /volume1/docker/media-server/gluetun:/gluetun
-    environment:
-      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-surfshark}
-      - VPN_TYPE=${VPN_TYPE:-wireguard}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - TZ=${TZ:-UTC}
-    networks:
-      - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-
-  # Torrent Client (through VPN)
+  # Torrent Client (through external VPN)
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
-    network_mode: service:gluetun
+    networks:
+      - homeserver
+      - gluetun
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -36,11 +17,16 @@ services:
       - /volume1/docker/media-server/qbittorrent:/config
       - /volume1/docker/media-server/downloads:/downloads
       - /volume1/docker/media-server/media:/data
-    depends_on:
-      - gluetun
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.qbittorrent.entrypoints=websecure"
+      - "traefik.http.routers.qbittorrent.tls.certresolver=myresolver"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
 
   # Usenet Client
   sabnzbd:
@@ -59,6 +45,13 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.sabnzbd.entrypoints=websecure"
+      - "traefik.http.routers.sabnzbd.tls.certresolver=myresolver"
+      - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
 
   # Indexer Manager
   prowlarr:
@@ -75,6 +68,13 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.prowlarr.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr.tls.certresolver=myresolver"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
 
   # TV Show Manager
   sonarr:
@@ -93,6 +93,13 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.sonarr.entrypoints=websecure"
+      - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
   # Movie Manager
   radarr:
@@ -111,6 +118,13 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.radarr.entrypoints=websecure"
+      - "traefik.http.routers.radarr.tls.certresolver=myresolver"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
     
   # Subtitle Manager
   bazarr:
@@ -128,6 +142,13 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.bazarr.rule=Host(`bazarr.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.bazarr.entrypoints=websecure"
+      - "traefik.http.routers.bazarr.tls.certresolver=myresolver"
+      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
 
   # Jellyfin Media Server
   jellyfin:
@@ -146,6 +167,13 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
     # GPU support (uncomment if you have Intel/AMD GPU)
     # devices:
     #   - /dev/dri:/dev/dri
@@ -168,6 +196,13 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex.rule=Host(`plex.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.plex.entrypoints=websecure"
+      - "traefik.http.routers.plex.tls.certresolver=myresolver"
+      - "traefik.http.services.plex.loadbalancer.server.port=32400"
     # GPU support (uncomment if you have Intel/AMD GPU)
     # devices:
     #   - /dev/dri:/dev/dri
@@ -188,9 +223,19 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.jellyseerr.entrypoints=websecure"
+      - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
 
 networks:
   homeserver:
     name: homeserver
+    external: true
+  gluetun:
+    name: gluetun
     external: true
 

@@ -10,6 +10,13 @@ services:
       - no-new-privileges:true
     networks:
       - homeserver
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle.rule=Host(`dozzle.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.dozzle.entrypoints=websecure"
+      - "traefik.http.routers.dozzle.tls.certresolver=myresolver"
+      - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
 
 networks:
   homeserver:

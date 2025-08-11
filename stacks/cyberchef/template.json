@@ -3,7 +3,13 @@
   "name": "CyberChef",
   "title": "CyberChef",
   "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis.",
-  "env": [],
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cyberchef/logo.png",
   "platform": "linux",
   "repository": {

@@ -46,6 +46,13 @@ services:
       - freshrss-db
     networks:
       - homeserver
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.freshrss.rule=Host(`freshrss.${SERVER_DOMAIN}`)
+      - traefik.http.routers.freshrss.entrypoints=websecure
+      - traefik.http.routers.freshrss.tls.certresolver=myresolver
+      - traefik.http.services.freshrss.loadbalancer.server.port=80
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

@@ -1,20 +1,26 @@
-# https://github.com/alexta69/metube#configuration-via-environment-variables
-
 version: '3.8'
 services:
   metube:
     image: ghcr.io/alexta69/metube
     container_name: metube
     restart: always
+    networks:
+      - homeserver
     volumes:
       - /volume1/docker/metube/downloads:/downloads
     security_opt:
       - no-new-privileges:true
-    networks:
-      - homeserver
     environment:
       - PUID=1000
       - PGID=1000
+      - PORT=8081
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.metube.rule=Host(`metube.${SERVER_DOMAIN}`)
+      - traefik.http.routers.metube.entrypoints=websecure
+      - traefik.http.routers.metube.tls.certresolver=myresolver
+      - traefik.http.services.metube.loadbalancer.server.port=8081
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

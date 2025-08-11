@@ -5,6 +5,11 @@
   "description": "Self-hosted RSS feed reader with PostgreSQL database.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "POSTGRES_PASSWORD",
       "name": "POSTGRES_PASSWORD"
     }

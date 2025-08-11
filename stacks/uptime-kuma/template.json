@@ -2,8 +2,14 @@
   "type": 3,
   "name": "Uptime Kuma",
   "title": "Uptime Kuma",
-  "description": "A fancy self-hosted monitoring tool.",
-  "env": [],
+  "description": "A fancy self-hosted monitoring tool for tracking service uptime.",
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "platform": "linux",
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/ffcc9ee7aed06102d724e45850b24ad8d9f80bde/stacks/uptime-kuma/logo.png",
   "repository": {

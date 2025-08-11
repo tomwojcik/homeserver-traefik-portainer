@@ -2,23 +2,32 @@
   "type": 3,
   "name": "Nextcloud",
   "title": "Nextcloud",
-  "description": "Google drive/Dropbox alternative.",
+  "description": "Google drive/Dropbox alternative with secure file sync and sharing.",
   "env": [
     {
+      "label": "Server Domain",
+      "name": "SERVER_DOMAIN",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "MYSQL_USER",
-      "name": "MYSQL_USER"
+      "name": "MYSQL_USER",
+      "default": "nextcloud"
     },
     {
       "label": "MYSQL_PASSWORD",
-      "name": "MYSQL_PASSWORD"
+      "name": "MYSQL_PASSWORD",
+      "description": "Password for MySQL nextcloud user"
     },
     {
       "label": "MYSQL_ROOT_PASSWORD",
-      "name": "MYSQL_ROOT_PASSWORD"
+      "name": "MYSQL_ROOT_PASSWORD",
+      "description": "Root password for MySQL database"
     },
     {
       "label": "MYSQL_DATABASE",
-      "name": "MYSQL_DATABASE"
+      "name": "MYSQL_DATABASE",
+      "default": "nextcloud"
     }
   ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/nextcloud/logo.png",

@@ -5,6 +5,11 @@
   "description": "Continuous file synchronization between devices. Secure, private, and decentralized.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "PUID (User ID)",
       "name": "PUID",
       "default": "1000"

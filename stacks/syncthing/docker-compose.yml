@@ -35,6 +35,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.syncthing.rule=Host(`syncthing.${SERVER_DOMAIN}`)
+      - traefik.http.routers.syncthing.entrypoints=websecure
+      - traefik.http.routers.syncthing.tls.certresolver=myresolver
+      - traefik.http.services.syncthing.loadbalancer.server.port=8384
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

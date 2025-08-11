@@ -29,6 +29,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cadvisor.rule=Host(`cadvisor.${SERVER_DOMAIN}`)
+      - traefik.http.routers.cadvisor.entrypoints=websecure
+      - traefik.http.routers.cadvisor.tls.certresolver=myresolver
+      - traefik.http.services.cadvisor.loadbalancer.server.port=8080
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

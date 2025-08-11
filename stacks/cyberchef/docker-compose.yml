@@ -8,6 +8,13 @@ services:
       - no-new-privileges:true
     networks:
       - homeserver
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cyberchef.rule=Host(`cyberchef.${SERVER_DOMAIN}`)
+      - traefik.http.routers.cyberchef.entrypoints=websecure
+      - traefik.http.routers.cyberchef.tls.certresolver=myresolver
+      - traefik.http.services.cyberchef.loadbalancer.server.port=8000
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

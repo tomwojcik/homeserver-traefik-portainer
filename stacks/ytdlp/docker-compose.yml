@@ -38,6 +38,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ytdlp.rule=Host(`ytdlp.${SERVER_DOMAIN}`)
+      - traefik.http.routers.ytdlp.entrypoints=websecure
+      - traefik.http.routers.ytdlp.tls.certresolver=myresolver
+      - traefik.http.services.ytdlp.loadbalancer.server.port=17442
+      - traefik.docker.network=homeserver
 
   ytdl-mongo:
     image: mongo:4.4.18

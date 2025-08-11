@@ -14,6 +14,13 @@ services:
       - no-new-privileges:true
     networks:
       - homeserver
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.heimdall.rule=Host(`heimdall.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.heimdall.entrypoints=websecure"
+      - "traefik.http.routers.heimdall.tls.certresolver=myresolver"
+      - "traefik.http.services.heimdall.loadbalancer.server.port=80"
 
 networks:
   homeserver:

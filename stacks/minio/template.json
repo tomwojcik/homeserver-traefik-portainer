@@ -5,6 +5,11 @@
   "description": "S3 alternative.",
   "env": [
     {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
       "label": "MINIO_ROOT_USER",
       "name": "MINIO_ROOT_USER"
     },

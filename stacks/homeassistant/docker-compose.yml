@@ -10,7 +10,8 @@ services:
     volumes:
       - /volume1/docker/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
-    network_mode: host  # Required for device discovery
+    networks:
+      - homeserver
     security_opt:
       - no-new-privileges:true
     deploy:
@@ -27,6 +28,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.homeassistant.rule=Host(`homeassistant.${SERVER_DOMAIN}`)
+      - traefik.http.routers.homeassistant.entrypoints=websecure
+      - traefik.http.routers.homeassistant.tls.certresolver=myresolver
+      - traefik.http.services.homeassistant.loadbalancer.server.port=8123
+      - traefik.docker.network=homeserver
 
   # Optional: MQTT Broker for IoT communication
   mosquitto:
@@ -58,6 +66,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mqtt.rule=Host(`mqtt.${SERVER_DOMAIN}`)
+      - traefik.http.routers.mqtt.entrypoints=websecure
+      - traefik.http.routers.mqtt.tls.certresolver=myresolver
+      - traefik.http.services.mqtt.loadbalancer.server.port=9001
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

@@ -20,6 +20,13 @@ services:
       - no-new-privileges:true
     networks:
       - homeserver
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.n8n.rule=Host(`n8n.${SERVER_DOMAIN}`)
+      - traefik.http.routers.n8n.entrypoints=websecure
+      - traefik.http.routers.n8n.tls.certresolver=myresolver
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+      - traefik.docker.network=homeserver
 
 networks:
   homeserver:

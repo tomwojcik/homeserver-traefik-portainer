@@ -3,7 +3,13 @@
   "name": "cadvisor",
   "title": "cadvisor",
   "description": "Resources monitor.",
-  "env": [],
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    }
+  ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/3b98d68b5cd095301faa643bfb1186860b099b51/stacks/cadvisor/logo.png",
   "platform": "linux",
   "repository": {
