@@ -5,6 +5,7 @@ services:
     image: tzahi12345/youtubedl-material:4.3.2
     container_name: ytdl-material
     restart: always
+    network_mode: "container:gluetun"
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -18,8 +19,6 @@ services:
       - /volume1/docker/ytdlp/video:/app/video
       - /volume1/docker/ytdlp/subscriptions:/app/subscriptions
       - /volume1/docker/ytdlp/users:/app/users
-    networks:
-      - homeserver
     security_opt:
       - no-new-privileges:true
     user: "1000:1000"

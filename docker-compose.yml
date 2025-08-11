@@ -64,7 +64,7 @@ services:
   cloudflared-private:
     image: cloudflare/cloudflared:2024.6.1
     container_name: cloudflared-private
-    restart: always
+    restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN_PRIVATE}
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN_PRIVATE}
@@ -93,7 +93,7 @@ services:
     env_file:
       - .env
     container_name: portainer
-    restart: always
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     networks:

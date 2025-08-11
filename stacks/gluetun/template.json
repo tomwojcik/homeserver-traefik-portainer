@@ -1,0 +1,63 @@
+{
+  "type": 3,
+  "name": "Gluetun VPN",
+  "title": "VPN Gateway",
+  "description": "VPN client gateway that other containers can use for secure internet access. Supports multiple VPN providers.",
+  "env": [
+    {
+      "label": "Timezone",
+      "name": "TZ",
+      "default": "UTC"
+    },
+    {
+      "label": "VPN Service Provider",
+      "name": "VPN_SERVICE_PROVIDER",
+      "default": "surfshark",
+      "description": "VPN provider (surfshark, nordvpn, expressvpn, etc.)"
+    },
+    {
+      "label": "VPN Type",
+      "name": "VPN_TYPE", 
+      "default": "wireguard",
+      "description": "VPN connection type (wireguard or openvpn)"
+    },
+    {
+      "label": "WireGuard Private Key",
+      "name": "WIREGUARD_PRIVATE_KEY",
+      "description": "Your VPN WireGuard private key"
+    },
+    {
+      "label": "WireGuard Public Key",
+      "name": "WIREGUARD_PUBLIC_KEY",
+      "description": "VPN server's WireGuard public key"
+    },
+    {
+      "label": "WireGuard Addresses",
+      "name": "WIREGUARD_ADDRESSES",
+      "description": "Your VPN WireGuard IP addresses (include /32 mask)"
+    },
+    {
+      "label": "WireGuard DNS",
+      "name": "WIREGUARD_DNS",
+      "default": "1.1.1.1",
+      "description": "DNS servers for WireGuard connection"
+    },
+    {
+      "label": "WireGuard SERVER_COUNTRIES",
+      "name": "SERVER_COUNTRIES",
+      "description": "Country name"
+    },
+    {
+      "label": "Firewall Outbound Subnets",
+      "name": "FIREWALL_OUTBOUND_SUBNETS",
+      "default": "172.18.0.0/16",
+      "description": "Allowed outbound subnets for Docker network communication"
+    }
+  ],
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/gluetun/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "Deploy this stack first, then reference the gluetun container in other stacks that need VPN connectivity."
+}

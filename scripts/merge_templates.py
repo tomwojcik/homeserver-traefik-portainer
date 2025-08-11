@@ -25,6 +25,8 @@ def merge_templates():
             template['name'] = template['title'].lower()
 
     templates.sort(key=lambda x: x['name'])
+    for t in templates:
+        t['name'] = t['name'].lower().replace(" ", "_")
     final_json = {
         "version": "2",
         "templates": templates
