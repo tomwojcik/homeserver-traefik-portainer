@@ -289,7 +289,7 @@
                     "label": "VPN Type",
                     "name": "VPN_TYPE",
                     "description": "VPN protocol type",
-                    "default": "wireguard",
+                    "default": "openvpn",
                     "select": [
                         {
                             "text": "WireGuard",
@@ -300,6 +300,16 @@
                             "value": "openvpn"
                         }
                     ]
+                },
+                {
+                    "label": "OpenVPN Username",
+                    "name": "OPENVPN_USER",
+                    "description": "Your VPN provider username (required for OpenVPN)"
+                },
+                {
+                    "label": "OpenVPN Password",
+                    "name": "OPENVPN_PASSWORD",
+                    "description": "Your VPN provider password (required for OpenVPN)"
                 },
                 {
                     "label": "WireGuard Private Key",
