@@ -3,7 +3,7 @@
     "templates": [
         {
             "type": 3,
-            "name": "ChatGPT Next Web",
+            "name": "chatgpt_next_web",
             "title": "ChatGPT Web Interface",
             "description": "Lightweight ChatGPT web interface supporting OpenAI, Anthropic, Google AI. Simple deployment with access code protection.",
             "env": [
@@ -60,7 +60,7 @@
         },
         {
             "type": 3,
-            "name": "CyberChef",
+            "name": "cyberchef",
             "title": "CyberChef",
             "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis.",
             "env": [
@@ -79,7 +79,7 @@
         },
         {
             "type": 3,
-            "name": "Dozzle",
+            "name": "dozzle",
             "title": "Dozzle",
             "description": "All docker logs in one place.",
             "env": [
@@ -98,7 +98,7 @@
         },
         {
             "type": 3,
-            "name": "Duplicati",
+            "name": "duplicati",
             "title": "Duplicati Backup",
             "description": "Encrypted backup solution with support for cloud storage (Google Drive, AWS S3, OneDrive, etc.)",
             "env": [
@@ -133,7 +133,7 @@
         },
         {
             "type": 3,
-            "name": "FreshRSS",
+            "name": "freshrss",
             "title": "FreshRSS",
             "description": "Self-hosted RSS feed reader with PostgreSQL database.",
             "env": [
@@ -156,7 +156,7 @@
         },
         {
             "type": 3,
-            "name": "Gitea",
+            "name": "gitea",
             "title": "Gitea Git Service",
             "description": "Self-hosted Git service with web interface. Lightweight, modern alternative to GitHub with CI/CD, issues, pull requests, and more.",
             "env": [
@@ -207,7 +207,7 @@
         },
         {
             "type": 3,
-            "name": "Gogs",
+            "name": "gogs",
             "title": "Gogs",
             "description": "Self-hosted git. Sync external git repos.",
             "env": [
@@ -226,7 +226,7 @@
         },
         {
             "type": 3,
-            "name": "Heimdall",
+            "name": "heimdall",
             "title": "Heimdall",
             "description": "Landing page dashboard for organizing links to your homeserver services.",
             "env": [
@@ -245,7 +245,7 @@
         },
         {
             "type": 3,
-            "name": "Home Assistant",
+            "name": "home_assistant",
             "title": "Home Assistant",
             "description": "Open source home automation platform. Control lights, switches, sensors, and more from a unified interface.",
             "env": [
@@ -270,14 +270,46 @@
         },
         {
             "type": 3,
-            "name": "Media Server Stack",
-            "title": "Complete Media Server",
-            "description": "Full media server stack with media management (Sonarr/Radarr) and streaming (Jellyfin/Plex). Includes request management via Jellyseerr. REQUIRES: Deploy gluetun stack first for qbittorrent VPN!",
+            "name": "media_server_stack",
+            "title": "Complete Media Server with VPN",
+            "description": "Full media server stack with VPN (Gluetun), media management (Sonarr/Radarr), torrent client (qBittorrent), and streaming (Jellyfin/Plex). Includes request management via Jellyseerr.",
             "env": [
                 {
                     "label": "Server Domain",
                     "name": "SERVER_DOMAIN",
                     "description": "Your domain name (e.g., example.com)"
+                },
+                {
+                    "label": "VPN Service Provider",
+                    "name": "VPN_SERVICE_PROVIDER",
+                    "description": "VPN service provider (e.g., surfshark, nordvpn, expressvpn)",
+                    "default": "surfshark"
+                },
+                {
+                    "label": "VPN Type",
+                    "name": "VPN_TYPE",
+                    "description": "VPN protocol type",
+                    "default": "wireguard",
+                    "select": [
+                        {
+                            "text": "WireGuard",
+                            "value": "wireguard"
+                        },
+                        {
+                            "text": "OpenVPN",
+                            "value": "openvpn"
+                        }
+                    ]
+                },
+                {
+                    "label": "WireGuard Private Key",
+                    "name": "WIREGUARD_PRIVATE_KEY",
+                    "description": "Your WireGuard private key (required for WireGuard)"
+                },
+                {
+                    "label": "WireGuard Addresses",
+                    "name": "WIREGUARD_ADDRESSES",
+                    "description": "WireGuard IP addresses (required for WireGuard)"
                 },
                 {
                     "label": "PUID (User ID)",
@@ -306,11 +338,11 @@
                 "stackfile": "stacks/media-server/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             },
-            "note": "Deploy gluetun stack first! qbittorrent requires VPN connection through gluetun."
+            "note": "Includes Gluetun VPN for secure torrent downloads. Configure VPN credentials before deployment."
         },
         {
             "type": 3,
-            "name": "MinIO",
+            "name": "minio",
             "title": "MinIO",
             "description": "S3 alternative.",
             "env": [
@@ -337,7 +369,7 @@
         },
         {
             "type": 3,
-            "name": "Nextcloud",
+            "name": "nextcloud",
             "title": "Nextcloud",
             "description": "Google drive/Dropbox alternative with secure file sync and sharing.",
             "env": [
@@ -376,7 +408,7 @@
         },
         {
             "type": 3,
-            "name": "Open WebUI",
+            "name": "open_webui",
             "title": "Private AI Chat Interface",
             "description": "Self-hosted ChatGPT-like interface supporting OpenAI, Anthropic Claude, Google, and more. All conversations stored locally with user management.",
             "env": [
@@ -436,7 +468,7 @@
         },
         {
             "type": 3,
-            "name": "PyPI Server",
+            "name": "pypi_server",
             "title": "PyPI Server",
             "description": "Private PyPI.",
             "env": [
@@ -455,7 +487,7 @@
         },
         {
             "type": 3,
-            "name": "Syncthing",
+            "name": "syncthing",
             "title": "Syncthing P2P Sync",
             "description": "Continuous file synchronization between devices. Secure, private, and decentralized.",
             "env": [
@@ -490,7 +522,7 @@
         },
         {
             "type": 3,
-            "name": "Uptime Kuma",
+            "name": "uptime_kuma",
             "title": "Uptime Kuma",
             "description": "A fancy self-hosted monitoring tool for tracking service uptime.",
             "env": [
@@ -509,7 +541,7 @@
         },
         {
             "type": 3,
-            "name": "YT-DLP Material",
+            "name": "yt-dlp_material",
             "title": "YouTube Downloader",
             "description": "Web-based YouTube downloader with material design. Download videos, playlists, and audio with subscription management.",
             "env": [
@@ -563,7 +595,7 @@
         },
         {
             "type": 3,
-            "name": "docker registry",
+            "name": "docker_registry",
             "title": "Docker registry",
             "description": "Docker registry and UI docker hub.",
             "env": [
@@ -579,66 +611,6 @@
                 "stackfile": "stacks/registry/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             }
-        },
-        {
-            "type": 1,
-            "title": "Gluetun VPN",
-            "description": "Secure VPN container for routing download services through VPN",
-            "categories": [
-                "VPN",
-                "Security"
-            ],
-            "platform": "linux",
-            "logo": "https://raw.githubusercontent.com/qdm12/gluetun/master/doc/logo.png",
-            "repository": {
-                "url": "https://github.com/qdm12/gluetun",
-                "stackfile": "stacks/gluetun/docker-compose.yml"
-            },
-            "env": [
-                {
-                    "name": "VPN_SERVICE_PROVIDER",
-                    "label": "VPN Service Provider",
-                    "description": "VPN service provider (e.g., surfshark, nordvpn, expressvpn)",
-                    "default": "surfshark"
-                },
-                {
-                    "name": "VPN_TYPE",
-                    "label": "VPN Type",
-                    "description": "VPN protocol type",
-                    "default": "wireguard",
-                    "select": [
-                        {
-                            "text": "WireGuard",
-                            "value": "wireguard"
-                        },
-                        {
-                            "text": "OpenVPN",
-                            "value": "openvpn"
-                        }
-                    ]
-                },
-                {
-                    "name": "WIREGUARD_PRIVATE_KEY",
-                    "label": "WireGuard Private Key",
-                    "description": "Your WireGuard private key"
-                },
-                {
-                    "name": "WIREGUARD_ADDRESSES",
-                    "label": "WireGuard Addresses",
-                    "description": "WireGuard IP addresses"
-                },
-                {
-                    "name": "SERVER_DOMAIN",
-                    "label": "Server Domain",
-                    "description": "Your domain name (e.g., example.com)"
-                },
-                {
-                    "name": "TZ",
-                    "label": "Timezone",
-                    "default": "UTC"
-                }
-            ],
-            "name": "gluetun vpn"
         },
         {
             "type": 3,
