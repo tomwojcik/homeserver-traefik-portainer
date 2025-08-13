@@ -17,6 +17,7 @@ services:
       - "traefik.http.routers.dozzle.entrypoints=websecure"
       - "traefik.http.routers.dozzle.tls.certresolver=myresolver"
       - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
+      - "traefik.docker.network=homeserver"
 
 networks:
   homeserver:

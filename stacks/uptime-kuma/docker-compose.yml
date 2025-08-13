@@ -18,6 +18,7 @@ services:
       - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
       - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
       - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+      - "traefik.docker.network=homeserver"
 
 networks:
   homeserver:

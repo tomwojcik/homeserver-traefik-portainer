@@ -6,7 +6,8 @@ services:
     image: ghcr.io/meeb/tubesync:latest
     container_name: tubesync
     restart: always
-    network_mode: "container:gluetun"
+    networks:
+      - homeserver
     volumes:
       - /volume1/docker/tubesync/downloads:/downloads
       - /volume1/docker/tubesync/config:/config
@@ -18,6 +19,7 @@ services:
       - PUID=1000
       - PGID=1000
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.tubesync.rule=Host(`tubesync.${SERVER_DOMAIN}`)
       - traefik.http.routers.tubesync.entrypoints=websecure

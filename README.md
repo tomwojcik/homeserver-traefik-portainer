@@ -24,11 +24,46 @@ cp .env.example .env
 # - VPN credentials for downloading services
 ```
 
+#### Setting up Cloudflare DNS API Token
+
+For automatic HTTPS certificates, you need a Cloudflare API token with DNS permissions:
+
+1. **Buy a domain** - Cloudflare offers domains at cost (no markup) and provides excellent DNS management
+2. **Create API Token**:
+   - Go to [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+   - Click "Create Token"
+   - Use "Custom token" template
+   - **Permissions**:
+     - Zone:Zone:Read
+     - Zone:DNS:Edit  
+   - **Zone Resources**: 
+     - Include: Specific zone: `your-domain.com`
+   - **Client IP Address Filtering**: Leave empty (optional)
+   - Click "Continue to summary" → "Create Token"
+3. **Save the token** - You'll use this for `CF_DNS_API_TOKEN` in your `.env` file
+
+**Alternative DNS Providers**: If not using Cloudflare, check Traefik's [supported ACME providers](https://doc.traefik.io/traefik/https/acme/#providers) and adjust the configuration accordingly.
+
 ### 2. Set Up DNS
+
+#### Local DNS Configuration
 Point `*.example.com` to your NAS IP address:
 - **Router DNS**: Add wildcard DNS entry
-- **Pi-hole**: Add local DNS record
+- **Pi-hole**: Add local DNS record  
 - **Hosts file**: `192.168.1.100 jellyfin.example.com` (etc.)
+
+#### Cloudflare DNS Configuration
+For external access and Let's Encrypt certificates:
+1. **In Cloudflare Dashboard**: Go to your domain → DNS
+2. **Add DNS Record**:
+   - **Type**: `A`
+   - **Name**: `*` (wildcard)
+   - **IPv4 address**: Your NAS IP address (e.g., `192.168.1.100`)
+   - **Proxy status**: ☁️ **Disabled** (DNS only, not proxied)
+   - **TTL**: Auto
+3. **Click Save**
+
+**Important**: The proxy status must be disabled for Let's Encrypt DNS challenges to work properly.
 
 ### 3. Start Core Services
 ```bash
@@ -201,6 +236,31 @@ Forward ports 80/443 to your NAS:
 
 **Recommendation**: Use Cloudflare Tunnels for security
 
+## Synology NAS Setup
+
+Synology DSM uses ports 80 and 443 for its web interface, which conflicts with Traefik. Here's how to resolve this:
+
+### Port Conflict Resolution
+1. **Change DSM ports** (recommended approach):
+   ```bash
+   sed -i -e 's/80/81/' -e 's/443/444/' /usr/syno/share/nginx/server.mustache /usr/syno/share/nginx/DSM.mustache /usr/syno/share/nginx/WWWService.mustache
+   ```
+
+2. **Restart nginx service**:
+   - **DSM < 7**: `synoservicecfg --restart nginx`
+   - **DSM ≥ 7**: `sudo systemctl restart nginx`
+
+3. **Access DSM**: Use `http://nas-ip:81` or `https://nas-ip:444` instead of default ports
+
+### Alternative Approach
+Instead of changing DSM ports, you can modify Traefik to use different ports in the docker-compose.yml:
+```yaml
+ports:
+  - "8080:80"   # HTTP
+  - "8443:443"  # HTTPS
+```
+Then access services via `https://service.example.com:8443`
+
 ## Troubleshooting
 
 ### **HTTPS Issues**
@@ -220,6 +280,31 @@ Forward ports 80/443 to your NAS:
 - **Verify labels**: Service must have proper Traefik labels
 - **Check networks**: Service must be on `homeserver` network
 - **DNS cache**: Clear browser/system DNS cache
+
+### **Portainer Security Timeout**
+If Portainer shows "timeout.html" or security timeout message:
+- **Cause**: Portainer requires admin setup within 2 minutes of first start
+- **Fix**: 
+  ```bash
+  docker restart portainer
+  # Immediately go to portainer.example.com and create admin user
+  ```
+- **Alternative**: Access directly via `http://nas-ip:9000` during setup
+- **Note**: This only happens on first setup - once admin is created, normal access works
+
+### **Services Not Routing Through Traefik**
+**Important**: If a service has exposed ports in docker-compose (e.g., `ports: - "9000:9000"`), it will bypass Traefik routing:
+
+- **Problem**: `portainer.example.com` returns 404, but `nas-ip:9000` works
+- **Cause**: Exposed ports take precedence over Traefik routing
+- **Solution**: 
+  1. **For initial setup**: Temporarily expose ports, access via `nas-ip:port`
+  2. **For production**: Comment out port mappings to force Traefik routing
+  ```yaml
+  # ports:
+  #   - "9000:9000"  # Disable for Traefik routing
+  ```
+- **When to expose ports**: Only for troubleshooting or when Traefik fails
 
 ### **Performance Issues**
 - **Local vs External**: Use local URLs for best performance

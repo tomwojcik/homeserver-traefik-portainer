@@ -22,6 +22,7 @@ services:
       timeout: 20s
       retries: 3
     labels:
+      - my.zone=homeserver
       # MinIO Console (Web UI)
       - traefik.enable=true
       - traefik.http.routers.minio-console.rule=Host(`minio.${SERVER_DOMAIN}`)

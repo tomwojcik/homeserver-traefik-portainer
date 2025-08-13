@@ -15,6 +15,7 @@ services:
     networks:
       - homeserver
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.gogs.rule=Host(`gogs.${SERVER_DOMAIN}`)
       - traefik.http.routers.gogs.entrypoints=websecure

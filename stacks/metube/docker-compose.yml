@@ -15,6 +15,7 @@ services:
       - PGID=1000
       - PORT=8081
     labels:
+      - "my.zone=homeserver"
       - traefik.enable=true
       - traefik.http.routers.metube.rule=Host(`metube.${SERVER_DOMAIN}`)
       - traefik.http.routers.metube.entrypoints=websecure

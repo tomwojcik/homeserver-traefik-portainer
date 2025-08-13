@@ -42,6 +42,7 @@ services:
       timeout: 10s
       retries: 3
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.gitea.rule=Host(`gitea.${SERVER_DOMAIN}`)
       - traefik.http.routers.gitea.entrypoints=websecure
@@ -77,6 +78,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - my.zone=homeserver
 
 networks:
   homeserver:

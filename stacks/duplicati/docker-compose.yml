@@ -36,6 +36,7 @@ services:
       timeout: 10s
       retries: 3
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.duplicati.rule=Host(`duplicati.${SERVER_DOMAIN}`)
       - traefik.http.routers.duplicati.entrypoints=websecure

@@ -50,6 +50,7 @@ services:
       timeout: 10s
       retries: 3
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.chatgpt-next-web.rule=Host(`chatgpt.${SERVER_DOMAIN}`)
       - traefik.http.routers.chatgpt-next-web.entrypoints=websecure

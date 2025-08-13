@@ -22,6 +22,8 @@ services:
           memory: 256M
     networks:
       - homeserver
+    labels:
+      - my.zone=homeserver
 
   freshrss:
     container_name: freshrss
@@ -47,6 +49,7 @@ services:
     networks:
       - homeserver
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.freshrss.rule=Host(`freshrss.${SERVER_DOMAIN}`)
       - traefik.http.routers.freshrss.entrypoints=websecure

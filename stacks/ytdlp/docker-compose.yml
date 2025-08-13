@@ -5,7 +5,8 @@ services:
     image: tzahi12345/youtubedl-material:4.3.2
     container_name: ytdl-material
     restart: always
-    network_mode: "container:gluetun"
+    networks:
+      - homeserver
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -38,6 +39,7 @@ services:
       timeout: 10s
       retries: 3
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.ytdlp.rule=Host(`ytdlp.${SERVER_DOMAIN}`)
       - traefik.http.routers.ytdlp.entrypoints=websecure
@@ -69,6 +71,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - my.zone=homeserver
 
 networks:
   homeserver:

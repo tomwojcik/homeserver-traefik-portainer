@@ -1,13 +1,45 @@
 {
   "type": 3,
   "name": "Media Server Stack",
-  "title": "Complete Media Server",
-  "description": "Full media server stack with media management (Sonarr/Radarr) and streaming (Jellyfin/Plex). Includes request management via Jellyseerr. REQUIRES: Deploy gluetun stack first for qbittorrent VPN!",
+  "title": "Complete Media Server with VPN",
+  "description": "Full media server stack with VPN (Gluetun), media management (Sonarr/Radarr), torrent client (qBittorrent), and streaming (Jellyfin/Plex). Includes request management via Jellyseerr.",
   "env": [
     {
       "label": "Server Domain",
       "name": "SERVER_DOMAIN",
       "description": "Your domain name (e.g., example.com)"
+    },
+    {
+      "label": "VPN Service Provider",
+      "name": "VPN_SERVICE_PROVIDER",
+      "description": "VPN service provider (e.g., surfshark, nordvpn, expressvpn)",
+      "default": "surfshark"
+    },
+    {
+      "label": "VPN Type",
+      "name": "VPN_TYPE",
+      "description": "VPN protocol type",
+      "default": "wireguard",
+      "select": [
+        {
+          "text": "WireGuard",
+          "value": "wireguard"
+        },
+        {
+          "text": "OpenVPN",
+          "value": "openvpn"
+        }
+      ]
+    },
+    {
+      "label": "WireGuard Private Key",
+      "name": "WIREGUARD_PRIVATE_KEY",
+      "description": "Your WireGuard private key (required for WireGuard)"
+    },
+    {
+      "label": "WireGuard Addresses",
+      "name": "WIREGUARD_ADDRESSES",
+      "description": "WireGuard IP addresses (required for WireGuard)"
     },
     {
       "label": "PUID (User ID)",
@@ -36,5 +68,5 @@
     "stackfile": "stacks/media-server/docker-compose.yml",
     "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
   },
-  "note": "Deploy gluetun stack first! qbittorrent requires VPN connection through gluetun."
+  "note": "Includes Gluetun VPN for secure torrent downloads. Configure VPN credentials before deployment."
 }

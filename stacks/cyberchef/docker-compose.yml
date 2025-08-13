@@ -9,6 +9,7 @@ services:
     networks:
       - homeserver
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.cyberchef.rule=Host(`cyberchef.${SERVER_DOMAIN}`)
       - traefik.http.routers.cyberchef.entrypoints=websecure

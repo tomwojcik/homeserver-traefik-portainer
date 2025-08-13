@@ -21,6 +21,7 @@ services:
     networks:
       - homeserver
     labels:
+      - my.zone=homeserver
       - traefik.enable=true
       - traefik.http.routers.n8n.rule=Host(`n8n.${SERVER_DOMAIN}`)
       - traefik.http.routers.n8n.entrypoints=websecure

@@ -23,7 +23,6 @@ services:
       - "--certificatesResolvers.myresolver.acme.dnschallenge.provider=${DNS_CHALLENGE_PROVIDER:-cloudflare}"
       - "--certificatesResolvers.myresolver.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.delayBeforeCheck=30"
-      - "--certificatesresolvers.myresolver.acme.dnschallenge.propagationTimeout=300"
       # Set and forget HTTPS reliability improvements
       - "--serverstransport.insecureskipverify=true"
       - "--providers.docker.constraints=Label(`my.zone`, `homeserver`)"
@@ -85,8 +84,8 @@ services:
   portainer:
     image: portainer/portainer-ce:2.32.0
     command: -H unix:///var/run/docker.sock
-    ports:
-      - 9000:9000  # Keep for direct access if Traefik fails
+#    ports:
+#      - 9000:9000  # Keep for direct access if Traefik fails
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
@@ -105,6 +104,8 @@ services:
       - "traefik.http.routers.portainer.entrypoints=websecure"
       - "traefik.http.routers.portainer.tls.certresolver=myresolver"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer.middlewares=portainer-headers"
+      - "traefik.http.middlewares.portainer-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
 
 networks:
   homeserver:

@@ -1,12 +1,53 @@
 version: "3.8"
 
 services:
+  # VPN Container
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "8080:8080"   # qbittorrent
+      - "8081:8081"   # metube
+    volumes:
+      - /volume1/docker/gluetun/config:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-surfshark}
+      - VPN_TYPE=${VPN_TYPE:-wireguard}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - TZ=${TZ:-UTC}
+      - HTTPPROXY=on
+      - HTTPPROXY_LOG=on
+    networks:
+      - homeserver
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "my.zone=homeserver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.${SERVER_DOMAIN}`)"
+      - "traefik.http.routers.qbittorrent.entrypoints=websecure"
+      - "traefik.http.routers.qbittorrent.tls.certresolver=myresolver"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
+      - "traefik.docker.network=homeserver"
+
   # Torrent Client (through external VPN)
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
-    networks:
-      - homeserver
+    network_mode: "service:gluetun"
+    depends_on:
       - gluetun
     environment:
       - PUID=${PUID:-1000}
@@ -22,36 +63,6 @@ services:
     restart: unless-stopped
     labels:
       - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.qbittorrent.entrypoints=websecure"
-      - "traefik.http.routers.qbittorrent.tls.certresolver=myresolver"
-      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
-
-  # Usenet Client
-  sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd:latest
-    container_name: sabnzbd
-    environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
-    volumes:
-      - /volume1/docker/media-server/sabnzbd:/config
-      - /volume1/docker/media-server/downloads:/downloads
-      - /volume1/docker/media-server/media:/data
-    networks:
-      - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.sabnzbd.entrypoints=websecure"
-      - "traefik.http.routers.sabnzbd.tls.certresolver=myresolver"
-      - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
 
   # Indexer Manager
   prowlarr:
@@ -234,8 +245,5 @@ services:
 networks:
   homeserver:
     name: homeserver
-    external: true
-  gluetun:
-    name: gluetun
     external: true
 
