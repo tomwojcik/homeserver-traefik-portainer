@@ -6,7 +6,6 @@ services:
     restart: unless-stopped
     environment:
       - DOMAIN=https://vaultwarden.${SERVER_DOMAIN}
-      - DATABASE_URL=sqlite:///data/db.sqlite3?mode=rwc&_journal_mode=WAL
       - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED:-false}
       - INVITATIONS_ALLOWED=${INVITATIONS_ALLOWED:-true}
       - SHOW_PASSWORD_HINT=${SHOW_PASSWORD_HINT:-false}
