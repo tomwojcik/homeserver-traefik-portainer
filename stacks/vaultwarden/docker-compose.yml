@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       - DOMAIN=https://vaultwarden.${SERVER_DOMAIN}
-      - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED:-false}
+      - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED:-true}
       - INVITATIONS_ALLOWED=${INVITATIONS_ALLOWED:-true}
       - SHOW_PASSWORD_HINT=${SHOW_PASSWORD_HINT:-false}
       - ADMIN_TOKEN=${ADMIN_TOKEN}

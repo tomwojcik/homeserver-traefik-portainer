@@ -17,7 +17,7 @@
     {
       "label": "Allow Signups",
       "name": "SIGNUPS_ALLOWED",
-      "default": "false",
+      "default": "true",
       "description": "Allow new user registrations (true/false)"
     },
     {
