@@ -100,6 +100,7 @@ Deploy any of these through Portainer's App Templates:
 
 ### **Productivity**
 - **Nextcloud** - File sync and collaboration
+- **Vaultwarden** - Self-hosted password manager (Bitwarden-compatible)
 - **Heimdall** - Dashboard for organizing services
 - **Uptime Kuma** - Service monitoring
 
@@ -123,6 +124,7 @@ After setup, your services will be available at:
 - https://qbittorrent.example.com (Torrents via VPN)
 - https://metube.example.com (YouTube downloads via VPN)
 - https://nextcloud.example.com (File sync)
+- https://vaultwarden.example.com (Password manager)
 - https://uptime.example.com (Service monitoring)
 
 ## Network Architecture
