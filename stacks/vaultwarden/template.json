@@ -1,0 +1,43 @@
+{
+  "type": 3,
+  "name": "Vaultwarden",
+  "title": "Vaultwarden",
+  "description": "Self-hosted Bitwarden-compatible password manager. Lightweight alternative to Bitwarden with full client compatibility.",
+  "env": [
+    {
+      "name": "SERVER_DOMAIN",
+      "label": "Server Domain",
+      "description": "Your domain name (e.g., example.com)"
+    },
+    {
+      "label": "Admin Token",
+      "name": "ADMIN_TOKEN",
+      "description": "Admin panel access token (generate with: openssl rand -base64 48)"
+    },
+    {
+      "label": "Allow Signups",
+      "name": "SIGNUPS_ALLOWED",
+      "default": "false",
+      "description": "Allow new user registrations (true/false)"
+    },
+    {
+      "label": "Allow Invitations",
+      "name": "INVITATIONS_ALLOWED",
+      "default": "true",
+      "description": "Allow user invitations (true/false)"
+    },
+    {
+      "label": "Show Password Hints",
+      "name": "SHOW_PASSWORD_HINT",
+      "default": "false",
+      "description": "Show password hints (true/false)"
+    }
+  ],
+  "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/vaultwarden/logo.jpg",
+  "platform": "linux",
+  "repository": {
+    "stackfile": "stacks/vaultwarden/docker-compose.yml",
+    "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+  },
+  "note": "Lightweight Bitwarden server with SQLite (WAL mode). Compatible with official Bitwarden clients. Use admin panel to generate invitation links for family members."
+}
