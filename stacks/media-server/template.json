@@ -2,7 +2,7 @@
   "type": 3,
   "name": "Media Server Stack",
   "title": "Complete Media Server with VPN",
-  "description": "Full media server stack with VPN (Gluetun), media management (Sonarr/Radarr), torrent client (qBittorrent), and streaming (Jellyfin/Plex). Includes request management via Jellyseerr.",
+  "description": "Full media server stack with VPN (Gluetun), media management (Sonarr/Radarr), torrent client (qBittorrent), and streaming (Jellyfin). Includes request management via Jellyseerr.",
   "env": [
     {
       "label": "Server Domain",
@@ -66,11 +66,6 @@
       "name": "TZ",
       "default": "UTC"
     },
-    {
-      "label": "Plex Claim Token",
-      "name": "PLEX_CLAIM",
-      "description": "Get from https://www.plex.tv/claim (optional, expires in 4 minutes)"
-    }
   ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/media-server/logo.png",
   "platform": "linux",
