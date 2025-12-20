@@ -65,7 +65,7 @@
       "label": "Timezone",
       "name": "TZ",
       "default": "UTC"
-    },
+    }
   ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/media-server/logo.png",
   "platform": "linux",
