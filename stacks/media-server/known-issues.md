@@ -13,3 +13,4 @@ chmod 600 /dev/net/tun
 setup_gluetun.sh
 ```
 go to synology task scheduler, and run it on startup, with root.
+3. qBittorrent needs Gluetun. Sometimes Gluetun takes a while. If qBittorrent failed due to Gluetun not being up, just restart qBittorrent container.
