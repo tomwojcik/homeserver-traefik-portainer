@@ -13,7 +13,7 @@ services:
       - /volume1/docker/gluetun/config:/gluetun
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-surfshark}
-      - VPN_TYPE=${VPN_TYPE:-openvpn}
+      - VPN_TYPE=${VPN_TYPE:-wireguard}
       - OPENVPN_USER=${OPENVPN_USER}
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
@@ -47,7 +47,8 @@ services:
     container_name: qbittorrent
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
