@@ -14,8 +14,6 @@ services:
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-surfshark}
       - VPN_TYPE=${VPN_TYPE:-wireguard}
-      - OPENVPN_USER=${OPENVPN_USER}
-      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
       - TZ=${TZ:-UTC}
@@ -27,11 +25,10 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/"]
-      interval: 30s
+      test: ["CMD", "wget", "-qO-", "https://1.1.1.1"] # Checks if internet/VPN is actually routing
+      interval: 1m
       timeout: 10s
       retries: 3
-      start_period: 40s
     labels:
       - "my.zone=homeserver"
       - "traefik.enable=true"
@@ -178,7 +175,7 @@ services:
       - TZ=${TZ:-UTC}
     volumes:
       - /volume1/docker/media-server/jellyfin:/config
-      - /volume1/docker/media-server/media:/data
+      - /volume1/docker/media-server/downloads:/data
       - /volume1/docker/media-server/jellyfin-cache:/cache
     networks:
       - homeserver
@@ -192,9 +189,9 @@ services:
       - "traefik.http.routers.jellyfin.entrypoints=websecure"
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-    # GPU support (uncomment if you have Intel/AMD GPU)
-    # devices:
-    #   - /dev/dri:/dev/dri
+    # CPU / GPU hardware acceleration
+    devices:
+     - /dev/dri:/dev/dri
 
   # Media Request Manager
   jellyseerr:
