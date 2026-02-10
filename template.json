@@ -133,6 +133,36 @@
         },
         {
             "type": 3,
+            "name": "forgejo_git_mirror",
+            "title": "Forgejo Git Mirror",
+            "description": "Self-hosted Forgejo instance with automatic GitHub repository mirroring. Backs up your GitHub repos (including private) to a local Forgejo server.",
+            "env": [
+                {
+                    "name": "SERVER_DOMAIN",
+                    "label": "Server Domain",
+                    "description": "Your domain name (e.g., example.com)"
+                },
+                {
+                    "label": "Forgejo API Token",
+                    "name": "FORGEJO_TOKEN",
+                    "description": "Forgejo API token for the mirror bot (create after first login)"
+                },
+                {
+                    "label": "GitHub Personal Access Token",
+                    "name": "GITHUB_PAT",
+                    "description": "GitHub PAT with repo read access for mirroring"
+                }
+            ],
+            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/forgejo-git-mirror/logo.svg",
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/forgejo-git-mirror/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Deploy first, create an admin account on Forgejo, generate an API token, then update the stack with the token. The mirror bot syncs all your GitHub repos every 24h."
+        },
+        {
+            "type": 3,
             "name": "freshrss",
             "title": "FreshRSS",
             "description": "Self-hosted RSS feed reader with PostgreSQL database.",
@@ -294,22 +324,8 @@
                         {
                             "text": "WireGuard",
                             "value": "wireguard"
-                        },
-                        {
-                            "text": "OpenVPN",
-                            "value": "openvpn"
                         }
                     ]
-                },
-                {
-                    "label": "OpenVPN Username",
-                    "name": "OPENVPN_USER",
-                    "description": "Your VPN provider username (required for OpenVPN)"
-                },
-                {
-                    "label": "OpenVPN Password",
-                    "name": "OPENVPN_PASSWORD",
-                    "description": "Your VPN provider password (required for OpenVPN)"
                 },
                 {
                     "label": "WireGuard Private Key",
