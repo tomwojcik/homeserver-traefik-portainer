@@ -11,10 +11,11 @@ services:
       - FORGEJO__server__SSH_DOMAIN=git.${SERVER_DOMAIN}
       - FORGEJO__server__ROOT_URL=https://git.${SERVER_DOMAIN}/
     volumes:
-      - /volume1/docker/forgejo-git-mirror/data:/data
+      # Forgejo data goes into the 'forgejo' subfolder
+      - /volume1/docker/forgejo-git-mirror/forgejo:/data
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - "2224:22"  # SSH for Git operations
+      - "2224:22"
     networks:
       - homeserver
     security_opt:
@@ -53,6 +54,9 @@ services:
       - PRESERVE_ORG_STRUCTURE=true
       - SCHEDULE_ENABLED=true
       - GITEA_MIRROR_INTERVAL=24h
+    volumes:
+      # Sync tool data goes into the 'mirror-sync' subfolder
+      - /volume1/docker/forgejo-git-mirror/mirror-sync:/app/data
     networks:
       - homeserver
     security_opt:
