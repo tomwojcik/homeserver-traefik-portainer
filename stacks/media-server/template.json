@@ -24,22 +24,8 @@
         {
           "text": "WireGuard",
           "value": "wireguard"
-        },
-        {
-          "text": "OpenVPN",
-          "value": "openvpn"
         }
       ]
-    },
-    {
-      "label": "OpenVPN Username",
-      "name": "OPENVPN_USER",
-      "description": "Your VPN provider username (required for OpenVPN)"
-    },
-    {
-      "label": "OpenVPN Password",
-      "name": "OPENVPN_PASSWORD",
-      "description": "Your VPN provider password (required for OpenVPN)"
     },
     {
       "label": "WireGuard Private Key",
