@@ -17,10 +17,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
           memory: 2G
         reservations:
-          cpus: '0.5'
           memory: 512M
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123"]
@@ -57,10 +55,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
           memory: 128M
         reservations:
-          cpus: '0.1'
           memory: 32M
     healthcheck:
       test: ["CMD-SHELL", "mosquitto_sub -t '$SYS/#' -C 1 | grep -v Error || exit 1"]
