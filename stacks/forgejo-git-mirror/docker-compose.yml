@@ -54,9 +54,7 @@ services:
       - PRESERVE_ORG_STRUCTURE=true
       - SCHEDULE_ENABLED=true
       - GITEA_MIRROR_INTERVAL=24h
-    volumes:
-      # Sync tool data goes into the 'mirror-sync' subfolder
-      - /volume1/docker/forgejo-git-mirror/mirror-sync:/app/data
+      - BETTER_AUTH_URL=https://git-mirror.${SERVER_DOMAIN}
     networks:
       - homeserver
     security_opt:
