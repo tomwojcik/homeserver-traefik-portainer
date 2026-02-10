@@ -12,7 +12,6 @@ services:
       - FORGEJO__server__ROOT_URL=https://git.${SERVER_DOMAIN}/
     volumes:
       - /volume1/docker/forgejo-git-mirror/data:/data
-      - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "2224:22"  # SSH for Git operations

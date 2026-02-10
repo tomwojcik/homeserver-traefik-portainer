@@ -18,7 +18,6 @@ services:
       - GITEA__server__ROOT_URL=https://${GITEA_DOMAIN:-git.localhost}/
     volumes:
       - /volume1/docker/gitea/data:/data
-      - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "2222:22"  # SSH for Git operations
