@@ -145,6 +145,7 @@
                 {
                     "label": "Forgejo API Token",
                     "name": "FORGEJO_TOKEN",
+                    "default": "TO-BE-SET-LATER",
                     "description": "Forgejo API token for the mirror bot (create after first login)"
                 },
                 {
