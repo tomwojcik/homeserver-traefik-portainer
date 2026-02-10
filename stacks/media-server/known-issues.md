@@ -22,3 +22,5 @@ go to synology task scheduler, and run it on startup, with root.
 sudo chmod 666 /dev/dri/card0
 sudo chmod 666 /dev/dri/renderD128
 ```
+
+Some trackers require captcha solving (in prowlarr). If so, add flaresolverr as a proxy.

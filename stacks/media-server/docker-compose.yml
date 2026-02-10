@@ -61,6 +61,24 @@ services:
     labels:
       - "my.zone=homeserver"
 
+  # Captcha solver for Prowlarr
+  flaresolverr:
+      image: ghcr.io/flaresolverr/flaresolverr:latest
+      container_name: flaresolverr
+      environment:
+        - LOG_LEVEL=info
+        - TZ=${TZ:-UTC}
+      networks:
+        - homeserver
+      security_opt:
+        - no-new-privileges:true
+      restart: unless-stopped
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8191/"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+
   # Indexer Manager
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
