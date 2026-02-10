@@ -39,43 +39,14 @@ services:
       - traefik.http.services.forgejo.loadbalancer.server.port=3000
       - traefik.docker.network=homeserver
 
-  mirror-bot-personal:
+  git-mirror-sync:
     image: ghcr.io/raylabshq/gitea-mirror:latest
-    container_name: forgejo-mirror-personal
+    container_name: git-mirror-sync
     restart: always
     environment:
       - GITEA_URL=http://forgejo:3000
       - GITEA_TOKEN=${FORGEJO_TOKEN}
-      - GITHUB_TOKEN=${GITHUB_PAT_PERSONAL}
-      - PRIVATE_REPOSITORIES=true
-      - MIRROR_STARRED=false
-      - MIRROR_ORGANIZATIONS=false
-      - SCHEDULE_ENABLED=true
-      - GITEA_MIRROR_INTERVAL=24h
-    networks:
-      - homeserver
-    security_opt:
-      - no-new-privileges:true
-    depends_on:
-      forgejo:
-        condition: service_healthy
-    labels:
-      - my.zone=homeserver
-      - traefik.enable=true
-      - traefik.http.routers.mirror-personal.rule=Host(`mirror-personal.${SERVER_DOMAIN}`)
-      - traefik.http.routers.mirror-personal.entrypoints=websecure
-      - traefik.http.routers.mirror-personal.tls.certresolver=myresolver
-      - traefik.http.services.mirror-personal.loadbalancer.server.port=4321
-      - traefik.docker.network=homeserver
-
-  mirror-bot-org:
-    image: ghcr.io/raylabshq/gitea-mirror:latest
-    container_name: forgejo-mirror-org
-    restart: always
-    environment:
-      - GITEA_URL=http://forgejo:3000
-      - GITEA_TOKEN=${FORGEJO_TOKEN}
-      - GITHUB_TOKEN=${GITHUB_PAT_ORG}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
       - PRIVATE_REPOSITORIES=true
       - MIRROR_STARRED=false
       - MIRROR_ORGANIZATIONS=true
@@ -92,10 +63,10 @@ services:
     labels:
       - my.zone=homeserver
       - traefik.enable=true
-      - traefik.http.routers.mirror-org.rule=Host(`mirror-org.${SERVER_DOMAIN}`)
-      - traefik.http.routers.mirror-org.entrypoints=websecure
-      - traefik.http.routers.mirror-org.tls.certresolver=myresolver
-      - traefik.http.services.mirror-org.loadbalancer.server.port=4321
+      - traefik.http.routers.git-mirror-sync.rule=Host(`git-mirror.${SERVER_DOMAIN}`)
+      - traefik.http.routers.git-mirror-sync.entrypoints=websecure
+      - traefik.http.routers.git-mirror-sync.tls.certresolver=myresolver
+      - traefik.http.services.git-mirror-sync.loadbalancer.server.port=4321
       - traefik.docker.network=homeserver
 
 networks:

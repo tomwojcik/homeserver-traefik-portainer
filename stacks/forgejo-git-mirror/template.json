@@ -16,14 +16,9 @@
       "description": "Forgejo API token for the mirror bot (create after first login)"
     },
     {
-      "label": "GitHub PAT (Personal)",
-      "name": "GITHUB_PAT_PERSONAL",
-      "description": "GitHub PAT for your personal account with repo read access"
-    },
-    {
-      "label": "GitHub PAT (Org)",
-      "name": "GITHUB_PAT_ORG",
-      "description": "GitHub PAT with org repo read access for mirroring organization repositories"
+      "label": "GitHub Token",
+      "name": "GITHUB_TOKEN",
+      "description": "GitHub PAT with repo read access (mirrors personal, private, and org repositories)"
     }
   ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/forgejo-git-mirror/logo.svg",
