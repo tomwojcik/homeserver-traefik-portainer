@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   registry:
-    image: registry:2
+    image: registry:2.8.3
     container_name: registry
     restart: always
     security_opt:
@@ -10,7 +8,7 @@ services:
     volumes:
       - /volume1/docker/registry/data:/var/lib/registry/
     environment:
-      STORAGE_PATH: /var/lib/registry/
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     networks:
       - homeserver
     labels:
@@ -23,12 +21,15 @@ services:
       - traefik.docker.network=homeserver
 
   dockerhub:
-    image: konradkleine/docker-registry-frontend:v2
+    image: joxit/docker-registry-ui:2.6.0
     restart: always
     container_name: dockerhub
     environment:
-      ENV_DOCKER_REGISTRY_USE_SSL: 1
-      ENV_DOCKER_REGISTRY_PORT: 443
+      SINGLE_REGISTRY: true
+      REGISTRY_TITLE: Docker Registry
+      NGINX_PROXY_PASS_URL: http://registry:5000
+      DELETE_IMAGES: true
+      SHOW_CONTENT_DIGEST: true
     networks:
       - homeserver
     security_opt:

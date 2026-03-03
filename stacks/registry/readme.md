@@ -5,6 +5,6 @@
 
 docker-compose build
 
-docker tag image_name:latest registry.example.com.com/repo/image_name:someversion
+docker tag image_name:latest registry.example.com/repo/image_name:someversion
 
 docker push registry.example.com/repo/image_name
