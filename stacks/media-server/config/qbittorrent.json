@@ -1,0 +1,40 @@
+{
+  "_comment": "Applied by `make apply-media-config` (scripts/apply_media_config.py). `preferences` are qBittorrent WebAPI app/setPreferences keys; ${VAR} is substituted from the environment. `categories` map category name -> save path (names stay `radarr` / `tv-sonarr` because Radarr and Sonarr are configured with them).",
+  "preferences": {
+    "save_path": "/data/torrents",
+    "temp_path_enabled": true,
+    "temp_path": "/data/torrents/incomplete",
+    "auto_tmm_enabled": true,
+    "torrent_changed_tmm_enabled": true,
+    "save_path_changed_tmm_enabled": true,
+    "category_changed_tmm_enabled": true,
+
+    "listen_port": 6881,
+    "random_port": false,
+    "upnp": false,
+    "current_network_interface": "tun0",
+    "current_interface_address": "",
+    "encryption": 0,
+    "anonymous_mode": false,
+
+    "autorun_enabled": false,
+    "autorun_on_torrent_added_enabled": false,
+
+    "web_ui_host_header_validation_enabled": true,
+    "web_ui_domain_list": "qbittorrent.${SERVER_DOMAIN}",
+    "web_ui_csrf_protection_enabled": true,
+    "web_ui_clickjacking_protection_enabled": true,
+    "web_ui_secure_cookie_enabled": true,
+    "web_ui_reverse_proxy_enabled": true,
+    "web_ui_reverse_proxies_list": "${DOCKER_BRIDGE_CIDR}",
+    "bypass_local_auth": false,
+    "bypass_auth_subnet_whitelist_enabled": false,
+    "web_ui_max_auth_fail_count": 5,
+    "web_ui_ban_duration": 3600,
+    "web_ui_session_timeout": 3600
+  },
+  "categories": {
+    "radarr": "/data/torrents/movies",
+    "tv-sonarr": "/data/torrents/tv"
+  }
+}

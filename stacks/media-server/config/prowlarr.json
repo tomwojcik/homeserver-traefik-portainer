@@ -1,0 +1,13 @@
+{
+  "_comment": "Applied by `make apply-media-config`. `applications` are matched by name against Settings > Apps. Container names, never the public hostnames: app-to-app traffic must not loop through Traefik (the admin routers are LAN-only).",
+  "applications": {
+    "Radarr": {
+      "prowlarrUrl": "http://prowlarr:9696",
+      "baseUrl": "http://radarr:7878"
+    },
+    "Sonarr": {
+      "prowlarrUrl": "http://prowlarr:9696",
+      "baseUrl": "http://sonarr:8989"
+    }
+  }
+}
