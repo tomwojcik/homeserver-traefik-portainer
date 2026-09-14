@@ -319,7 +319,7 @@
                 {
                     "label": "WireGuard Private Key",
                     "name": "WIREGUARD_PRIVATE_KEY",
-                    "description": "Your WireGuard private key. Leave EMPTY if you keep it in /volume1/docker/media-server/gluetun/secrets/wireguard_private_key (recommended). The file takes precedence over this field; to rotate the key, update or delete the file."
+                    "description": "Your WireGuard private key (from the provider's WireGuard config)."
                 },
                 {
                     "label": "WireGuard Addresses",
@@ -373,7 +373,7 @@
                 "stackfile": "stacks/media-server/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             },
-            "note": "Read stacks/media-server/readme.md first. Synology prerequisites: 1) TUN + qbittorrent boot task from known-issues.md, 2) optional WireGuard key file under /volume1/docker/media-server/gluetun/secrets, 3) /volume1/docker/media-server owned by PUID:PGID, 4) data layout data/{torrents,movies,tv} (see manual_migration.md when upgrading an existing deployment)."
+            "note": "Read stacks/media-server/readme.md first. Synology prerequisites: 1) TUN + qbittorrent boot task from known-issues.md, 2) /volume1/docker/media-server owned by PUID:PGID, 3) data layout data/{torrents,movies,tv} (see manual_migration.md when upgrading an existing deployment)."
         },
         {
             "type": 3,

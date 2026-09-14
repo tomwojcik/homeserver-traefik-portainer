@@ -12,7 +12,7 @@ Identical model to Sonarr; only the differences are spelled out.
 | router | `radarr.<domain>`, `media-lan-only` + `media-headers` | LAN only. |
 | image | `6.3.0.10514-ls315` | Pinned. |
 
-## Versioned (apply script) — `config/radarr.json`
+## Set once in the UI: Media Management and Naming
 
 | Setting | Value | Why |
 |---|---|---|
@@ -27,7 +27,7 @@ Identical model to Sonarr; only the differences are spelled out.
 | Media Management > Rename folders automatically | off | Folder names stay stable for Jellyfin. |
 | Root folder | `/data/movies` | Created if missing. |
 
-## Set once in the UI
+## Set once in the UI: the rest
 
 | Where | Expected |
 |---|---|
@@ -48,7 +48,6 @@ Identical model to Sonarr; only the differences are spelled out.
 
 ```sh
 docker exec radarr curl -s -o /dev/null -w '%{http_code}\n' http://localhost:7878/ping      # 200
-make apply-media-config-dry   # every radarr line reads "up to date"
 ```
 In the UI: System > Health has no warnings; Settings > Download Clients > Test green; Movies
 filtered by "Missing" contains only titles that are genuinely not on disk.

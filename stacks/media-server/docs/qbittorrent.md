@@ -15,7 +15,7 @@ port `8080` by other containers, and at `https://qbittorrent.<domain>` (LAN only
 | healthcheck | `eth0` present + WebUI listening | Detects the lost namespace after a gluetun restart; deunhealth then restarts the container. |
 | `stop_grace_period` | `5m` | libtorrent flushes resume data on stop; a 10 s kill causes rechecks after every redeploy. |
 
-## Versioned (apply script) — `config/qbittorrent.json`
+## Set once in the UI: preferences
 
 | Preference | Value | Why |
 |---|---|---|
@@ -30,15 +30,17 @@ port `8080` by other containers, and at `https://qbittorrent.<domain>` (LAN only
 | `autorun_enabled`, `autorun_on_torrent_added_enabled` | off | "Run external program" is a remote-code-execution surface if the WebUI is ever reached. |
 | `web_ui_host_header_validation_enabled` / `web_ui_domain_list` | on, `qbittorrent.<domain>;gluetun` | DNS-rebinding defence. `gluetun` must stay: Sonarr/Radarr send `Host: gluetun:8080`. |
 | `web_ui_csrf_protection_enabled`, `web_ui_clickjacking_protection_enabled`, `web_ui_secure_cookie_enabled` | on | Behind HTTPS via Traefik. |
-| `web_ui_reverse_proxy_enabled` / `web_ui_reverse_proxies_list` | on, the `homeserver` subnet (`DOCKER_BRIDGE_CIDR`) | Logs and bans use the real client IP from `X-Forwarded-For`, trusted only from Traefik's subnet. |
+| `web_ui_reverse_proxy_enabled` / `web_ui_reverse_proxies_list` | on, the `homeserver` subnet (`172.22.0.0/16`) | Logs and bans use the real client IP from `X-Forwarded-For`, trusted only from Traefik's subnet. |
 | `bypass_local_auth`, `bypass_auth_subnet_whitelist_enabled` | off | Behind Traefik every request looks local; a bypass would disable auth for everyone. |
 | `web_ui_max_auth_fail_count` / `web_ui_ban_duration` / `web_ui_session_timeout` | 5 / 3600 / 3600 | Brute-force ban and session expiry. |
 
-## Set once in the UI
+The keys above are the WebAPI names (Options dialog fields map one-to-one). Set them in
+Options > Downloads / Connection / Advanced / WebUI; categories via the sidebar.
+
+## Set once in the UI: the rest
 
 * WebUI username and a permanent password (a temporary one is printed to
-  `docker logs qbittorrent` on every start until you set one). The apply script logs in
-  with these (`QBIT_USER`/`QBIT_PASS`).
+  `docker logs qbittorrent` on every start until you set one).
 * Seeding limits (Options > BitTorrent > Seeding Limits): your choice; the *arrs remove a
   torrent after import only once qBittorrent reports its seeding goal reached.
 

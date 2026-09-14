@@ -153,9 +153,8 @@ Only the torrent transfer is VPN'd. Indexer searches and YouTube downloads use t
 ## VPN Setup (Critical for Torrents)
 
 Gluetun is a service inside the media-server stack (WireGuard only). Credentials go into the
-template form (`VPN_SERVICE_PROVIDER`, `WIREGUARD_ADDRESSES`, `SERVER_COUNTRIES`) and the
-private key either into the form or, preferably, into a root-only file on the NAS
-(`/volume1/docker/media-server/gluetun/secrets/wireguard_private_key`).
+template form: `VPN_SERVICE_PROVIDER`, `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_ADDRESSES`,
+`SERVER_COUNTRIES`.
 
 ### Verify the VPN
 ```bash

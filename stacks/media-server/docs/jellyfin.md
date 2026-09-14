@@ -13,11 +13,6 @@
 | memory limit | 4 GB | ffmpeg being OOM-killed mid-playback beats a NAS-wide OOM. |
 | router | `jellyfin.<domain>`, `media-lan-only` + `media-headers` | Not published outside the LAN today. No rate limit: streams issue many range requests. Drop `media-lan-only` if it is ever exposed. |
 
-## Versioned (apply script)
-
-Nothing. Jellyfin keeps its configuration in XML files under `/config`; the expected state
-is below. `encoding.xml` is the authoritative record of the transcoding settings.
-
 ## Set once in the UI
 
 | Where | Expected |

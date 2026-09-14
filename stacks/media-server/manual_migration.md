@@ -46,20 +46,12 @@ Root folders `/data/movies` and `/data/tv` already exist in Radarr and Sonarr an
    Task every 5 minutes. The recurring run covers the case where Container Manager restarts
    (DSM update, package update) and qbittorrent fails to start because gluetun was not up yet:
    Docker does not retry a failed start. Run it once now as well.
-2. **WireGuard key file** (optional but recommended; afterwards leave `WIREGUARD_PRIVATE_KEY`
-   empty in the Portainer form). The directory lives inside the stack tree, which step 3 creates:
-   ```sh
-   mkdir -p /volume1/docker/media-server/gluetun/secrets
-   printf '%s' 'YOUR_PRIVATE_KEY' > /volume1/docker/media-server/gluetun/secrets/wireguard_private_key
-   chmod 700 /volume1/docker/media-server/gluetun/secrets && chmod 600 /volume1/docker/media-server/gluetun/secrets/*
-   ```
-3. **Ownership**: the containers now run as your user instead of root.
+2. **Ownership**: the containers now run as your user instead of root.
    ```sh
    chown -R 1000:1000 /volume1/docker/media-server
-   chown -R root:root /volume1/docker/media-server/gluetun/secrets 2>/dev/null   # keep the key root-only
    ```
    Metadata only; takes a few minutes on 1.5 TB.
-4. **Docker version** (decides whether a LAN host could route straight to container IPs,
+3. **Docker version** (decides whether a LAN host could route straight to container IPs,
    bypassing Traefik; fixed in Docker 28):
    ```sh
    docker version --format '{{.Server.Version}}'; iptables -S FORWARD | head -1
@@ -135,8 +127,8 @@ find ../torrents -maxdepth 1 -type d -name '*[[]boxset[]]' -exec mv {} ../torren
 1. Point the Portainer stack at branch `media-server-rework` (Stack > Editor / Git settings), or
    merge the branch to master first and redeploy.
 2. Fill the new form fields: `SERVER_COUNTRIES` (default `Switzerland,Iceland`), `LAN_CIDR`
-   (narrow to your LAN, e.g. `192.168.1.0/24`), leave `GLUETUN_IMAGE` at its default, clear
-   `WIREGUARD_PRIVATE_KEY` if you created the key file.
+   (narrow to your LAN, e.g. `192.168.1.0/24`), leave `GLUETUN_IMAGE` at its default.
+   `WIREGUARD_PRIVATE_KEY` stays as it is (the form is the only place the key lives).
 3. Deploy. Expected: gluetun healthy within about a minute, then qbittorrent, then the rest.
 4. **Lock-out check**: open `https://qbittorrent.<domain>` from a LAN browser. If Traefik
    returns 403, the NAS engine is presenting LAN clients with a bridge address. Check the
@@ -151,26 +143,34 @@ find ../torrents -maxdepth 1 -type d -name '*[[]boxset[]]' -exec mv {} ../torren
    targets `https://traefik:443` (where the LAN gate rejects it). A hostname targeting
    `http://jellyseerr:5055` directly would bypass Traefik entirely.
 
-## 7. Push the versioned preferences
+## 7. qBittorrent and Prowlarr settings
 
-From a machine on the LAN, in this repo:
-```sh
-export SERVER_DOMAIN=<your domain> DOCKER_BRIDGE_CIDR=172.22.0.0/16
-export QBIT_USER=... QBIT_PASS=... SONARR_API_KEY=... RADARR_API_KEY=... PROWLARR_API_KEY=...
-make apply-media-config-dry     # review
-make apply-media-config
-```
-Before running it, make sure qBittorrent has a permanent WebUI password: on a fresh config it
-prints a temporary one to `docker logs qbittorrent` on every start until you set one. The
-script keeps `gluetun` in qBittorrent's allowed Host list: Sonarr/Radarr reach it as
-`gluetun:8080` and host-header validation would otherwise answer 401.
+Everything below is done in the UIs; the full expected state of each app is in `docs/`.
 
-This sets qBittorrent's save paths, categories, `tun0` binding, WebUI hardening; Sonarr/Radarr
-renaming, recycle bin, hardlinks, season folders; and rewrites Prowlarr's Apps to the container
-URLs (`http://radarr:7878`, `http://sonarr:8989`, `http://prowlarr:9696`). App-to-app traffic
-must never use the public `*.<domain>` hostnames: those loop through Traefik from a bridge
-address and are rejected by the LAN-only rule. Re-run any time after editing
-`stacks/media-server/config/*.json`.
+**qBittorrent** (`https://qbittorrent.<domain>`; see `docs/qbittorrent.md` for every value)
+1. If prompted, set a permanent password (a temporary one is printed to
+   `docker logs qbittorrent` on every start until you do).
+2. Options > Downloads: Default Save Path `/data/torrents`; Automatic Torrent Management on,
+   including "relocate on category/save-path change"; keep incomplete torrents in
+   `/data/torrents/incomplete`.
+3. Categories (left sidebar > right-click > Edit): `radarr` -> `/data/torrents/movies`,
+   `tv-sonarr` -> `/data/torrents/tv`. Existing torrents: select all > Set Location
+   `/data/torrents` if they still point at `/downloads`.
+4. Options > Connection: listening port `6881`, UPnP/NAT-PMP off.
+5. Options > Advanced: Network interface `tun0`.
+6. Options > WebUI: Host header validation on with Server domains
+   `qbittorrent.<domain>;gluetun` (**`gluetun` is mandatory**: Sonarr/Radarr reach it as
+   `gluetun:8080` and would get 401 otherwise); CSRF and clickjacking protection on; reverse
+   proxy support on with trusted proxies `172.22.0.0/16`; both "bypass authentication" options
+   off.
+7. Options > Downloads: "Run external program" off.
+
+**Prowlarr** (`docs/prowlarr.md`)
+1. Settings > Apps: Radarr `http://radarr:7878`, Sonarr `http://sonarr:8989`, and in each the
+   Prowlarr Server `http://prowlarr:9696`. Container names, never the public `*.<domain>`
+   hostnames: those loop through Traefik from a bridge address and are rejected by the
+   LAN-only rule. Test both.
+2. Settings > General > Security: Authentication Required = Enabled.
 
 ## 8. Re-point Radarr and Sonarr (two passes each)
 
@@ -193,7 +193,10 @@ does not exist, so the paths must first be rewritten to where the files really a
 
 **Sonarr**: the same five steps with Series, root folder `/data/tv`.
 
-Both apps, in the UI (these are not versioned by the apply script):
+Both apps, in the UI (see `docs/sonarr.md` and `docs/radarr.md` for every value):
+* Settings > Media Management: Rename on; Recycling Bin `/data/recycle/tv` (`/data/recycle/movies`
+  in Radarr), 14 days; Use Hardlinks on; Import Extra Files on (`srt,sub,idx`); Delete empty
+  folders on. Sonarr: Season Folders on for every series (Series > Mass Edit).
 * Settings > Download Clients > qBittorrent: host `gluetun`, port `8080`, **no** Remote Path
   Mapping (both sides see `/data/torrents`). Test must be green.
 * Settings > General > Security: Authentication Required = **Enabled**. Never "Disabled for
