@@ -324,7 +324,7 @@ the router in the Traefik dashboard and the container's labels instead.
 
 ### **Resource Management**
 - **Health checks**: every media-server service has one; `deunhealth` restarts qBittorrent when it loses gluetun's network
-- **Resource limits**: memory and pids limits on every media-server service (scale down on a small NAS)
+- **Resource limits**: memory limits on every media-server service (scale down on a small NAS; `cpus` and `pids` are not supported by the DSM kernel)
 - **Monitoring**: Use cAdvisor and Uptime Kuma
 
 ## Deployment Order (Important!)
