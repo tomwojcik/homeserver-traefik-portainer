@@ -64,6 +64,7 @@ Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlink
    databases migrate forward only, so snapshot before every image bump.
 
 Upgrading an existing deployment from the old layout: follow `manual_migration.md`.
+Expected configuration of every service, in and out of the compose file: [`docs/`](docs/README.md).
 
 ## Template variables
 
@@ -87,7 +88,7 @@ Versioned in `config/*.json` and pushed with `make apply-media-config` (see
 paths/categories/`tun0` binding/WebUI hardening, Sonarr and Radarr naming, recycle bin,
 hardlinks, season folders, and Prowlarr's app URLs.
 
-Everything else is set once in each UI:
+Everything else is set once in each UI (full per-service reference in [`docs/`](docs/README.md)):
 
 * **Sonarr / Radarr**: download client host `gluetun`, port `8080`, no remote path mapping;
   Authentication Required = Enabled.

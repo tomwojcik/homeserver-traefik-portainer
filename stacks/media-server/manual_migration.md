@@ -124,9 +124,10 @@ Review the list (folders without a ` (Year)` suffix). Then move them aside, noth
 mkdir -p ../torrents/_orphans
 find . -maxdepth 1 -mindepth 1 -type d ! -regex '.* ([0-9][0-9][0-9][0-9])$' -exec mv {} ../torrents/_orphans/ \;
 ```
-Also move Jellyfin's old collection folders out of the way:
+Also move Jellyfin's old collection folders (`<Name> [boxset]`, created by Jellyfin in what
+used to be its library root) out of the way:
 ```sh
-mv "../torrents/Atlantis Collection [boxset]" "../torrents/Knocked Up Collection [boxset]" "../torrents/Shrek Collection [boxset]" ../torrents/_orphans/ 2>/dev/null
+find ../torrents -maxdepth 1 -type d -name '*[[]boxset[]]' -exec mv {} ../torrents/_orphans/ \;
 ```
 
 ## 6. Redeploy the stack
@@ -186,8 +187,8 @@ does not exist, so the paths must first be rewritten to where the files really a
    Radarr renames each folder into `/data/movies` (same mount, instant). Movies whose folder
    only exists in `/data/movies` already (the ones Radarr had lost) log a warning and simply
    get the right path.
-4. Movies > Update All. Verify: no movie path starts with `/data/torrents`; previously
-   "missing" movies (Hot Fuzz, The Martian, ...) show a file.
+4. Movies > Update All. Verify: no movie path starts with `/data/torrents`; movies that were
+   "missing" before but had a folder under `data/movies` now show a file.
 5. Remove the temporary `/data/torrents` root folder.
 
 **Sonarr**: the same five steps with Series, root folder `/data/tv`.
@@ -200,10 +201,14 @@ Both apps, in the UI (these are not versioned by the apply script):
 
 **Prowlarr**: Settings > General > Security: Authentication Required = **Enabled** as well.
 
+The full expected state of every app, including the settings not touched by this guide, is
+in `docs/` (one file per service).
+
 ## 9. qBittorrent leftovers
 
-The 10 existing torrents carry a `/volume1/docker/...` save path (host-style; how it got
-there is unknown) that does not exist inside the container. Open the WebUI and check them: if
+Existing torrents may carry a save path that does not exist inside the new container (in
+the case that prompted this guide, a host-style `/volume1/docker/...` path). Open the WebUI
+and check them: if
 they show "Missing files", either right-click > Set Location `/data/torrents/movies` (or `/tv`)
 followed by Force Recheck if the files are actually in the new tree, or remove the torrent
 **without** deleting files. If every torrent turns out to use such paths, the legacy
