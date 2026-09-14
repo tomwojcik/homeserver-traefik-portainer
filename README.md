@@ -320,7 +320,7 @@ the router in the Traefik dashboard and the container's labels instead.
 ### **Media Streaming**
 - **Local access only**: No tunnel overhead
 - **Direct file access**: Mount media directories properly
-- **GPU acceleration**: Enable for transcoding if available
+- **GPU acceleration**: on by default in the media-server stack (Intel QuickSync via the render node)
 
 ### **Resource Management**
 - **Health checks**: every media-server service has one; `deunhealth` restarts qBittorrent when it loses gluetun's network

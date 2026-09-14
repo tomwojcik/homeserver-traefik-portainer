@@ -3,8 +3,9 @@
 #   gluetun (WireGuard kill switch) -> qbittorrent (inside gluetun's network namespace)
 #   prowlarr + flaresolverr -> sonarr / radarr -> bazarr -> jellyfin <- jellyseerr
 #
-# Reworked service by service on branch media-server-rework. Host directories are
-# never changed; only container-side settings are.
+# Host layout: /volume1/docker/media-server/data/{torrents,movies,tv,recycle} is mounted as
+# /data (one mount => hardlinks), per-app state under /volume1/docker/media-server/<app>.
+# Upgrading from the old downloads/ + media/ layout: see manual_migration.md.
 
 # ---- shared blocks ----------------------------------------------------------
 x-logging: &default-logging
@@ -27,6 +28,7 @@ x-common: &common
 #   - /tmp on tmpfs for .NET/python scratch files
 #   - UMASK, Docker Mods and custom init scripts do not work in this mode (none are used here)
 #   - /config on the host must be owned by PUID:PGID (it is: PUID=1000 was in use before)
+#   - each app logs a "read-only / non-root not supported" banner at start: expected (see known-issues.md)
 # No `networks:` here on purpose: qbittorrent uses network_mode and the two are mutually exclusive.
 x-lsio-hardened: &lsio-hardened
   restart: unless-stopped
@@ -97,8 +99,9 @@ services:
     volumes:
       - /volume1/docker/media-server/gluetun/config:/gluetun
       # Optional root-only directory holding the WireGuard private key as a FILE named
-      # `wireguard_private_key` (gluetun default: WIREGUARD_PRIVATE_KEY_SECRETFILE). When the
-      # file exists, leave WIREGUARD_PRIVATE_KEY empty in Portainer so the key is not stored there.
+      # `wireguard_private_key` (gluetun default: WIREGUARD_PRIVATE_KEY_SECRETFILE). The FILE
+      # TAKES PRECEDENCE over the WIREGUARD_PRIVATE_KEY env var (gluetun reads secrets first);
+      # an empty env value is ignored. To rotate the key, update or delete the file.
       #   mkdir -p /volume1/docker/media-server/gluetun/secrets
       #   printf '%s' 'YOUR_KEY' > /volume1/docker/media-server/gluetun/secrets/wireguard_private_key
       #   chmod 700 /volume1/docker/media-server/gluetun/secrets && chmod 600 /volume1/docker/media-server/gluetun/secrets/*
@@ -106,14 +109,20 @@ services:
     environment:
       VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER:-surfshark}
       VPN_TYPE: wireguard                    # only WireGuard is wired (no OPENVPN_* pass-through)
-      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY:-}   # env wins over the secret file; leave empty to use the file
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY:-}   # fallback only; the secret file, if present, wins
       WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES:-}
       SERVER_COUNTRIES: ${SERVER_COUNTRIES:-Switzerland,Iceland}   # exact spelling: `docker run --rm qmcgaw/gluetun format-servers -surfshark`
       UPDATER_PERIOD: ${UPDATER_PERIOD:-720h}               # refresh the server list (persisted in /gluetun/servers); wiki floor is 360h
       TZ: ${TZ:-UTC}
       # Secure defaults made explicit (all are gluetun defaults):
       FIREWALL: "on"                         # kill switch; never set FIREWALL_OUTBOUND_SUBNETS to the LAN
-      FIREWALL_INPUT_PORTS: "8080"           # qbittorrent WebUI, reached by Traefik and the *arrs over the bridge only
+      # gluetun's firewall accepts everything from the local Docker subnet on eth0, so Traefik and
+      # the *arrs reach qbittorrent's :8080 without FIREWALL_INPUT_PORTS (and :6881 is reachable
+      # from the bridge too). The HTTP control server (:8000) is unauthenticated on this build and
+      # a PUT can stop the VPN, so it is bound to loopback; nothing in the stack uses it. To monitor
+      # the VPN from Uptime Kuma later, provision auth roles in /gluetun/auth/config.toml first
+      # (see known-issues.md item 6) and set this back to ":8000".
+      HTTP_CONTROL_SERVER_ADDRESS: "127.0.0.1:8000"
       DNS_SERVER: "on"                       # DNS-over-TLS forwarder inside the tunnel
       BLOCK_MALICIOUS: "on"
       DNS_KEEP_NAMESERVER: "off"
@@ -174,7 +183,7 @@ services:
     # which re-joins the new namespace. VPN health itself is gluetun's healthcheck, so a VPN
     # blip that gluetun heals by itself does not restart qbittorrent.
     healthcheck:
-      test: ["CMD-SHELL", "grep -q 'eth0:' /proc/net/dev && nc -z 127.0.0.1 8080"]
+      test: ["CMD-SHELL", "grep -q 'eth0:' /proc/net/dev || { echo 'eth0 missing: gluetun namespace gone'; exit 1; }; nc -z 127.0.0.1 8080 || { echo 'WebUI :8080 not listening'; exit 1; }"]
       interval: 1m
       timeout: 10s
       retries: 3
@@ -191,10 +200,12 @@ services:
   # ---------------------------------------------------------------------------
   # Restarts containers labelled deunhealth.restart.on.unhealthy=true when Docker marks them
   # unhealthy (Docker itself never restarts on a failed healthcheck). Needed only for qbittorrent.
+  # Runs as root (upstream FROM scratch image, no USER) with the Docker socket: the one accepted
+  # trust point in the stack, hence no network, read-only, cap_drop ALL, digest-pinned.
   # ---------------------------------------------------------------------------
   deunhealth:
     <<: *common
-    image: qmcgaw/deunhealth:v0.3.0
+    image: qmcgaw/deunhealth@sha256:4102bf5d788fd0580ee5adb367cf48fc269a154b8fd284e6315e0dd8b24bb03c   # v0.3.0
     container_name: deunhealth
     network_mode: none
     read_only: true
@@ -430,8 +441,8 @@ services:
       # TranscodingTempPath=/config/cache/transcodes setting valid with no UI change.
       - /volume1/docker/media-server/jellyfin-cache:/config/cache
     # Hardware transcoding: pass only the render node. The init script fixes its permissions
-    # inside the container; if the log lacks "permissions for /dev/dri/renderD128 are good",
-    # see known-issues.md. On a model without an iGPU, delete the `devices:` block.
+    # inside the container (verified: "permissions for /dev/dri/renderD128 are good"); if that
+    # line is missing, see known-issues.md item 3. On a model without an iGPU, delete `devices:`.
     devices:
       - ${JELLYFIN_RENDER_DEVICE:-/dev/dri/renderD128}:${JELLYFIN_RENDER_DEVICE:-/dev/dri/renderD128}
     networks:
@@ -462,8 +473,10 @@ services:
   # name, hostname and /app/config are unchanged, so URLs and the database carry over (migrated
   # in place on first start, one way: back up /volume1/docker/media-server/jellyseerr first).
   # Nothing in this stack is published outside the LAN (no tunnel), so it gets the LAN gate like
-  # the rest, plus a rate limit on its login page. If it is ever published through a tunnel,
-  # drop `media-lan-only` from its router and key the rate limit on `Cf-Connecting-IP`.
+  # the rest, plus a per-IP request rate limit (a flood backstop, not a brute-force limiter:
+  # 60 r/s still allows many login attempts). If it is ever published through a tunnel, drop
+  # `media-lan-only` from its router, key the rate limit on `Cf-Connecting-IP` and put
+  # Cloudflare Access in front of it.
   # Image runs as uid 1000 (`node`) and ships no init and no healthcheck.
   # In-app: Jellyfin http://jellyfin:8096, Sonarr http://sonarr:8989, Radarr http://radarr:7878.
   # ---------------------------------------------------------------------------
@@ -496,7 +509,7 @@ services:
           pids: 256
     labels:
       <<: *traefik-labels
-      # Login-page abuse limiter, per client IP.
+      # Per-IP request limiter (flood backstop).
       traefik.http.middlewares.media-ratelimit.ratelimit.average: "60"
       traefik.http.middlewares.media-ratelimit.ratelimit.burst: "120"
       traefik.http.middlewares.media-ratelimit.ratelimit.period: "1s"
