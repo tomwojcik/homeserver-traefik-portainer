@@ -303,7 +303,7 @@
             "type": 3,
             "name": "media_server_stack",
             "title": "Complete Media Server with VPN",
-            "description": "Full media server stack: Gluetun (WireGuard kill switch) + qBittorrent, Prowlarr + FlareSolverr, Sonarr, Radarr, Bazarr, Jellyfin, Seerr (Jellyseerr). LAN-only behind Traefik.",
+            "description": "Full media server stack: Gluetun (WireGuard kill switch) + qBittorrent, Prowlarr + FlareSolverr, Sonarr, Radarr, Bazarr, Jellyfin, Seerr (Jellyseerr).",
             "env": [
                 {
                     "label": "Server Domain",
@@ -337,12 +337,6 @@
                     "name": "GLUETUN_IMAGE",
                     "default": "qmcgaw/gluetun@sha256:7b1dafa3d25cfd891deae52c7973c499f619f7d8eac52fad84f9aa1e5e6e01ca",
                     "description": "Exact gluetun build to run (digest of the master build verified on the NAS on 2026-09-10). Bump deliberately; the last tagged release is from 2024."
-                },
-                {
-                    "label": "LAN CIDR (admin UIs)",
-                    "name": "LAN_CIDR",
-                    "default": "192.168.0.0/16,10.0.0.0/8",
-                    "description": "Source ranges allowed to open any media-server UI (all seven routers) through Traefik. On Synology add the Docker bridge gateway as a /32 (e.g. 172.22.0.1/32): DSM proxies LAN clients through it (see known-issues.md item 8). Never add the whole 172.16.0.0/12: that admits every container."
                 },
                 {
                     "label": "Jellyfin render device",

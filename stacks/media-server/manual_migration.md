@@ -126,22 +126,15 @@ find ../torrents -maxdepth 1 -type d -name '*[[]boxset[]]' -exec mv {} ../torren
 
 1. Point the Portainer stack at branch `media-server-rework` (Stack > Editor / Git settings), or
    merge the branch to master first and redeploy.
-2. Fill the new form fields: `SERVER_COUNTRIES` (default `Switzerland,Iceland`), `LAN_CIDR`
-   (narrow to your LAN, e.g. `192.168.1.0/24`), leave `GLUETUN_IMAGE` at its default.
-   `WIREGUARD_PRIVATE_KEY` stays as it is (the form is the only place the key lives).
+2. Fill the new form fields: `SERVER_COUNTRIES` (default `Switzerland,Iceland`), leave
+   `GLUETUN_IMAGE` at its default. `WIREGUARD_PRIVATE_KEY` stays as it is (the form is the
+   only place the key lives).
 3. Deploy. Expected: gluetun healthy within about a minute, then qbittorrent, then the rest.
-4. **Lock-out check**: open `https://qbittorrent.<domain>` from a LAN browser. If Traefik
-   returns 403, the NAS engine is presenting LAN clients with a bridge address. Check the
-   client IP (first column of Traefik's access log):
-   ```sh
-   docker logs traefik --tail 20 2>&1 | awk '{print $1, $6, $7, $9}'
-   ```
-   If it shows a bridge address (typically the gateway `172.22.0.1`, also what IPv6 clients
-   arrive as), add ONLY that address as a `/32` to `LAN_CIDR`, never a `/16`, and redeploy.
-5. **Tunnel leftovers**: the root stack still runs `cloudflared`. In Cloudflare Zero Trust >
-   Tunnels, delete every public hostname that points at a media service, or make sure each
-   targets `https://traefik:443` (where the LAN gate rejects it). A hostname targeting
-   `http://jellyseerr:5055` directly would bypass Traefik entirely.
+   Open `https://qbittorrent.<domain>` from a LAN browser to confirm routing works.
+4. **Tunnel leftovers**: the root stack still runs `cloudflared`. In Cloudflare Zero Trust >
+   Tunnels, delete every public hostname that points at a media service. Nothing in the
+   stack is meant to be reachable from the internet, and there is no IP allow-list to stop
+   a forgotten hostname.
 
 ## 7. qBittorrent and Prowlarr settings
 
@@ -168,8 +161,8 @@ Everything below is done in the UIs; the full expected state of each app is in `
 **Prowlarr** (`docs/prowlarr.md`)
 1. Settings > Apps: Radarr `http://radarr:7878`, Sonarr `http://sonarr:8989`, and in each the
    Prowlarr Server `http://prowlarr:9696`. Container names, never the public `*.<domain>`
-   hostnames: those loop through Traefik from a bridge address and are rejected by the
-   LAN-only rule. Test both.
+   hostnames: those loop through Traefik for no benefit and make every sync depend on DNS
+   and certificates. Test both.
 2. Settings > General > Security: Authentication Required = Enabled.
 
 ## 8. Re-point Radarr and Sonarr (two passes each)

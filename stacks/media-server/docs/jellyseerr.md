@@ -14,7 +14,7 @@ The request front-end. The container is still named `jellyseerr` and served at
 | `cap_drop` | ALL | Nothing needed. |
 | mounts | `jellyseerr` at `/app/config` | Unchanged path: the database migrates in place on first start (one way). |
 | healthcheck | `GET /api/v1/status` via wget | The image has no healthcheck and no curl. |
-| router | `jellyseerr.<domain>`, `media-lan-only` + `media-headers` + `media-ratelimit` | Not published outside the LAN today. The rate limit is a per-IP flood backstop, not a brute-force limiter. If it is ever exposed: drop `media-lan-only`, key the limit on `Cf-Connecting-IP`, and put Cloudflare Access in front. |
+| router | `jellyseerr.<domain>`, `media-headers` + `media-ratelimit` | Not published outside the LAN today. The rate limit is a per-IP flood backstop, not a brute-force limiter. If it is ever exposed: key the limit on `Cf-Connecting-IP` and put Cloudflare Access in front. |
 
 ## Set once in the UI
 
@@ -25,8 +25,8 @@ The request front-end. The container is still named `jellyseerr` and served at
 | Settings > Services > Sonarr | One server, default, hostname `sonarr`, port `8989`, Sonarr's API key, Quality Profile, **Root Folder `/data/tv`**, Season Folders on, "Enable Scan" on. |
 | Settings > Users | Your own user with auto-approve; other users (family) with request limits as you see fit. |
 
-Container names everywhere. A public hostname here loops through Traefik from a bridge
-address and is rejected by the LAN gate.
+Container names everywhere. A public hostname here would loop through Traefik for no
+benefit.
 
 ## Left at defaults on purpose
 

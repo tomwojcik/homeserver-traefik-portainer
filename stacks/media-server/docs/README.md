@@ -12,10 +12,10 @@ One file per service. Each describes the state the service is expected to be in 
 Conventions that apply everywhere:
 
 * Containers address each other by container name (`http://sonarr:8989`, `gluetun:8080`),
-  never by the public `*.<domain>` hostnames. Those hairpin through Traefik from a bridge
-  address and are rejected by the LAN-only rule.
-* Every UI keeps its own login enabled. Traefik's LAN gate is a second layer, not a
-  replacement.
+  never by the public `*.<domain>` hostnames. Those hairpin through Traefik for no benefit
+  and make every sync depend on DNS and certificates.
+* Every UI keeps its own login enabled. That is the access control: there is no IP
+  allow-list (`../known-issues.md` item 8).
 * Paths are always the container-side `/data/...` paths. The host side is
   `/volume1/docker/media-server/data/...`.
 

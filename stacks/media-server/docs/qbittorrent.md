@@ -1,7 +1,7 @@
 # qBittorrent
 
 Runs inside gluetun's network namespace: no network of its own, reached as host `gluetun`
-port `8080` by other containers, and at `https://qbittorrent.<domain>` (LAN only) by you.
+port `8080` by other containers, and at `https://qbittorrent.<domain>` by you.
 
 ## Compose / template
 
