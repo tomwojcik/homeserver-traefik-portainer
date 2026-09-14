@@ -11,7 +11,7 @@ subtitle download stays available as an on-demand fallback.
 | `user` / `read_only` / `cap_drop` | `PUID:PGID`, read-only, ALL dropped | LinuxServer non-root + read-only modes. |
 | mounts | `/config`; `data/movies` at `/data/movies`; `data/tv` at `/data/tv` | Library only; the same container paths Sonarr and Radarr report, so no path mappings. |
 | healthcheck | `GET /` | Liveness only; Bazarr has no anonymous readiness endpoint. |
-| router | `bazarr.<domain>`, `media-lan-only` + `media-headers` | LAN only. |
+| router | `bazarr.<domain>`, `media-headers` | |
 | image | `v1.6.0-ls363` | Pinned. |
 
 ## Set once in the UI

@@ -7,7 +7,7 @@
 | `user` / `read_only` / `cap_drop` | `PUID:PGID`, read-only, ALL dropped | LinuxServer non-root + read-only modes. |
 | mounts | `/config`; `data` at `/data` | Staging (`/data/torrents`) and library (`/data/tv`) on ONE mount so imports are hardlinks. |
 | healthcheck | `GET /ping` | Anonymous readiness endpoint. |
-| router | `sonarr.<domain>`, `media-lan-only` + `media-headers` | LAN only. |
+| router | `sonarr.<domain>`, `media-headers` | |
 | image | `4.0.19.2979-ls323` | Includes the reverse-proxy authentication-bypass fix (>= 4.0.16). |
 
 ## Set once in the UI: Media Management and Naming

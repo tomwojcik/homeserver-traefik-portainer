@@ -1,6 +1,6 @@
 # homeserver-traefik-portainer
 
-A complete homeserver setup using **Traefik reverse proxy** with **automatic HTTPS** and **Portainer** for easy container management. Torrenting runs inside a VPN kill switch. Everything is LAN-only by default; external access is opt-in.
+A complete homeserver setup using **Traefik reverse proxy** with **automatic HTTPS** and **Portainer** for easy container management. Torrenting runs inside a VPN kill switch. Nothing is published outside the LAN unless you opt in.
 
 ## Features
 
@@ -8,7 +8,7 @@ A complete homeserver setup using **Traefik reverse proxy** with **automatic HTT
 ✅ **Automatic HTTPS** - Set-and-forget SSL certificates via Let's Encrypt  
 ✅ **VPN-protected torrenting** - qBittorrent lives inside a Gluetun WireGuard kill switch  
 ✅ **Easy service deployment** - Deploy services via Portainer's web UI  
-✅ **LAN-only by default** - Admin UIs are gated to private networks by Traefik; external access is opt-in  
+✅ **Nothing public by default** - No ports forwarded, no tunnel; every app keeps its own login  
 ✅ **Service auto-discovery** - Traefik automatically detects new services  
 ✅ **No port conflicts** - Everything routed through Traefik on 80/443  
 
@@ -126,9 +126,9 @@ After setup, your services will be available at:
 - https://vaultwarden.example.com (Password manager)
 - https://uptime.example.com (Service monitoring)
 
-The media-server UIs are only reachable from private LAN ranges (Traefik `ipAllowList`, see
-`LAN_CIDR` in the template). Containers talk to each other by container name
-(`http://radarr:7878`), never through these public hostnames.
+Containers talk to each other by container name (`http://radarr:7878`), never through these
+public hostnames: that would loop out through Traefik for no benefit and add a DNS and
+certificate dependency to every sync.
 
 ## Network Architecture
 
@@ -139,9 +139,8 @@ Local Device → Router DNS → NAS:443 → Traefik → Service
 **Benefits**: Full bandwidth, no internet dependency, lowest latency
 
 ### **External Access (Optional)**
-None by default. If you publish a service through a Cloudflare Tunnel, remove the
-`media-lan-only` middleware from that router; tunnel traffic reaches Traefik from the
-Docker bridge and is otherwise rejected.
+None by default. If you publish a service through a Cloudflare Tunnel, put Cloudflare
+Access in front of its hostname: the app's own login is the only other layer.
 
 ### **VPN Protection (Torrents)**
 ```
@@ -164,8 +163,8 @@ docker stop gluetun                          # kill-switch test: qbittorrent mus
 ```
 
 ### Accessing qBittorrent
-`https://qbittorrent.<domain>` (LAN only). Sonarr and Radarr reach it as host `gluetun`,
-port `8080`. Never publish port 8080 on the host: that bypasses Traefik, TLS and the LAN gate.
+`https://qbittorrent.<domain>`. Sonarr and Radarr reach it as host `gluetun`, port `8080`.
+Never publish port 8080 on the host: that bypasses Traefik and TLS.
 
 ### Workflow after setup
 1. **Request media**: Seerr → Sonarr/Radarr
@@ -219,9 +218,8 @@ Nothing is published outside the LAN by default.
 
 ### Option 1: Cloudflare Tunnel (if you need it)
 Run `cloudflared` from the root compose with a tunnel token and add public hostnames for the
-services you want, origin `https://traefik:443`. For any media-server router you publish,
-remove `media-lan-only` from its `traefik.http.routers.<name>.middlewares` label and put
-Cloudflare Access in front of the hostname.
+services you want, origin `https://traefik:443`, and put Cloudflare Access in front of every
+hostname you publish.
 
 ### Option 2: Port Forwarding
 Not recommended: it exposes every routed hostname to the internet.
@@ -283,8 +281,8 @@ If Portainer shows "timeout.html" or security timeout message:
 - **Note**: This only happens on first setup - once admin is created, normal access works
 
 ### **Published Ports Bypass Traefik**
-A `ports:` mapping makes a service reachable at `nas-ip:port` in plain HTTP, outside Traefik,
-TLS and the LAN gate. Keep ports unpublished in production; if a hostname returns 404, check
+A `ports:` mapping makes a service reachable at `nas-ip:port` in plain HTTP, outside Traefik
+and TLS. Keep ports unpublished in production; if a hostname returns 404, check
 the router in the Traefik dashboard and the container's labels instead.
 
 ### **Performance Issues**
@@ -300,7 +298,7 @@ the router in the Traefik dashboard and the container's labels instead.
 - No host ports published by the media-server stack (only Traefik 80/443)
 
 ### **Access Control**
-- Media-server UIs: LAN-only via Traefik `ipAllowList` (`LAN_CIDR`), security headers on every router
+- Security headers on every media-server router. No IP allow-list: Synology's Docker presents every LAN client as the bridge gateway, so one cannot work (see `stacks/media-server/known-issues.md` item 8)
 - Every app keeps its own login enabled; Seerr's login page is rate-limited
 - External: nothing by default; opt-in per router (see External Access)
 

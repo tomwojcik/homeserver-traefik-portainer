@@ -9,7 +9,7 @@ Identical model to Sonarr; only the differences are spelled out.
 | `user` / `read_only` / `cap_drop` | `PUID:PGID`, read-only, ALL dropped | LinuxServer non-root + read-only modes. |
 | mounts | `/config`; `data` at `/data` | Staging (`/data/torrents`) and library (`/data/movies`) on ONE mount so imports are hardlinks. |
 | healthcheck | `GET /ping` | Anonymous readiness endpoint. |
-| router | `radarr.<domain>`, `media-lan-only` + `media-headers` | LAN only. |
+| router | `radarr.<domain>`, `media-headers` | |
 | image | `6.3.0.10514-ls315` | Pinned. |
 
 ## Set once in the UI: Media Management and Naming

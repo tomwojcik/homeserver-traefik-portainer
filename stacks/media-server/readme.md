@@ -1,7 +1,7 @@
 # Complete Media Server with VPN
 
 One Portainer stack: VPN-protected torrenting, automated TV/movie management, subtitles,
-streaming and requests. LAN-only behind Traefik.
+streaming and requests, behind Traefik.
 
 ## Services
 
@@ -18,8 +18,9 @@ streaming and requests. LAN-only behind Traefik.
 | jellyfin | Streaming | `jellyfin.<domain>` | Libraries `/data/movies`, `/data/tv` read-only; Intel QSV transcoding |
 | jellyseerr | Requests (Seerr) | `jellyseerr.<domain>` | Container name kept from Jellyseerr |
 
-Every UI keeps its own login. Traefik additionally restricts all of them to `LAN_CIDR`
-(private ranges by default) and adds security headers.
+Every UI keeps its own login; Traefik adds security headers. There is no IP allow-list:
+on Synology's Docker every LAN client arrives as the bridge gateway, so one cannot tell LAN
+from anything else (`known-issues.md` item 8).
 
 ## Data layout
 
@@ -72,7 +73,6 @@ Expected configuration of every service, in and out of the compose file: [`docs/
 | `WIREGUARD_ADDRESSES` | | e.g. `10.14.0.2/16` |
 | `SERVER_COUNTRIES` | `Switzerland,Iceland` | Server pool (gluetun spelling) |
 | `GLUETUN_IMAGE` | pinned digest | Exact gluetun build; bump deliberately |
-| `LAN_CIDR` | `192.168.0.0/16,10.0.0.0/8` | Who may open the UIs. Never add `172.16.0.0/12` (Docker bridge) |
 | `JELLYFIN_RENDER_DEVICE` | `/dev/dri/renderD128` | GPU render node |
 | `PUID` / `PGID` | `1000` | Owner of all data |
 | `TZ` | `UTC` | Timezone |
@@ -99,8 +99,8 @@ reason, is in [`docs/`](docs/README.md); the essentials:
   `/data/tv` and `/data/movies`.
 
 Containers always address each other by container name. The public hostnames are for
-browsers; app-to-app requests through them hairpin via Traefik from a bridge address and are
-rejected by the LAN gate.
+browsers; app-to-app requests through them hairpin via Traefik for no benefit and add a DNS
+and certificate dependency to every sync.
 
 ## Security model
 
@@ -125,5 +125,5 @@ rejected by the LAN gate.
 * qbittorrent unhealthy after a gluetun restart is normal for up to ~3 minutes; deunhealth
   restarts it. If it stays down after a NAS reboot, run the boot script by hand.
 * Jellyfin transcoding: see `known-issues.md` item 3.
-* A UI returns 403: your client is outside `LAN_CIDR`, or Traefik sees a bridge address
-  (`docker logs traefik`, field `ClientAddr`).
+* A UI returns 403: a middleware on its router is rejecting the request; check the
+  router's `middlewares` label and `docker logs traefik`.

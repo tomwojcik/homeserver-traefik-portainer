@@ -63,12 +63,10 @@ x-traefik-labels: &traefik-labels
   traefik.http.middlewares.media-headers.headers.customResponseHeaders.X-Robots-Tag: "noindex, nofollow, nosnippet, noarchive"
   traefik.http.middlewares.media-headers.headers.customResponseHeaders.Server: ""
   traefik.http.middlewares.media-headers.headers.customResponseHeaders.X-Powered-By: ""
-  # -- LAN-only gate for admin UIs. Traefik sees the real LAN IP for direct :443 hits and the
-  #    bridge IP (172.22.x on this host) for anything that hairpins through Traefik (a tunnel
-  #    client, or a container using a public hostname), so a LAN allow-list blocks both.
-  #    172.16.0.0/12 is intentionally NOT in the default.
-  #    Narrow LAN_CIDR to your real subnet (e.g. 192.168.1.0/24) in the Portainer form.
-  traefik.http.middlewares.media-lan-only.ipallowlist.sourceRange: "${LAN_CIDR:-192.168.0.0/16,10.0.0.0/8}"
+  # No IP allow-list: on Synology's Docker every LAN client reaches Traefik as the bridge
+  # gateway (172.22.0.1), so an allow-list cannot tell LAN from anything else and only ever
+  # blocked app-to-app hairpins through the public hostnames. Access control is each app's own
+  # login; nothing in this stack is published outside the LAN. See known-issues.md item 8.
 
 services:
   # ---------------------------------------------------------------------------
@@ -139,7 +137,7 @@ services:
       traefik.http.routers.qbittorrent.tls.certresolver: "myresolver"
       "traefik.http.routers.qbittorrent.tls.domains[0].main": "${SERVER_DOMAIN}"
       "traefik.http.routers.qbittorrent.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
-      traefik.http.routers.qbittorrent.middlewares: "media-lan-only,media-headers"
+      traefik.http.routers.qbittorrent.middlewares: "media-headers"
       traefik.http.services.qbittorrent.loadbalancer.server.port: "8080"
 
   # ---------------------------------------------------------------------------
@@ -248,7 +246,7 @@ services:
       my.zone: "homeserver"
 
   # ---------------------------------------------------------------------------
-  # Indexer manager. Admin UI: LAN only. Talks to flaresolverr over media-internal and to
+  # Indexer manager. Talks to flaresolverr over media-internal and to
   # sonarr/radarr over homeserver (Apps: http://sonarr:8989, http://radarr:7878).
   # ---------------------------------------------------------------------------
   prowlarr:
@@ -279,11 +277,11 @@ services:
       traefik.http.routers.prowlarr.tls.certresolver: "myresolver"
       "traefik.http.routers.prowlarr.tls.domains[0].main": "${SERVER_DOMAIN}"
       "traefik.http.routers.prowlarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
-      traefik.http.routers.prowlarr.middlewares: "media-lan-only,media-headers"
+      traefik.http.routers.prowlarr.middlewares: "media-headers"
       traefik.http.services.prowlarr.loadbalancer.server.port: "9696"
 
   # ---------------------------------------------------------------------------
-  # TV show manager. Admin UI: LAN only. Download client: host `gluetun`, port 8080.
+  # TV show manager. Download client: host `gluetun`, port 8080.
   # Root folder /data/tv; staging /data/torrents on the same mount (hardlinks).
   # ---------------------------------------------------------------------------
   sonarr:
@@ -314,11 +312,11 @@ services:
       traefik.http.routers.sonarr.tls.certresolver: "myresolver"
       "traefik.http.routers.sonarr.tls.domains[0].main": "${SERVER_DOMAIN}"
       "traefik.http.routers.sonarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
-      traefik.http.routers.sonarr.middlewares: "media-lan-only,media-headers"
+      traefik.http.routers.sonarr.middlewares: "media-headers"
       traefik.http.services.sonarr.loadbalancer.server.port: "8989"
 
   # ---------------------------------------------------------------------------
-  # Movie manager. Admin UI: LAN only. Download client: host `gluetun`, port 8080.
+  # Movie manager. Download client: host `gluetun`, port 8080.
   # Root folder /data/movies; staging /data/torrents on the same mount (hardlinks).
   # ---------------------------------------------------------------------------
   radarr:
@@ -349,11 +347,11 @@ services:
       traefik.http.routers.radarr.tls.certresolver: "myresolver"
       "traefik.http.routers.radarr.tls.domains[0].main": "${SERVER_DOMAIN}"
       "traefik.http.routers.radarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
-      traefik.http.routers.radarr.middlewares: "media-lan-only,media-headers"
+      traefik.http.routers.radarr.middlewares: "media-headers"
       traefik.http.services.radarr.loadbalancer.server.port: "7878"
 
   # ---------------------------------------------------------------------------
-  # Subtitle manager. Admin UI: LAN only. Sonarr http://sonarr:8989, Radarr http://radarr:7878,
+  # Subtitle manager. Sonarr http://sonarr:8989, Radarr http://radarr:7878,
   # no path mappings (everyone sees /data/tv and /data/movies).
   # ---------------------------------------------------------------------------
   bazarr:
@@ -385,13 +383,12 @@ services:
       traefik.http.routers.bazarr.tls.certresolver: "myresolver"
       "traefik.http.routers.bazarr.tls.domains[0].main": "${SERVER_DOMAIN}"
       "traefik.http.routers.bazarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
-      traefik.http.routers.bazarr.middlewares: "media-lan-only,media-headers"
+      traefik.http.routers.bazarr.middlewares: "media-headers"
       traefik.http.services.bazarr.loadbalancer.server.port: "6767"
 
   # ---------------------------------------------------------------------------
-  # Jellyfin. Not exposed outside today, so it gets the LAN gate too; drop `media-lan-only`
-  # from its router if it is ever published through the Cloudflare tunnel. No rate limit:
-  # streams issue many range requests. Library is read-only; metadata lives under /config.
+  # Jellyfin. Not exposed outside today. No rate limit: streams issue many range requests.
+  # Library is read-only; metadata lives under /config.
   # Keeps LinuxServer's root-init + PUID/PGID model (no documented non-root mode for this image);
   # capabilities cut to what s6/usermod need. Only the render node is passed, not card0.
   # ---------------------------------------------------------------------------
@@ -448,17 +445,16 @@ services:
       traefik.http.routers.jellyfin.tls.certresolver: "myresolver"
       "traefik.http.routers.jellyfin.tls.domains[0].main": "${SERVER_DOMAIN}"
       "traefik.http.routers.jellyfin.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
-      traefik.http.routers.jellyfin.middlewares: "media-lan-only,media-headers"
+      traefik.http.routers.jellyfin.middlewares: "media-headers"
       traefik.http.services.jellyfin.loadbalancer.server.port: "8096"
 
   # ---------------------------------------------------------------------------
   # Seerr (formerly Jellyseerr; fallenbagel/jellyseerr stopped at 2.7.3 in Aug 2025). Container
   # name, hostname and /app/config are unchanged, so URLs and the database carry over (migrated
   # in place on first start, one way: back up /volume1/docker/media-server/jellyseerr first).
-  # Nothing in this stack is published outside the LAN (no tunnel), so it gets the LAN gate like
-  # the rest, plus a per-IP request rate limit (a flood backstop, not a brute-force limiter:
-  # 60 r/s still allows many login attempts). If it is ever published through a tunnel, drop
-  # `media-lan-only` from its router, key the rate limit on `Cf-Connecting-IP` and put
+  # Nothing in this stack is published outside the LAN (no tunnel). Per-IP request rate limit
+  # (a flood backstop, not a brute-force limiter: 60 r/s still allows many login attempts).
+  # If it is ever published through a tunnel, key the rate limit on `Cf-Connecting-IP` and put
   # Cloudflare Access in front of it.
   # Image runs as uid 1000 (`node`) and ships no init and no healthcheck.
   # In-app: Jellyfin http://jellyfin:8096, Sonarr http://sonarr:8989, Radarr http://radarr:7878.
@@ -500,7 +496,7 @@ services:
       traefik.http.routers.jellyseerr.tls.certresolver: "myresolver"
       "traefik.http.routers.jellyseerr.tls.domains[0].main": "${SERVER_DOMAIN}"
       "traefik.http.routers.jellyseerr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
-      traefik.http.routers.jellyseerr.middlewares: "media-lan-only,media-headers,media-ratelimit"
+      traefik.http.routers.jellyseerr.middlewares: "media-headers,media-ratelimit"
       traefik.http.services.jellyseerr.loadbalancer.server.port: "5055"
 
 networks:
