@@ -33,7 +33,7 @@ created by Docker; see the prerequisites below).
 | `data/tv/<Series>/Season N/` | `/data/tv` | Sonarr library, Jellyfin "Shows" |
 | `data/recycle/{movies,tv}` | `/data/recycle/...` | Sonarr/Radarr recycle bin, 14 days |
 | `<app>/` | `/config` | Per-app state (`jellyseerr/` -> `/app/config`) |
-| `gluetun/config`, `gluetun/secrets` | `/gluetun`, `/run/secrets` | Server list; optional WireGuard key file |
+| `gluetun/config` | `/gluetun` | Server list |
 | `jellyfin-cache/` | `/config/cache` | Jellyfin cache and transcode segments |
 
 Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlinks
@@ -45,13 +45,9 @@ Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlink
    `known-issues.md`: loads the TUN module and starts qbittorrent once gluetun is healthy.
 2. `chown -R 1000:1000 /volume1/docker/media-server` (use your PUID:PGID). The apps run as
    that user and cannot fix ownership themselves.
-3. Optional: put the WireGuard private key in
-   `/volume1/docker/media-server/gluetun/secrets/wireguard_private_key` (directory `root:root`,
-   `chmod 700`) and leave `WIREGUARD_PRIVATE_KEY` empty in the form. The file takes precedence
-   over the form field; to rotate the key, change the file.
-4. Jellyfin hardware transcoding needs `/dev/dri/renderD128` (or set `JELLYFIN_RENDER_DEVICE`).
+3. Jellyfin hardware transcoding needs `/dev/dri/renderD128` (or set `JELLYFIN_RENDER_DEVICE`).
    On a model without an iGPU, delete the `devices:` block from the jellyfin service.
-5. Fresh install (no existing data): create the tree and own it before the first start, then
+4. Fresh install (no existing data): create the tree and own it before the first start, then
    set a permanent qBittorrent password (a temporary one is printed to `docker logs qbittorrent`
    until you do) and finish the *arr authentication wizards:
    ```sh
@@ -59,7 +55,7 @@ Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlink
    mkdir -p data/torrents/{movies,tv,incomplete} data/movies data/tv data/recycle/{movies,tv} gluetun/config jellyfin-cache
    chown -R 1000:1000 .
    ```
-6. Backups: snapshot or tar `/volume1/docker/media-server` excluding `data/torrents` and
+5. Backups: snapshot or tar `/volume1/docker/media-server` excluding `data/torrents` and
    `jellyfin-cache` on a schedule (DSM Snapshot Replication or the Duplicati stack). App
    databases migrate forward only, so snapshot before every image bump.
 
@@ -72,7 +68,7 @@ Expected configuration of every service, in and out of the compose file: [`docs/
 |---|---|---|
 | `SERVER_DOMAIN` | | Your domain |
 | `VPN_SERVICE_PROVIDER` | `surfshark` | Gluetun provider (WireGuard-capable only) |
-| `WIREGUARD_PRIVATE_KEY` | | Leave empty if you use the key file |
+| `WIREGUARD_PRIVATE_KEY` | | From the provider's WireGuard config |
 | `WIREGUARD_ADDRESSES` | | e.g. `10.14.0.2/16` |
 | `SERVER_COUNTRIES` | `Switzerland,Iceland` | Server pool (gluetun spelling) |
 | `GLUETUN_IMAGE` | pinned digest | Exact gluetun build; bump deliberately |
@@ -83,15 +79,13 @@ Expected configuration of every service, in and out of the compose file: [`docs/
 
 ## In-app configuration
 
-Versioned in `config/*.json` and pushed with `make apply-media-config` (see
-`scripts/apply_media_config.py` for the required environment variables). Covers qBittorrent
-paths/categories/`tun0` binding/WebUI hardening, Sonarr and Radarr naming, recycle bin,
-hardlinks, season folders, and Prowlarr's app URLs.
+Set once in each UI. The full per-service reference, with every expected value and the
+reason, is in [`docs/`](docs/README.md); the essentials:
 
-Everything else is set once in each UI (full per-service reference in [`docs/`](docs/README.md)):
-
+* **qBittorrent**: save path `/data/torrents`, categories `radarr`/`tv-sonarr` under it,
+  network interface `tun0`, Host header list `qbittorrent.<domain>;gluetun`.
 * **Sonarr / Radarr**: download client host `gluetun`, port `8080`, no remote path mapping;
-  Authentication Required = Enabled.
+  rename on, hardlinks on, recycle bin under `/data/recycle`; Authentication Required = Enabled.
 * **Prowlarr**: Apps `http://sonarr:8989`, `http://radarr:7878`, Prowlarr server
   `http://prowlarr:9696`; FlareSolverr proxy `http://flaresolverr:8191`, tagged on the
   indexers that need it; Authentication Required = Enabled.

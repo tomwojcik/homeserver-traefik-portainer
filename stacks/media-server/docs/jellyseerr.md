@@ -16,10 +16,6 @@ The request front-end. The container is still named `jellyseerr` and served at
 | healthcheck | `GET /api/v1/status` via wget | The image has no healthcheck and no curl. |
 | router | `jellyseerr.<domain>`, `media-lan-only` + `media-headers` + `media-ratelimit` | Not published outside the LAN today. The rate limit is a per-IP flood backstop, not a brute-force limiter. If it is ever exposed: drop `media-lan-only`, key the limit on `Cf-Connecting-IP`, and put Cloudflare Access in front. |
 
-## Versioned (apply script)
-
-Nothing; settings live in `/app/config/settings.json` (contains API keys, so not versioned).
-
 ## Set once in the UI
 
 | Where | Expected |

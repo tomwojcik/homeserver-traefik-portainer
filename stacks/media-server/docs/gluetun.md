@@ -10,7 +10,7 @@ environment in the compose file, so this page is mostly "why each value".
 | `VPN_SERVICE_PROVIDER` | `surfshark` (form) | Must be a WireGuard-capable gluetun provider. ExpressVPN is OpenVPN-only in gluetun and will not start. |
 | `VPN_TYPE` | `wireguard` (hard-coded) | OpenVPN credentials are not wired; the old form dropdown offered a default that was not selectable. |
 | `WIREGUARD_ADDRESSES` | e.g. `10.14.0.2/16` (form) | Interface address from the provider's WireGuard config. |
-| `WIREGUARD_PRIVATE_KEY` | form field, optional | **The key file wins** when present: `/volume1/docker/media-server/gluetun/secrets/wireguard_private_key` (mounted at `/run/secrets`, gluetun's default secret path). Leave the form empty to keep the key out of Portainer. To rotate, change the file. |
+| `WIREGUARD_PRIVATE_KEY` | form field | The key lives in the Portainer stack environment (closed LAN; accepted). Rotate by editing the stack. |
 | `SERVER_COUNTRIES` | `Switzerland,Iceland` (form) | Random server from this pool per start instead of anywhere in the world. Spelling must match `docker run --rm qmcgaw/gluetun format-servers -surfshark`. |
 | `UPDATER_PERIOD` | `720h` | Refreshes the embedded server list monthly (persisted in `/gluetun/servers.json`). |
 | `FIREWALL` | `on` | The kill switch. `FIREWALL_OUTBOUND_SUBNETS` stays **unset**: adding the LAN would let the torrent client reach DSM. |

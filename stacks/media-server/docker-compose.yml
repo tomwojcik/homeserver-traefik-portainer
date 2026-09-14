@@ -98,18 +98,10 @@ services:
       - /tmp                                 # PUBLICIP_FILE lives at /tmp/gluetun/ip
     volumes:
       - /volume1/docker/media-server/gluetun/config:/gluetun
-      # Optional root-only directory holding the WireGuard private key as a FILE named
-      # `wireguard_private_key` (gluetun default: WIREGUARD_PRIVATE_KEY_SECRETFILE). The FILE
-      # TAKES PRECEDENCE over the WIREGUARD_PRIVATE_KEY env var (gluetun reads secrets first);
-      # an empty env value is ignored. To rotate the key, update or delete the file.
-      #   mkdir -p /volume1/docker/media-server/gluetun/secrets
-      #   printf '%s' 'YOUR_KEY' > /volume1/docker/media-server/gluetun/secrets/wireguard_private_key
-      #   chmod 700 /volume1/docker/media-server/gluetun/secrets && chmod 600 /volume1/docker/media-server/gluetun/secrets/*
-      - /volume1/docker/media-server/gluetun/secrets:/run/secrets:ro
     environment:
       VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER:-surfshark}
       VPN_TYPE: wireguard                    # only WireGuard is wired (no OPENVPN_* pass-through)
-      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY:-}   # fallback only; the secret file, if present, wins
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY}     # from the Portainer form (this is a trusted, closed LAN)
       WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES:-}
       SERVER_COUNTRIES: ${SERVER_COUNTRIES:-Switzerland,Iceland}   # exact spelling: `docker run --rm qmcgaw/gluetun format-servers -surfshark`
       UPDATER_PERIOD: ${UPDATER_PERIOD:-720h}               # refresh the server list (persisted in /gluetun/servers); wiki floor is 360h

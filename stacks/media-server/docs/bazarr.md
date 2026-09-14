@@ -14,11 +14,6 @@ subtitle download stays available as an on-demand fallback.
 | router | `bazarr.<domain>`, `media-lan-only` + `media-headers` | LAN only. |
 | image | `v1.6.0-ls363` | Pinned. |
 
-## Versioned (apply script)
-
-Nothing. Bazarr's settings are one-time and live in its own config; the expected values are
-below.
-
 ## Set once in the UI
 
 | Where | Expected |

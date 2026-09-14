@@ -10,7 +10,7 @@
 | router | `sonarr.<domain>`, `media-lan-only` + `media-headers` | LAN only. |
 | image | `4.0.19.2979-ls323` | Includes the reverse-proxy authentication-bypass fix (>= 4.0.16). |
 
-## Versioned (apply script) — `config/sonarr.json`
+## Set once in the UI: Media Management and Naming
 
 | Setting | Value | Why |
 |---|---|---|
@@ -26,7 +26,7 @@
 | Root folder | `/data/tv` | Created if missing. |
 | Season folders | on for every series | Per-season directories. |
 
-## Set once in the UI
+## Set once in the UI: the rest
 
 | Where | Expected |
 |---|---|
@@ -47,7 +47,6 @@
 
 ```sh
 docker exec sonarr curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8989/ping      # 200
-make apply-media-config-dry   # every sonarr line reads "up to date"
 ```
 In the UI: System > Health has no warnings; Settings > Download Clients > Test is green; a
 series page shows a `Season N` folder layout under `/data/tv`.

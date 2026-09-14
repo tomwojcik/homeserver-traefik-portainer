@@ -3,10 +3,8 @@
 One file per service. Each describes the state the service is expected to be in once deployed:
 
 * **Compose / template** — set by `docker-compose.yml` and the Portainer form; nothing to do.
-* **Versioned (apply script)** — set by `make apply-media-config` from `../config/*.json`.
-  Re-run after editing those files.
-* **Set once in the UI** — settings the apps keep in their own databases and that the script
-  does not touch. Expected values are listed; anything else is a drift worth fixing.
+* **Set once in the UI** — settings the apps keep in their own databases. Expected values are
+  listed; anything else is a drift worth fixing.
 * **Left at defaults on purpose** — settings that were considered and deliberately not
   changed, with the reason, so nobody "fixes" them later.
 * **Verify** — commands or UI checks that prove the service is in the expected state.

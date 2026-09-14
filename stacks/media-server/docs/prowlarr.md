@@ -17,22 +17,12 @@ FlareSolverr: `v3.5.0`, only on `media-internal`, no router, `cap_drop ALL`, `/t
 `CAPTCHA_SOLVER=none`. It is unauthenticated by design, which is why nothing but Prowlarr
 can reach it.
 
-## Versioned (apply script) — `config/prowlarr.json`
-
-| Setting | Value | Why |
-|---|---|---|
-| Apps > Radarr | `prowlarrUrl` `http://prowlarr:9696`, `baseUrl` `http://radarr:7878` | Container names. The public hostnames would loop through Traefik and be rejected by the LAN gate. |
-| Apps > Sonarr | `prowlarrUrl` `http://prowlarr:9696`, `baseUrl` `http://sonarr:8989` | Same. |
-
-The script matches the entries by name (`Radarr`, `Sonarr`) and only rewrites those two
-fields; API keys and sync level are left as they are.
-
 ## Set once in the UI
 
 | Where | Expected |
 |---|---|
 | Settings > General > Security | Authentication `Forms`, Authentication Required `Enabled`, a username and password. |
-| Settings > Apps | One entry per app, Sync Level `Full Sync`, no tags (every indexer goes to both apps). |
+| Settings > Apps | One entry per app, Sync Level `Full Sync`, no tags (every indexer goes to both apps). Radarr: Prowlarr Server `http://prowlarr:9696`, Radarr Server `http://radarr:7878`. Sonarr: Prowlarr Server `http://prowlarr:9696`, Sonarr Server `http://sonarr:8989`. Container names: the public hostnames would loop through Traefik and be rejected by the LAN gate. |
 | Settings > Indexers > Indexer Proxies | One `FlareSolverr` entry, host `http://flaresolverr:8191`, request timeout 60 s, tag `flaresolverr`. |
 | Indexers | Your trackers. Add the `flaresolverr` tag only to the ones behind Cloudflare; every solve launches a browser. |
 
