@@ -18,7 +18,7 @@
     {
       "label": "WireGuard Private Key",
       "name": "WIREGUARD_PRIVATE_KEY",
-      "description": "Your WireGuard private key. Leave EMPTY if you keep it in /volume1/docker/media-server/gluetun/secrets/wireguard_private_key (recommended: the key then never lands in Portainer)."
+      "description": "Your WireGuard private key. Leave EMPTY if you keep it in /volume1/docker/media-server/gluetun/secrets/wireguard_private_key (recommended). The file takes precedence over this field; to rotate the key, update or delete the file."
     },
     {
       "label": "WireGuard Addresses",
@@ -41,7 +41,7 @@
       "label": "LAN CIDR (admin UIs)",
       "name": "LAN_CIDR",
       "default": "192.168.0.0/16,10.0.0.0/8",
-      "description": "Source ranges allowed to open qbittorrent/prowlarr/sonarr/radarr/bazarr through Traefik. Narrow to your LAN. Never add 172.16.0.0/12: that is the Docker bridge, and adding it would admit Cloudflare tunnel traffic."
+      "description": "Source ranges allowed to open any media-server UI (all seven routers) through Traefik. Narrow to your LAN. Never add 172.16.0.0/12: that is the Docker bridge; adding it would admit every container and any tunnel client."
     },
     {
       "label": "Jellyfin render device",
@@ -62,7 +62,8 @@
     {
       "label": "Timezone",
       "name": "TZ",
-      "default": "UTC"
+      "default": "UTC",
+      "description": "Timezone for every service in the stack (not read from the root .env)."
     }
   ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/media-server/logo.png",

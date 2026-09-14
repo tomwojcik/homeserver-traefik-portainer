@@ -19,6 +19,7 @@ Environment (nothing is read from files; keys are never committed):
 Run it from a machine on the LAN: the admin hostnames are LAN-only behind Traefik.
 Standard library only; Python 3.8+.
 """
+import argparse
 import http.cookiejar
 import json
 import os
@@ -30,7 +31,9 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_DIR = os.path.join(ROOT, "stacks", "media-server", "config")
-DRY = "--dry-run" in sys.argv
+_parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+_parser.add_argument("--dry-run", action="store_true", help="show what would change, touch nothing")
+DRY = _parser.parse_args().dry_run
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -216,8 +219,14 @@ def apply_prowlarr(domain):
 def main():
     only = {x.strip() for x in env("APPLY_ONLY", "").split(",") if x.strip()}
     domain = env("SERVER_DOMAIN")
-    if not domain and not all(env(v) for v in ("QBIT_URL", "SONARR_URL", "RADARR_URL", "PROWLARR_URL")):
-        die("SERVER_DOMAIN is not set (or set QBIT_URL/SONARR_URL/RADARR_URL/PROWLARR_URL)")
+    url_var = {"qbittorrent": "QBIT_URL", "sonarr": "SONARR_URL", "radarr": "RADARR_URL", "prowlarr": "PROWLARR_URL"}
+    unknown = only - set(url_var)
+    if unknown:
+        die(f"APPLY_ONLY names unknown app(s): {', '.join(sorted(unknown))}")
+    selected = [a for a in url_var if not only or a in only]
+    missing = [url_var[a] for a in selected if not domain and not env(url_var[a])]
+    if missing:
+        die(f"SERVER_DOMAIN is not set and no URL override for: {', '.join(missing)}")
     if DRY:
         print("dry run: nothing will be changed\n")
 
@@ -227,10 +236,8 @@ def main():
         "radarr": lambda: apply_arr("radarr", domain, "RADARR_API_KEY", 7878),
         "prowlarr": lambda: apply_prowlarr(domain),
     }
-    for app, fn in steps.items():
-        if only and app not in only:
-            continue
-        fn()
+    for app in selected:
+        steps[app]()
         print()
 
 

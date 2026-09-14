@@ -41,15 +41,27 @@ Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlink
 
 ## Prerequisites (Synology, as root)
 
-1. Boot task (DSM Task Scheduler, boot-up, root) with the script in `known-issues.md`: loads the
-   TUN module and starts qbittorrent once gluetun is healthy.
+1. Boot task (DSM Task Scheduler, root, on boot-up AND every 5 minutes) with the script in
+   `known-issues.md`: loads the TUN module and starts qbittorrent once gluetun is healthy.
 2. `chown -R 1000:1000 /volume1/docker/media-server` (use your PUID:PGID). The apps run as
    that user and cannot fix ownership themselves.
 3. Optional: put the WireGuard private key in
-   `/volume1/docker/media-server/gluetun/secrets/wireguard_private_key` (`chmod 700` the
-   directory) and leave `WIREGUARD_PRIVATE_KEY` empty in the form.
+   `/volume1/docker/media-server/gluetun/secrets/wireguard_private_key` (directory `root:root`,
+   `chmod 700`) and leave `WIREGUARD_PRIVATE_KEY` empty in the form. The file takes precedence
+   over the form field; to rotate the key, change the file.
 4. Jellyfin hardware transcoding needs `/dev/dri/renderD128` (or set `JELLYFIN_RENDER_DEVICE`).
    On a model without an iGPU, delete the `devices:` block from the jellyfin service.
+5. Fresh install (no existing data): create the tree and own it before the first start, then
+   set a permanent qBittorrent password (a temporary one is printed to `docker logs qbittorrent`
+   until you do) and finish the *arr authentication wizards:
+   ```sh
+   cd /volume1/docker/media-server
+   mkdir -p data/torrents/{movies,tv,incomplete} data/movies data/tv data/recycle/{movies,tv} gluetun/config jellyfin-cache
+   chown -R 1000:1000 .
+   ```
+6. Backups: snapshot or tar `/volume1/docker/media-server` excluding `data/torrents` and
+   `jellyfin-cache` on a schedule (DSM Snapshot Replication or the Duplicati stack). App
+   databases migrate forward only, so snapshot before every image bump.
 
 Upgrading an existing deployment from the old layout: follow `manual_migration.md`.
 
@@ -81,11 +93,13 @@ Everything else is set once in each UI:
   Authentication Required = Enabled.
 * **Prowlarr**: Apps `http://sonarr:8989`, `http://radarr:7878`, Prowlarr server
   `http://prowlarr:9696`; FlareSolverr proxy `http://flaresolverr:8191`, tagged on the
-  indexers that need it.
+  indexers that need it; Authentication Required = Enabled.
 * **Bazarr**: Sonarr `sonarr:8989`, Radarr `radarr:7878`, no path mappings; languages profile
   en+pl; providers napiprojekt, podnapisi, opensubtitles.com.
-* **Jellyfin**: libraries `/data/movies`, `/data/tv`; Known proxies = the `homeserver` subnet
-  (`docker network inspect homeserver`); Playback > Transcoding = Intel QuickSync.
+* **Jellyfin**: libraries `/data/movies`, `/data/tv` (read-only: keep "save artwork/NFO into
+  media folders" and trickplay-next-to-media off, do not delete media from Jellyfin); Known
+  proxies = the `homeserver` subnet (`docker network inspect homeserver`); UPnP off;
+  Playback > Transcoding = Intel QuickSync.
 * **Seerr**: Jellyfin `jellyfin:8096`, Sonarr `sonarr:8989`, Radarr `radarr:7878`, root folders
   `/data/tv` and `/data/movies`.
 
@@ -99,8 +113,12 @@ rejected by the LAN gate.
   stall qbittorrent). Prowlarr, FlareSolverr and the *arrs use the NAS IP.
 * No host ports are published. Everything goes through Traefik with a wildcard certificate.
 * LinuxServer apps (qbittorrent, prowlarr, sonarr, radarr, bazarr) run as `PUID:PGID`,
-  read-only root filesystem, all capabilities dropped. Gluetun keeps `NET_ADMIN`/`NET_RAW`
-  only. Jellyfin keeps the handful of capabilities its init needs. Seerr runs as uid 1000.
+  read-only root filesystem, all capabilities dropped. Gluetun keeps `NET_ADMIN`, `NET_RAW`,
+  `CHOWN`, `DAC_OVERRIDE`; its control server is bound to loopback. Jellyfin keeps the handful
+  of capabilities its init needs. Seerr runs as uid 1000.
+* Known limitation: every service still shares the flat `homeserver` bridge with the other
+  stacks, so their ports are reachable at L3 from any container on it. That is why every app
+  keeps its own login. See `known-issues.md` item 5.
 * Images are pinned. Memory/pids limits, log rotation and health checks on every service.
 * FlareSolverr is unauthenticated and drives a sandbox-less Chromium, so it is isolated on
   `media-internal` where only prowlarr can reach it.

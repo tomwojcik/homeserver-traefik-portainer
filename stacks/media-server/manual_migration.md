@@ -30,11 +30,9 @@ Root folders `/data/movies` and `/data/tv` already exist in Radarr and Sonarr an
 
 ## 0. Before touching anything
 
-1. Take a DSM snapshot of `/volume1/docker/media-server` (Snapshot Replication) or at least:
-   ```sh
-   cd /volume1/docker/media-server
-   tar czf /volume1/docker/media-server-configs-$(date +%F).tgz qbittorrent sonarr radarr bazarr prowlarr jellyfin jellyseerr
-   ```
+1. Plan the backup: it is taken in section 2, **after the stack is stopped** (a tar of live
+   SQLite databases is not a valid rollback point). Do NOT run `make create-volumes` or
+   pre-create `data/` before section 3: the renames there must not find their targets.
 2. Note the current Jellyfin watched/favourite state you care about. Library paths change, so
    Jellyfin will treat movies as new items (watched status resets). Media files are untouched.
 3. Have ready: the WireGuard private key, qBittorrent WebUI user/password, Sonarr and Radarr API
@@ -42,9 +40,12 @@ Root folders `/data/movies` and `/data/tv` already exist in Radarr and Sonarr an
 
 ## 1. NAS prerequisites (SSH as root)
 
-1. **Boot task**: DSM Control Panel > Task Scheduler > Create > Triggered Task > Boot-up, user
-   `root`, with the script from `known-issues.md` item 1 (loads the TUN module, creates
-   `/dev/net/tun`, starts qbittorrent once gluetun is healthy). Run it once now as well.
+1. **Boot task**: DSM Control Panel > Task Scheduler, user `root`, with the script from
+   `known-issues.md` item 1 (loads the TUN module, creates `/dev/net/tun`, starts qbittorrent
+   once gluetun is healthy). Create it TWICE: as a Triggered Task (Boot-up) and as a Scheduled
+   Task every 5 minutes. The recurring run covers the case where Container Manager restarts
+   (DSM update, package update) and qbittorrent fails to start because gluetun was not up yet:
+   Docker does not retry a failed start. Run it once now as well.
 2. **WireGuard key file** (optional but recommended; afterwards leave `WIREGUARD_PRIVATE_KEY`
    empty in the Portainer form). The directory lives inside the stack tree, which step 3 creates:
    ```sh
@@ -55,23 +56,39 @@ Root folders `/data/movies` and `/data/tv` already exist in Radarr and Sonarr an
 3. **Ownership**: the containers now run as your user instead of root.
    ```sh
    chown -R 1000:1000 /volume1/docker/media-server
+   chown -R root:root /volume1/docker/media-server/gluetun/secrets 2>/dev/null   # keep the key root-only
    ```
    Metadata only; takes a few minutes on 1.5 TB.
+4. **Docker version** (decides whether a LAN host could route straight to container IPs,
+   bypassing Traefik; fixed in Docker 28):
+   ```sh
+   docker version --format '{{.Server.Version}}'; iptables -S FORWARD | head -1
+   ```
+   If the version is below 28 or the FORWARD policy is not DROP, add this line to the boot
+   script (replace `eth0` with the NAS LAN interface):
+   `iptables -I DOCKER-USER -i eth0 -m conntrack --ctstate NEW --ctorigdst 172.16.0.0/12 -j DROP`
 
-## 2. Stop the stack
+## 2. Stop the stack and take the backup
 
-Portainer > Stacks > media server > Stop. Confirm with `docker ps` that qbittorrent, sonarr,
-radarr, bazarr, jellyfin and jellyseerr are down.
+Portainer > Stacks > media server > Stop. Confirm with `docker ps` that gluetun, qbittorrent,
+flaresolverr, prowlarr, sonarr, radarr, bazarr, jellyfin and jellyseerr are all down. Then:
+```sh
+cd /volume1/docker/media-server
+tar czf /volume1/docker/media-server-configs-$(date +%F).tgz qbittorrent sonarr radarr bazarr prowlarr jellyfin jellyseerr
+```
+(or a DSM snapshot of `/volume1/docker/media-server` now). This is the rollback point for the
+one-way Seerr database migration and for every app setting changed below.
 
 ## 3. Build the data root (renames only, same volume, instant)
 
 ```sh
 cd /volume1/docker/media-server
-mv media data                                    # library root: data/movies, data/tv
-mv downloads data/torrents                       # torrent staging joins the same root
+for t in data data/torrents gluetun/config; do [ -e "$t" ] && { echo "$t already exists - stop, do not nest"; exit 1; }; done
+mv -T media data                                 # library root: data/movies, data/tv
+mv -T downloads data/torrents                    # torrent staging joins the same root
 mkdir -p data/torrents/movies data/torrents/tv data/torrents/incomplete data/recycle/movies data/recycle/tv
 chown -R 1000:1000 data/torrents data/recycle
-mkdir -p gluetun && mv /volume1/docker/gluetun/config gluetun/config   # gluetun state into the stack directory
+mkdir -p gluetun && mv -T /volume1/docker/gluetun/config gluetun/config   # gluetun state into the stack directory
 rmdir /volume1/docker/gluetun 2>/dev/null || true                      # only if nothing else is left there
 ```
 
@@ -121,10 +138,17 @@ mv "../torrents/Atlantis Collection [boxset]" "../torrents/Knocked Up Collection
    `WIREGUARD_PRIVATE_KEY` if you created the key file.
 3. Deploy. Expected: gluetun healthy within about a minute, then qbittorrent, then the rest.
 4. **Lock-out check**: open `https://qbittorrent.<domain>` from a LAN browser. If Traefik
-   returns 403, the NAS engine is masquerading LAN clients as bridge addresses. Read
-   `ClientAddr` in `docker logs traefik`; if it is `172.22.x`, set `LAN_CIDR` to include it as a
-   stop-gap and re-deploy, then tell me: the durable fix is a separate Traefik entrypoint for
-   the tunnel.
+   returns 403, the NAS engine is presenting LAN clients with a bridge address. Check the
+   client IP (first column of Traefik's access log):
+   ```sh
+   docker logs traefik --tail 20 2>&1 | awk '{print $1, $6, $7, $9}'
+   ```
+   If it shows a bridge address (typically the gateway `172.22.0.1`, also what IPv6 clients
+   arrive as), add ONLY that address as a `/32` to `LAN_CIDR`, never a `/16`, and redeploy.
+5. **Tunnel leftovers**: the root stack still runs `cloudflared`. In Cloudflare Zero Trust >
+   Tunnels, delete every public hostname that points at a media service, or make sure each
+   targets `https://traefik:443` (where the LAN gate rejects it). A hostname targeting
+   `http://jellyseerr:5055` directly would bypass Traefik entirely.
 
 ## 7. Push the versioned preferences
 
@@ -135,6 +159,11 @@ export QBIT_USER=... QBIT_PASS=... SONARR_API_KEY=... RADARR_API_KEY=... PROWLAR
 make apply-media-config-dry     # review
 make apply-media-config
 ```
+Before running it, make sure qBittorrent has a permanent WebUI password: on a fresh config it
+prints a temporary one to `docker logs qbittorrent` on every start until you set one. The
+script keeps `gluetun` in qBittorrent's allowed Host list: Sonarr/Radarr reach it as
+`gluetun:8080` and host-header validation would otherwise answer 401.
+
 This sets qBittorrent's save paths, categories, `tun0` binding, WebUI hardening; Sonarr/Radarr
 renaming, recycle bin, hardlinks, season folders; and rewrites Prowlarr's Apps to the container
 URLs (`http://radarr:7878`, `http://sonarr:8989`, `http://prowlarr:9696`). App-to-app traffic
@@ -142,34 +171,53 @@ must never use the public `*.<domain>` hostnames: those loop through Traefik fro
 address and are rejected by the LAN-only rule. Re-run any time after editing
 `stacks/media-server/config/*.json`.
 
-## 8. Re-point Radarr and Sonarr
+## 8. Re-point Radarr and Sonarr (two passes each)
 
-**Radarr**: Movies > Select All > Edit > Root Folder `/data/movies`, **Move Files: Yes** > Save.
-Radarr renames folders that are under `/data/torrents` into `/data/movies` (same mount, instant)
-and logs a warning for movies whose folder is not there; those already live in `/data/movies`
-and are picked up next. Then Movies > Update All. Verify: no movie path starts with
-`/data/torrents`, and previously "missing" movies (Hot Fuzz, The Martian, ...) now show a file.
+Every movie and series record currently points at `/downloads/<Folder>`, a path the new
+containers do not have. A mass edit with "Move Files" skips the move when the source folder
+does not exist, so the paths must first be rewritten to where the files really are
+(`/data/torrents/<Folder>`), and only then moved into the library.
 
-**Sonarr**: Series > Select All (Mass Edit) > Root Folder `/data/tv`, **Move Files: Yes**. Same
-behaviour. Then Series > Update All.
+**Radarr**
+1. Settings > Media Management > Root Folders: add `/data/torrents` (temporary).
+2. Movies > Select All > Edit > Root Folder `/data/torrents`, **Move Files: No** > Save.
+   Paths now read `/data/torrents/<Movie (Year)>`, which exist (the old downloads dir).
+3. Movies > Select All > Edit > Root Folder `/data/movies`, **Move Files: Yes** > Save.
+   Radarr renames each folder into `/data/movies` (same mount, instant). Movies whose folder
+   only exists in `/data/movies` already (the ones Radarr had lost) log a warning and simply
+   get the right path.
+4. Movies > Update All. Verify: no movie path starts with `/data/torrents`; previously
+   "missing" movies (Hot Fuzz, The Martian, ...) show a file.
+5. Remove the temporary `/data/torrents` root folder.
 
-Both apps: Settings > Download Clients > qBittorrent: host `gluetun`, port `8080`, and **no**
-Remote Path Mapping (both sides see `/data/torrents`). Settings > General > Security:
-Authentication Required = Enabled.
+**Sonarr**: the same five steps with Series, root folder `/data/tv`.
+
+Both apps, in the UI (these are not versioned by the apply script):
+* Settings > Download Clients > qBittorrent: host `gluetun`, port `8080`, **no** Remote Path
+  Mapping (both sides see `/data/torrents`). Test must be green.
+* Settings > General > Security: Authentication Required = **Enabled**. Never "Disabled for
+  Local Addresses": behind Traefik every request looks local.
+
+**Prowlarr**: Settings > General > Security: Authentication Required = **Enabled** as well.
 
 ## 9. qBittorrent leftovers
 
-The 10 existing torrents carry a `/volume1/docker/...` save path that does not exist inside the
-container. Open the WebUI and check them: if they show "Missing files", either right-click >
-Set Location `/data/torrents/movies` (or `/tv`) followed by Force Recheck if the files are
-actually in the new tree, or remove the torrent **without** deleting files.
+The 10 existing torrents carry a `/volume1/docker/...` save path (host-style; how it got
+there is unknown) that does not exist inside the container. Open the WebUI and check them: if
+they show "Missing files", either right-click > Set Location `/data/torrents/movies` (or `/tv`)
+followed by Force Recheck if the files are actually in the new tree, or remove the torrent
+**without** deleting files. If every torrent turns out to use such paths, the legacy
+`/downloads` alias in the compose protects nothing and can be removed right away.
 
 ## 10. Jellyfin
 
 1. Dashboard > Libraries > Movies > Manage Library: add folder `/data/movies`, remove `/data`.
 2. Add Library: Shows, folder `/data/tv`.
 3. Scan All Libraries. Duplicates disappear; movies that were only in `data/movies` appear.
-4. Dashboard > Networking: Known proxies `172.22.0.0/16`; LAN networks = your LAN CIDR.
+4. Dashboard > Networking: Known proxies `172.22.0.0/16`; LAN networks = your LAN CIDR; UPnP off.
+5. The library is mounted read-only. Keep "save artwork/NFO into media folders" and
+   "trickplay images next to media" OFF, and do not delete media from the Jellyfin UI
+   (Radarr/Sonarr own the files).
 
 ## 11. Bazarr (one-time setup; it was never configured)
 
@@ -193,7 +241,8 @@ The stack now runs `ghcr.io/seerr-team/seerr` instead of the abandoned `fallenba
 Same container name, hostname and config path; on first start it migrates the database in
 place (one way, hence the backup in step 0 and the ownership fix in step 1). Watch
 `docker logs jellyseerr` until "Server ready"; if it exits with `EACCES` on `/app/config`,
-the chown in step 1 was skipped.
+the chown in step 1 was skipped. Rollback, if ever needed: stop the container, restore
+`jellyseerr/` from the section-2 tar, and set the image back to `fallenbagel/jellyseerr:2.7.3`.
 
 Settings > Jellyfin: hostname `jellyfin`, port `8096`, no SSL. Settings > Radarr: hostname
 `radarr`, port `7878`, Root Folder `/data/movies`. Settings > Sonarr: hostname `sonarr`, port
@@ -205,8 +254,8 @@ New requests now land in the library roots.
 * `data/torrents/_orphans` and `data/torrents/_duplicates`: review, then delete to reclaim
   space. Raw torrent folders in `data/torrents` whose torrent no longer exists in qBittorrent
   are also reclaimable.
-* Remove the legacy `/downloads` alias from qbittorrent's volumes once every torrent shows a
-  `/data/torrents` path.
+* Remove the legacy `/downloads` alias from qbittorrent's volumes once no torrent shows a
+  `/downloads/...` path (see section 9).
 * `jellyfin/cache` on the host is now shadowed by the `jellyfin-cache` mount (Jellyfin writes
   cache and transcode segments there instead). The old directory only holds regenerable
   cache; delete it to reclaim space once the new stack has run for a while.
