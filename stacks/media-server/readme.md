@@ -119,7 +119,7 @@ rejected by the LAN gate.
 * Known limitation: every service still shares the flat `homeserver` bridge with the other
   stacks, so their ports are reachable at L3 from any container on it. That is why every app
   keeps its own login. See `known-issues.md` item 5.
-* Images are pinned. Memory/pids limits, log rotation and health checks on every service.
+* Images are pinned. Memory limits (the DSM kernel supports neither `cpus` nor `pids` limits), log rotation and health checks on every service.
 * FlareSolverr is unauthenticated and drives a sandbox-less Chromium, so it is isolated on
   `media-internal` where only prowlarr can reach it.
 

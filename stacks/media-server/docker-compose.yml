@@ -138,7 +138,6 @@ services:
       resources:
         limits:
           memory: 256M
-          pids: 256
     labels:
       <<: *traefik-labels
       # qbittorrent's router lives here because qbittorrent has no network identity of its own.
@@ -192,7 +191,6 @@ services:
       resources:
         limits:
           memory: 2G
-          pids: 512
     labels:
       my.zone: "homeserver"
       deunhealth.restart.on.unhealthy: "true"
@@ -220,7 +218,6 @@ services:
       resources:
         limits:
           memory: 64M
-          pids: 64
 
   # ---------------------------------------------------------------------------
   # Cloudflare-challenge solver used by Prowlarr. Headless API, no UI, no Traefik router on
@@ -255,7 +252,6 @@ services:
       resources:
         limits:
           memory: 2G                       # each request launches a browser
-          pids: 1024
     labels:
       my.zone: "homeserver"
 
@@ -284,7 +280,6 @@ services:
       resources:
         limits:
           memory: 1G
-          pids: 256
     labels:
       <<: *traefik-labels
       traefik.http.routers.prowlarr.rule: "Host(`prowlarr.${SERVER_DOMAIN}`)"
@@ -320,7 +315,6 @@ services:
       resources:
         limits:
           memory: 1G
-          pids: 256
     labels:
       <<: *traefik-labels
       traefik.http.routers.sonarr.rule: "Host(`sonarr.${SERVER_DOMAIN}`)"
@@ -356,7 +350,6 @@ services:
       resources:
         limits:
           memory: 1G
-          pids: 256
     labels:
       <<: *traefik-labels
       traefik.http.routers.radarr.rule: "Host(`radarr.${SERVER_DOMAIN}`)"
@@ -393,7 +386,6 @@ services:
       resources:
         limits:
           memory: 1G
-          pids: 256
     labels:
       <<: *traefik-labels
       traefik.http.routers.bazarr.rule: "Host(`bazarr.${SERVER_DOMAIN}`)"
@@ -457,7 +449,6 @@ services:
       resources:
         limits:
           memory: 4G                       # ffmpeg OOM mid-playback beats a NAS-wide OOM
-          pids: 1024
     labels:
       <<: *traefik-labels
       traefik.http.routers.jellyfin.rule: "Host(`jellyfin.${SERVER_DOMAIN}`)"
@@ -506,7 +497,6 @@ services:
       resources:
         limits:
           memory: 1G
-          pids: 256
     labels:
       <<: *traefik-labels
       # Per-IP request limiter (flood backstop).
