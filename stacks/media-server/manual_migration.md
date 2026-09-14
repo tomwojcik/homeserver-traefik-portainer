@@ -84,6 +84,17 @@ mkdir -p gluetun && mv -T /volume1/docker/gluetun/config gluetun/config   # glue
 rmdir /volume1/docker/gluetun 2>/dev/null || true                      # only if nothing else is left there
 ```
 
+If the stack was already deployed before this step (Docker then creates `data/` and
+`gluetun/` as empty directories and every app sees an empty library), stop the stack and
+remove the placeholder first; nothing else changes:
+```sh
+cd /volume1/docker/media-server
+[ "$(find data -type f | wc -l)" = 0 ] || { echo "data/ is not empty - inspect: find data -type f"; false; }
+find data -depth -type d -empty -delete
+```
+then run the block above without the `gluetun` lines (gluetun has already rebuilt its server
+list in the new location).
+
 ## 4. Find folders that exist in both places
 
 Radarr will move its clean `Movie (Year)` folders from `torrents` into `movies` in step 8. If
@@ -129,8 +140,13 @@ find ../torrents -maxdepth 1 -type d -name '*[[]boxset[]]' -exec mv {} ../torren
 2. Fill the new form fields: `SERVER_COUNTRIES` (default `Switzerland,Iceland`), leave
    `GLUETUN_IMAGE` at its default. `WIREGUARD_PRIVATE_KEY` stays as it is (the form is the
    only place the key lives).
-3. Deploy. Expected: gluetun healthy within about a minute, then qbittorrent, then the rest.
-   Open `https://qbittorrent.<domain>` from a LAN browser to confirm routing works.
+3. Deploy with **Pull and redeploy** (plain "Update the stack" reuses the compose Portainer
+   already fetched). Expected: gluetun healthy within about a minute, then qbittorrent, then
+   the rest. Then `docker restart traefik`: on this engine Traefik misses some container
+   events and silently lacks routers for recreated containers (a hostname answers 404 while
+   the container is healthy). The Traefik dashboard must list every media router.
+   Do step 8 (re-point Radarr/Sonarr) BEFORE step 7's Prowlarr change: until the paths are
+   fixed both apps consider most of the library missing and would grab it again.
 4. **Tunnel leftovers**: the root stack still runs `cloudflared`. In Cloudflare Zero Trust >
    Tunnels, delete every public hostname that points at a media service. Nothing in the
    stack is meant to be reachable from the internet, and there is no IP allow-list to stop
