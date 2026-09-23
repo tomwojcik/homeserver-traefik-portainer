@@ -1,246 +1,512 @@
+# Media server stack (Portainer App Template "Complete Media Server with VPN")
+#
+#   gluetun (WireGuard kill switch) -> qbittorrent (inside gluetun's network namespace)
+#   prowlarr + flaresolverr -> sonarr / radarr -> bazarr -> jellyfin <- jellyseerr
+#
+# Host layout: /volume1/docker/media-server/data/{torrents,movies,tv,recycle} is mounted as
+# /data (one mount => hardlinks), per-app state under /volume1/docker/media-server/<app>.
+# Upgrading from the old downloads/ + media/ layout: see manual_migration.md.
+
+# ---- shared blocks ----------------------------------------------------------
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Baseline for containers that keep their image's own init/user model.
+x-common: &common
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  logging: *default-logging
+
+# LinuxServer.io apps in the documented "non-root" + "read-only" modes
+# (https://docs.linuxserver.io/misc/non-root/ , https://docs.linuxserver.io/misc/read-only/):
+#   - `user:` replaces PUID/PGID (those env vars have no effect in this mode)
+#   - s6 needs a writable, executable /run owned by that user (required with no-new-privileges)
+#   - /tmp on tmpfs for .NET/python scratch files
+#   - UMASK, Docker Mods and custom init scripts do not work in this mode (none are used here)
+#   - /config on the host must be owned by PUID:PGID (it is: PUID=1000 was in use before)
+#   - each app logs a "read-only / non-root not supported" banner at start: expected (see known-issues.md)
+# No `networks:` here on purpose: qbittorrent uses network_mode and the two are mutually exclusive.
+x-lsio-hardened: &lsio-hardened
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  logging: *default-logging
+  user: "${PUID:-1000}:${PGID:-1000}"
+  read_only: true
+  cap_drop:
+    - ALL
+  tmpfs:
+    - /run:uid=${PUID:-1000},gid=${PGID:-1000},exec
+    - /tmp:uid=${PUID:-1000},gid=${PGID:-1000},size=256m
+  stop_grace_period: 1m
+
+# Labels shared by every Traefik-routed container. Middleware definitions are repeated
+# on every routed container ON PURPOSE: Traefik accepts identical duplicate definitions
+# and drops a middleware only when two containers define it differently, so the shared
+# middlewares survive any single container being stopped.
+x-traefik-labels: &traefik-labels
+  my.zone: "homeserver"
+  traefik.enable: "true"
+  traefik.docker.network: "homeserver"
+  # -- security headers (Traefik v3 option names) --
+  traefik.http.middlewares.media-headers.headers.stsSeconds: "31536000"
+  traefik.http.middlewares.media-headers.headers.stsIncludeSubdomains: "true"
+  # stsPreload deliberately off: preload is domain-wide and irreversible.
+  traefik.http.middlewares.media-headers.headers.customFrameOptionsValue: "SAMEORIGIN"
+  traefik.http.middlewares.media-headers.headers.contentTypeNosniff: "true"
+  traefik.http.middlewares.media-headers.headers.referrerPolicy: "strict-origin-when-cross-origin"
+  traefik.http.middlewares.media-headers.headers.permissionsPolicy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  traefik.http.middlewares.media-headers.headers.customResponseHeaders.X-Robots-Tag: "noindex, nofollow, nosnippet, noarchive"
+  traefik.http.middlewares.media-headers.headers.customResponseHeaders.Server: ""
+  traefik.http.middlewares.media-headers.headers.customResponseHeaders.X-Powered-By: ""
+  # No IP allow-list: on Synology's Docker every LAN client reaches Traefik as the bridge
+  # gateway (172.22.0.1), so an allow-list cannot tell LAN from anything else and only ever
+  # blocked app-to-app hairpins through the public hostnames. Access control is each app's own
+  # login; nothing in this stack is published outside the LAN. See known-issues.md item 8.
+
 services:
-  # VPN Container
+  # ---------------------------------------------------------------------------
+  # VPN gateway. Only qbittorrent lives inside its network namespace.
+  # ---------------------------------------------------------------------------
   gluetun:
-    image: qmcgaw/gluetun:latest
+    <<: *common
+    # The last tagged release (v3.41.3) is from July 2024; the master build is what has the
+    # current healthcheck and server lists. Pin the exact build that is known to work on the
+    # NAS by digest (docker image inspect qmcgaw/gluetun:latest --format '{{index .RepoDigests 0}}')
+    # and bump it deliberately.
+    image: ${GLUETUN_IMAGE:-qmcgaw/gluetun@sha256:7b1dafa3d25cfd891deae52c7973c499f619f7d8eac52fad84f9aa1e5e6e01ca}
     container_name: gluetun
+    # gluetun needs NET_ADMIN (routes, wg, tun) and NET_RAW (iptables). Everything else in Docker's
+    # default set is dropped. CHOWN/DAC_OVERRIDE: gluetun chowns what it writes under /gluetun.
+    # NET_BIND_SERVICE: the DNS server (DNS_SERVER=on) listens on :53; without it the bind fails
+    # ("listen tcp :53: bind: permission denied"), DNS never comes up and gluetun goes unhealthy.
+    cap_drop:
+      - ALL
     cap_add:
       - NET_ADMIN
+      - NET_RAW
+      - NET_BIND_SERVICE
+      - CHOWN
+      - DAC_OVERRIDE
     devices:
-      - /dev/net/tun:/dev/net/tun
-    ports:
-      - "8080:8080"   # qbittorrent
+      - /dev/net/tun:/dev/net/tun            # host node must exist: see known-issues.md (TUN boot task)
+    # NOT read_only: gluetun rewrites /etc/resolv.conf (Docker mounts it read-only on a read-only rootfs).
+    tmpfs:
+      - /tmp                                 # PUBLICIP_FILE lives at /tmp/gluetun/ip
     volumes:
-      - /volume1/docker/gluetun/config:/gluetun
+      - /volume1/docker/media-server/gluetun/config:/gluetun
     environment:
-      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-surfshark}
-      - VPN_TYPE=${VPN_TYPE:-wireguard}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - TZ=${TZ:-UTC}
-      - HTTPPROXY=on
-      - HTTPPROXY_LOG=on
+      VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER:-surfshark}
+      VPN_TYPE: wireguard                    # only WireGuard is wired (no OPENVPN_* pass-through)
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY}     # from the Portainer form (this is a trusted, closed LAN)
+      WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES:-}
+      SERVER_COUNTRIES: ${SERVER_COUNTRIES:-Switzerland,Iceland}   # exact spelling: `docker run --rm qmcgaw/gluetun format-servers -surfshark`
+      UPDATER_PERIOD: ${UPDATER_PERIOD:-720h}               # refresh the server list (persisted in /gluetun/servers); wiki floor is 360h
+      TZ: ${TZ:-UTC}
+      # Secure defaults made explicit (all are gluetun defaults):
+      FIREWALL: "on"                         # kill switch; never set FIREWALL_OUTBOUND_SUBNETS to the LAN
+      # gluetun's firewall accepts everything from the local Docker subnet on eth0, so Traefik and
+      # the *arrs reach qbittorrent's :8080 without FIREWALL_INPUT_PORTS (and :6881 is reachable
+      # from the bridge too). The HTTP control server (:8000) is unauthenticated on this build and
+      # a PUT can stop the VPN, so it is bound to loopback; nothing in the stack uses it. To monitor
+      # the VPN from Uptime Kuma later, provision auth roles in /gluetun/auth/config.toml first
+      # (see known-issues.md item 6) and set this back to ":8000".
+      HTTP_CONTROL_SERVER_ADDRESS: "127.0.0.1:8000"
+      DNS_SERVER: "on"                       # DNS-over-TLS forwarder inside the tunnel
+      BLOCK_MALICIOUS: "on"
+      DNS_KEEP_NAMESERVER: "off"
+      HTTPPROXY: "off"                       # was on + unauthenticated + logging every URL; nothing used it
+      SHADOWSOCKS: "off"
+    # Keep the image's own HEALTHCHECK (gluetun's internal health server, 5s interval, 3 retries);
+    # only the start period is extended for a slow NAS. Do not replace `test`.
+    healthcheck:
+      start_period: 60s
     networks:
       - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "https://1.1.1.1"] # Checks if internet/VPN is actually routing
-      interval: 1m
-      timeout: 10s
-      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.qbittorrent.entrypoints=websecure"
-      - "traefik.http.routers.qbittorrent.tls.certresolver=myresolver"
-      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
-      - "traefik.docker.network=homeserver"
+      <<: *traefik-labels
+      # qbittorrent's router lives here because qbittorrent has no network identity of its own.
+      # Port 8080 must equal WEBUI_PORT on the qbittorrent service.
+      traefik.http.routers.qbittorrent.rule: "Host(`qbittorrent.${SERVER_DOMAIN}`)"
+      traefik.http.routers.qbittorrent.entrypoints: "websecure"
+      traefik.http.routers.qbittorrent.tls.certresolver: "myresolver"
+      "traefik.http.routers.qbittorrent.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.qbittorrent.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.qbittorrent.middlewares: "media-headers"
+      traefik.http.services.qbittorrent.loadbalancer.server.port: "8080"
 
-  # Torrent Client (through external VPN)
+  # ---------------------------------------------------------------------------
+  # Torrent client - shares gluetun's network stack (kill switch applies to it).
+  # ---------------------------------------------------------------------------
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
+    <<: *lsio-hardened
+    image: lscr.io/linuxserver/qbittorrent:5.2.3_v2.0.14-ls475
     container_name: qbittorrent
     network_mode: "service:gluetun"
     depends_on:
       gluetun:
         condition: service_healthy
+        restart: true                        # recreate qbittorrent when compose recreates gluetun
+    stop_grace_period: 5m                    # let libtorrent flush fastresume data; avoids rechecks after redeploys
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
-      - WEBUI_PORT=8080
+      TZ: ${TZ:-UTC}
+      WEBUI_PORT: "8080"                     # must equal traefik ...services.qbittorrent.loadbalancer.server.port on gluetun
+      TORRENTING_PORT: "6881"                # fixed listen port; Surfshark has no port forwarding, so never publish it
     volumes:
       - /volume1/docker/media-server/qbittorrent:/config
-      - /volume1/docker/media-server/downloads:/downloads
-      - /volume1/docker/media-server/media:/data
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+      # Single data root (see manual_migration.md): host data/ = container /data, with
+      # torrents/, movies/, tv/ inside it so Sonarr/Radarr can hardlink instead of copy.
+      # qbittorrent only needs the torrents subtree.
+      - /volume1/docker/media-server/data/torrents:/data/torrents
+      # Legacy alias: torrents that still carry a /downloads/... save path keep working.
+      # Remove once every torrent in qbittorrent shows a /data/torrents path.
+      - /volume1/docker/media-server/data/torrents:/downloads
+    # Health = "am I still inside a live gluetun namespace?". When gluetun is restarted its
+    # namespace is destroyed and this container is left with only `lo` (eth0 gone): the classic
+    # "qbittorrent lost network after gluetun restart". deunhealth then restarts qbittorrent,
+    # which re-joins the new namespace. VPN health itself is gluetun's healthcheck, so a VPN
+    # blip that gluetun heals by itself does not restart qbittorrent.
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q 'eth0:' /proc/net/dev || { echo 'eth0 missing: gluetun namespace gone'; exit 1; }; nc -z 127.0.0.1 8080 || { echo 'WebUI :8080 not listening'; exit 1; }"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     labels:
-      - "my.zone=homeserver"
+      my.zone: "homeserver"
+      deunhealth.restart.on.unhealthy: "true"
 
-  # Captcha solver for Prowlarr
+  # ---------------------------------------------------------------------------
+  # Restarts containers labelled deunhealth.restart.on.unhealthy=true when Docker marks them
+  # unhealthy (Docker itself never restarts on a failed healthcheck). Needed only for qbittorrent.
+  # Runs as root (upstream FROM scratch image, no USER) with the Docker socket: the one accepted
+  # trust point in the stack, hence no network, read-only, cap_drop ALL, digest-pinned.
+  # ---------------------------------------------------------------------------
+  deunhealth:
+    <<: *common
+    image: qmcgaw/deunhealth@sha256:4102bf5d788fd0580ee5adb367cf48fc269a154b8fd284e6315e0dd8b24bb03c   # v0.3.0
+    container_name: deunhealth
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LOG_LEVEL: info
+      TZ: ${TZ:-UTC}
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # ---------------------------------------------------------------------------
+  # Cloudflare-challenge solver used by Prowlarr. Headless API, no UI, no Traefik router on
+  # purpose (unauthenticated). Chromium runs with --no-sandbox, so the container is kept OFF the
+  # shared homeserver bridge: it lives on a stack-private network that only prowlarr joins.
+  # Prowlarr talks to it at http://flaresolverr:8191.
+  # ---------------------------------------------------------------------------
   flaresolverr:
-      image: ghcr.io/flaresolverr/flaresolverr:latest
-      container_name: flaresolverr
-      environment:
-        - LOG_LEVEL=info
-        - TZ=${TZ:-UTC}
-      networks:
-        - homeserver
-      security_opt:
-        - no-new-privileges:true
-      restart: unless-stopped
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8191/"]
-        interval: 30s
-        timeout: 10s
-        retries: 3
+    <<: *common
+    image: ghcr.io/flaresolverr/flaresolverr:v3.5.0
+    container_name: flaresolverr
+    cap_drop:
+      - ALL
+    # NOT read_only: undetected-chromedriver patches its driver binary under /app at start.
+    tmpfs:
+      - /tmp:size=512m,mode=1777           # Chromium profiles/scratch; sized so it counts against the limit predictably
+      - /config:size=16m                   # image declares VOLUME /config; tmpfs avoids an orphan volume per recreate
+    environment:
+      LOG_LEVEL: info
+      LOG_HTML: "false"
+      CAPTCHA_SOLVER: none
+      TZ: ${TZ:-UTC}
+    networks:
+      - media-internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8191/health"]   # /health does not log a line per probe; / does
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 2G                       # each request launches a browser
+    labels:
+      my.zone: "homeserver"
 
-  # Indexer Manager
+  # ---------------------------------------------------------------------------
+  # Indexer manager. Talks to flaresolverr over media-internal and to
+  # sonarr/radarr over homeserver (Apps: http://sonarr:8989, http://radarr:7878).
+  # ---------------------------------------------------------------------------
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
+    <<: *lsio-hardened
+    image: lscr.io/linuxserver/prowlarr:2.5.2.5491-ls159
     container_name: prowlarr
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
+      TZ: ${TZ:-UTC}
     volumes:
       - /volume1/docker/media-server/prowlarr:/config
     networks:
       - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+      - media-internal                      # to reach flaresolverr
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9696/ping"]   # anonymous readiness endpoint
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.prowlarr.entrypoints=websecure"
-      - "traefik.http.routers.prowlarr.tls.certresolver=myresolver"
-      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+      <<: *traefik-labels
+      traefik.http.routers.prowlarr.rule: "Host(`prowlarr.${SERVER_DOMAIN}`)"
+      traefik.http.routers.prowlarr.entrypoints: "websecure"
+      traefik.http.routers.prowlarr.tls.certresolver: "myresolver"
+      "traefik.http.routers.prowlarr.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.prowlarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.prowlarr.middlewares: "media-headers"
+      traefik.http.services.prowlarr.loadbalancer.server.port: "9696"
 
-  # TV Show Manager
+  # ---------------------------------------------------------------------------
+  # TV show manager. Download client: host `gluetun`, port 8080.
+  # Root folder /data/tv; staging /data/torrents on the same mount (hardlinks).
+  # ---------------------------------------------------------------------------
   sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
+    <<: *lsio-hardened
+    image: lscr.io/linuxserver/sonarr:4.0.19.2979-ls323
     container_name: sonarr
-    depends_on:
-      - prowlarr
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
+      TZ: ${TZ:-UTC}
     volumes:
       - /volume1/docker/media-server/sonarr:/config
-      - /volume1/docker/media-server/downloads:/downloads
-      - /volume1/docker/media-server/media:/data
+      - /volume1/docker/media-server/data:/data      # /data/torrents (staging) + /data/tv (library) on ONE mount = hardlinks
     networks:
       - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8989/ping"]   # anonymous readiness endpoint
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`sonarr.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.sonarr.entrypoints=websecure"
-      - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      <<: *traefik-labels
+      traefik.http.routers.sonarr.rule: "Host(`sonarr.${SERVER_DOMAIN}`)"
+      traefik.http.routers.sonarr.entrypoints: "websecure"
+      traefik.http.routers.sonarr.tls.certresolver: "myresolver"
+      "traefik.http.routers.sonarr.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.sonarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.sonarr.middlewares: "media-headers"
+      traefik.http.services.sonarr.loadbalancer.server.port: "8989"
 
-  # Movie Manager
+  # ---------------------------------------------------------------------------
+  # Movie manager. Download client: host `gluetun`, port 8080.
+  # Root folder /data/movies; staging /data/torrents on the same mount (hardlinks).
+  # ---------------------------------------------------------------------------
   radarr:
-    image: lscr.io/linuxserver/radarr:latest
+    <<: *lsio-hardened
+    image: lscr.io/linuxserver/radarr:6.3.0.10514-ls315
     container_name: radarr
-    depends_on:
-      - prowlarr
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
+      TZ: ${TZ:-UTC}
     volumes:
       - /volume1/docker/media-server/radarr:/config
-      - /volume1/docker/media-server/downloads:/downloads
-      - /volume1/docker/media-server/media:/data
+      - /volume1/docker/media-server/data:/data      # /data/torrents (staging) + /data/movies (library) on ONE mount = hardlinks
     networks:
       - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:7878/ping"]   # anonymous readiness endpoint
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.radarr.rule=Host(`radarr.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.radarr.entrypoints=websecure"
-      - "traefik.http.routers.radarr.tls.certresolver=myresolver"
-      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      <<: *traefik-labels
+      traefik.http.routers.radarr.rule: "Host(`radarr.${SERVER_DOMAIN}`)"
+      traefik.http.routers.radarr.entrypoints: "websecure"
+      traefik.http.routers.radarr.tls.certresolver: "myresolver"
+      "traefik.http.routers.radarr.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.radarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.radarr.middlewares: "media-headers"
+      traefik.http.services.radarr.loadbalancer.server.port: "7878"
 
-  # Subtitle Manager
+  # ---------------------------------------------------------------------------
+  # Subtitle manager. Sonarr http://sonarr:8989, Radarr http://radarr:7878,
+  # no path mappings (everyone sees /data/tv and /data/movies).
+  # ---------------------------------------------------------------------------
   bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
+    <<: *lsio-hardened
+    image: lscr.io/linuxserver/bazarr:v1.6.0-ls363
     container_name: bazarr
-    depends_on:
-      - sonarr
-      - radarr
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
+      TZ: ${TZ:-UTC}
     volumes:
       - /volume1/docker/media-server/bazarr:/config
-      - /volume1/docker/media-server/media:/data
+      - /volume1/docker/media-server/data/movies:/data/movies
+      - /volume1/docker/media-server/data/tv:/data/tv
     networks:
       - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:6767/"]   # liveness only: no anonymous readiness endpoint
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.bazarr.rule=Host(`bazarr.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.bazarr.entrypoints=websecure"
-      - "traefik.http.routers.bazarr.tls.certresolver=myresolver"
-      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
+      <<: *traefik-labels
+      traefik.http.routers.bazarr.rule: "Host(`bazarr.${SERVER_DOMAIN}`)"
+      traefik.http.routers.bazarr.entrypoints: "websecure"
+      traefik.http.routers.bazarr.tls.certresolver: "myresolver"
+      "traefik.http.routers.bazarr.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.bazarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.bazarr.middlewares: "media-headers"
+      traefik.http.services.bazarr.loadbalancer.server.port: "6767"
 
-  # Jellyfin Media Server
+  # ---------------------------------------------------------------------------
+  # Jellyfin. Not exposed outside today. No rate limit: streams issue many range requests.
+  # Library is read-only; metadata lives under /config.
+  # Keeps LinuxServer's root-init + PUID/PGID model (no documented non-root mode for this image);
+  # capabilities cut to what s6/usermod need. Only the render node is passed, not card0.
+  # ---------------------------------------------------------------------------
   jellyfin:
-    image: lscr.io/linuxserver/jellyfin:latest
+    <<: *common
+    image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
     container_name: jellyfin
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+      - KILL
+    stop_grace_period: 1m
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      JELLYFIN_PublishedServerUrl: https://jellyfin.${SERVER_DOMAIN}
     volumes:
       - /volume1/docker/media-server/jellyfin:/config
-      - /volume1/docker/media-server/downloads:/data
-      - /volume1/docker/media-server/jellyfin-cache:/cache
+      # Library only, read-only. Jellyfin was scanning the torrent staging dir (downloads mounted as
+      # /data since 55f0a46), which is why every movie showed twice. Libraries: /data/movies, /data/tv.
+      - /volume1/docker/media-server/data/movies:/data/movies:ro
+      - /volume1/docker/media-server/data/tv:/data/tv:ro
+      # Jellyfin keeps its cache and transcode segments under /config/cache (the old /cache mount
+      # was never used). Mounting the dedicated host dir there keeps the existing
+      # TranscodingTempPath=/config/cache/transcodes setting valid with no UI change.
+      - /volume1/docker/media-server/jellyfin-cache:/config/cache
+    # Hardware transcoding: pass only the render node. The init script fixes its permissions
+    # inside the container (verified: "permissions for /dev/dri/renderD128 are good"); if that
+    # line is missing, see known-issues.md item 3. On a model without an iGPU, delete `devices:`.
+    devices:
+      - ${JELLYFIN_RENDER_DEVICE:-/dev/dri/renderD128}:${JELLYFIN_RENDER_DEVICE:-/dev/dri/renderD128}
     networks:
       - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8096/health"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 3m                     # answers while startup tasks are still running
+    deploy:
+      resources:
+        limits:
+          memory: 4G                       # ffmpeg OOM mid-playback beats a NAS-wide OOM
     labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.jellyfin.entrypoints=websecure"
-      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
-      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-    # CPU / GPU hardware acceleration
-    devices:
-     - /dev/dri:/dev/dri
+      <<: *traefik-labels
+      traefik.http.routers.jellyfin.rule: "Host(`jellyfin.${SERVER_DOMAIN}`)"
+      traefik.http.routers.jellyfin.entrypoints: "websecure"
+      traefik.http.routers.jellyfin.tls.certresolver: "myresolver"
+      "traefik.http.routers.jellyfin.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.jellyfin.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.jellyfin.middlewares: "media-headers"
+      traefik.http.services.jellyfin.loadbalancer.server.port: "8096"
 
-  # Media Request Manager
+  # ---------------------------------------------------------------------------
+  # Seerr (formerly Jellyseerr; fallenbagel/jellyseerr stopped at 2.7.3 in Aug 2025). Container
+  # name, hostname and /app/config are unchanged, so URLs and the database carry over (migrated
+  # in place on first start, one way: back up /volume1/docker/media-server/jellyseerr first).
+  # Nothing in this stack is published outside the LAN (no tunnel). Per-IP request rate limit
+  # (a flood backstop, not a brute-force limiter: 60 r/s still allows many login attempts).
+  # If it is ever published through a tunnel, key the rate limit on `Cf-Connecting-IP` and put
+  # Cloudflare Access in front of it.
+  # Image runs as uid 1000 (`node`) and ships no init and no healthcheck.
+  # In-app: Jellyfin http://jellyfin:8096, Sonarr http://sonarr:8989, Radarr http://radarr:7878.
+  # ---------------------------------------------------------------------------
   jellyseerr:
-    image: fallenbagel/jellyseerr:latest
+    <<: *common
+    image: ghcr.io/seerr-team/seerr:v3.4.1
     container_name: jellyseerr
-    depends_on:
-      - jellyfin
-      - sonarr
-      - radarr
+    init: true
+    user: "${PUID:-1000}:${PGID:-1000}"    # /app/config on the host must be owned by this uid
+    cap_drop:
+      - ALL
+    stop_grace_period: 30s
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
-      - LOG_LEVEL=info
+      TZ: ${TZ:-UTC}
+      LOG_LEVEL: info
     volumes:
       - /volume1/docker/media-server/jellyseerr:/app/config
     networks:
       - homeserver
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:5055/api/v1/status"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 2m                     # first start after the migration runs DB migrations
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     labels:
-      - "my.zone=homeserver"
-      - "traefik.enable=true"
-      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${SERVER_DOMAIN}`)"
-      - "traefik.http.routers.jellyseerr.entrypoints=websecure"
-      - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
-      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+      <<: *traefik-labels
+      # Per-IP request limiter (flood backstop).
+      traefik.http.middlewares.media-ratelimit.ratelimit.average: "60"
+      traefik.http.middlewares.media-ratelimit.ratelimit.burst: "120"
+      traefik.http.middlewares.media-ratelimit.ratelimit.period: "1s"
+      traefik.http.routers.jellyseerr.rule: "Host(`jellyseerr.${SERVER_DOMAIN}`)"
+      traefik.http.routers.jellyseerr.entrypoints: "websecure"
+      traefik.http.routers.jellyseerr.tls.certresolver: "myresolver"
+      "traefik.http.routers.jellyseerr.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.jellyseerr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.jellyseerr.middlewares: "media-headers,media-ratelimit"
+      traefik.http.services.jellyseerr.loadbalancer.server.port: "5055"
 
 networks:
   homeserver:
     name: homeserver
     external: true
+  # Stack-private bridge for flaresolverr <-> prowlarr. Not `internal: true` (flaresolverr needs egress).
+  media-internal:
+    name: media-internal
 

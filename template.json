@@ -303,7 +303,7 @@
             "type": 3,
             "name": "media_server_stack",
             "title": "Complete Media Server with VPN",
-            "description": "Full media server stack with VPN (Gluetun), media management (Sonarr/Radarr), torrent client (qBittorrent), and streaming (Jellyfin). Includes request management via Jellyseerr.",
+            "description": "Full media server stack: Gluetun (WireGuard kill switch) + qBittorrent, Prowlarr + FlareSolverr, Sonarr, Radarr, Bazarr, Jellyfin, Seerr (Jellyseerr).",
             "env": [
                 {
                     "label": "Server Domain",
@@ -313,30 +313,36 @@
                 {
                     "label": "VPN Service Provider",
                     "name": "VPN_SERVICE_PROVIDER",
-                    "description": "VPN service provider (e.g., surfshark, nordvpn, expressvpn)",
+                    "description": "Gluetun provider name, WireGuard-capable only (e.g. surfshark, nordvpn, protonvpn, mullvad). ExpressVPN is OpenVPN-only in gluetun and will not work.",
                     "default": "surfshark"
-                },
-                {
-                    "label": "VPN Type",
-                    "name": "VPN_TYPE",
-                    "description": "VPN protocol type",
-                    "default": "openvpn",
-                    "select": [
-                        {
-                            "text": "WireGuard",
-                            "value": "wireguard"
-                        }
-                    ]
                 },
                 {
                     "label": "WireGuard Private Key",
                     "name": "WIREGUARD_PRIVATE_KEY",
-                    "description": "Your WireGuard private key (required for WireGuard)"
+                    "description": "Your WireGuard private key (from the provider's WireGuard config)."
                 },
                 {
                     "label": "WireGuard Addresses",
                     "name": "WIREGUARD_ADDRESSES",
-                    "description": "WireGuard IP addresses (required for WireGuard)"
+                    "description": "WireGuard interface address(es), e.g. 10.14.0.2/16 for Surfshark"
+                },
+                {
+                    "label": "VPN server countries",
+                    "name": "SERVER_COUNTRIES",
+                    "default": "Switzerland,Iceland",
+                    "description": "Comma-separated gluetun country names to pick servers from. Exact spelling: docker run --rm qmcgaw/gluetun format-servers -surfshark"
+                },
+                {
+                    "label": "Gluetun image",
+                    "name": "GLUETUN_IMAGE",
+                    "default": "qmcgaw/gluetun@sha256:7b1dafa3d25cfd891deae52c7973c499f619f7d8eac52fad84f9aa1e5e6e01ca",
+                    "description": "Exact gluetun build to run (digest of the master build verified on the NAS on 2026-09-10). Bump deliberately; the last tagged release is from 2024."
+                },
+                {
+                    "label": "Jellyfin render device",
+                    "name": "JELLYFIN_RENDER_DEVICE",
+                    "default": "/dev/dri/renderD128",
+                    "description": "GPU render node passed to Jellyfin for hardware transcoding (ls -l /dev/dri on the NAS)."
                 },
                 {
                     "label": "PUID (User ID)",
@@ -351,7 +357,8 @@
                 {
                     "label": "Timezone",
                     "name": "TZ",
-                    "default": "UTC"
+                    "default": "UTC",
+                    "description": "Timezone for every service in the stack (not read from the root .env)."
                 }
             ],
             "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/media-server/logo.png",
@@ -360,7 +367,7 @@
                 "stackfile": "stacks/media-server/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             },
-            "note": "Includes Gluetun VPN for secure torrent downloads. Configure VPN credentials before deployment."
+            "note": "Read stacks/media-server/readme.md first. Synology prerequisites: 1) TUN + qbittorrent boot task from known-issues.md, 2) /volume1/docker/media-server owned by PUID:PGID, 3) data layout data/{torrents,movies,tv} (see manual_migration.md when upgrading an existing deployment)."
         },
         {
             "type": 3,

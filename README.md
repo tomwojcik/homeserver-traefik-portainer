@@ -1,14 +1,14 @@
 # homeserver-traefik-portainer
 
-A complete homeserver setup using **Traefik reverse proxy** with **automatic HTTPS** and **Portainer** for easy container management. Features VPN-protected downloading and both local and external access options.
+A complete homeserver setup using **Traefik reverse proxy** with **automatic HTTPS** and **Portainer** for easy container management. Torrenting runs inside a VPN kill switch. Nothing is published outside the LAN unless you opt in.
 
 ## Features
 
 ✅ **Local-first architecture** - Fast streaming without internet dependencies  
 ✅ **Automatic HTTPS** - Set-and-forget SSL certificates via Let's Encrypt  
-✅ **VPN-protected downloads** - Secure torrenting through isolated VPN container  
+✅ **VPN-protected torrenting** - qBittorrent lives inside a Gluetun WireGuard kill switch  
 ✅ **Easy service deployment** - Deploy services via Portainer's web UI  
-✅ **Hybrid access** - Local network speed + selective external access  
+✅ **Nothing public by default** - No ports forwarded, no tunnel; every app keeps its own login  
 ✅ **Service auto-discovery** - Traefik automatically detects new services  
 ✅ **No port conflicts** - Everything routed through Traefik on 80/443  
 
@@ -21,7 +21,7 @@ cp .env.example .env
 # - SERVER_DOMAIN=example.com
 # - ACME_EMAIL=your-email@example.com  
 # - CF_DNS_API_TOKEN=your_cloudflare_dns_token
-# - VPN credentials for downloading services
+# (VPN credentials are entered in the Portainer form of the media-server template, not here)
 ```
 
 #### Setting up Cloudflare DNS API Token
@@ -73,7 +73,7 @@ docker-compose up -d
 This starts:
 - **Traefik v3.0** (reverse proxy with automatic HTTPS)
 - **Portainer 2.32.0** (container management)
-- **Cloudflared** (selective external access)
+- **Cloudflared** (optional; only used if you set up a Cloudflare Tunnel)
 
 ### 4. Deploy Services via Portainer
 
@@ -83,20 +83,19 @@ This starts:
 2. **Configure App Templates**:
    - Go to **Settings** > **App Templates**
    - Set URL: `https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/template.json`
-3. **Deploy VPN stack FIRST**: Deploy "Gluetun VPN" 
-4. **Deploy download services**: Deploy metube, media-server (depend on gluetun)
-5. **Deploy other services**: Any order
+3. **Deploy "Complete Media Server with VPN"**: Gluetun is part of that stack. Read
+   [stacks/media-server/readme.md](stacks/media-server/readme.md) first for the Synology
+   prerequisites (TUN boot task, directory ownership).
+4. **Deploy other services**: Any order
 
 ## Available Services
 
 Deploy any of these through Portainer's App Templates:
 
 ### **Media & Entertainment**
-- **Jellyfin/Plex** - Media streaming servers
-- **Sonarr/Radarr** - TV show/movie management  
-- **Jellyseerr** - Media request system
-- **MeTube** - YouTube downloader (VPN-protected)
-- **qbittorrent** - Torrent client (VPN-protected)
+- **Complete Media Server with VPN** - one stack: Gluetun + qBittorrent (VPN), Prowlarr + FlareSolverr,
+  Sonarr, Radarr, Bazarr, Jellyfin, Seerr (Jellyseerr). See [stacks/media-server](stacks/media-server/readme.md)
+- **MeTube** - YouTube downloader (not routed through the VPN)
 
 ### **Productivity**
 - **Nextcloud** - File sync and collaboration
@@ -122,10 +121,14 @@ After setup, your services will be available at:
 - https://jellyfin.example.com (Media streaming - **local speed**)
 - https://sonarr.example.com (TV show management)
 - https://qbittorrent.example.com (Torrents via VPN)
-- https://metube.example.com (YouTube downloads via VPN)
+- https://metube.example.com (YouTube downloads)
 - https://nextcloud.example.com (File sync)
 - https://vaultwarden.example.com (Password manager)
 - https://uptime.example.com (Service monitoring)
+
+Containers talk to each other by container name (`http://radarr:7878`), never through these
+public hostnames: that would loop out through Traefik for no benefit and add a DNS and
+certificate dependency to every sync.
 
 ## Network Architecture
 
@@ -135,54 +138,39 @@ Local Device → Router DNS → NAS:443 → Traefik → Service
 ```
 **Benefits**: Full bandwidth, no internet dependency, lowest latency
 
-### **External Access (Selective)**
+### **External Access (Optional)**
+None by default. If you publish a service through a Cloudflare Tunnel, put Cloudflare
+Access in front of its hostname: the app's own login is the only other layer.
+
+### **VPN Protection (Torrents)**
 ```
-External → Cloudflare Tunnel → Specific Services
+qbittorrent → Gluetun (WireGuard, kill switch) → Internet
+prowlarr / *arr / metube → Internet directly
 ```
-**Use for**: Nextcloud (file sync), Jellyseerr (remote requests)
+Only the torrent transfer is VPN'd. Indexer searches and YouTube downloads use the NAS IP.
 
-### **VPN Protection (Downloads)**
+## VPN Setup (Critical for Torrents)
+
+Gluetun is a service inside the media-server stack (WireGuard only). Credentials go into the
+template form: `VPN_SERVICE_PROVIDER`, `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_ADDRESSES`,
+`SERVER_COUNTRIES`.
+
+### Verify the VPN
+```bash
+docker logs gluetun                          # look for "Wireguard setup is complete" and a healthy check
+docker exec gluetun cat /tmp/gluetun/ip      # VPN server IP, not your real IP (the image has no curl)
+docker stop gluetun                          # kill-switch test: qbittorrent must lose connectivity
 ```
-qbittorrent/metube → Gluetun VPN → Internet
-```
-**Benefits**: IP masking, geographic flexibility, ISP protection
 
-## VPN Setup (Critical for Downloads)
+### Accessing qBittorrent
+`https://qbittorrent.<domain>`. Sonarr and Radarr reach it as host `gluetun`, port `8080`.
+Never publish port 8080 on the host: that bypasses Traefik and TLS.
 
-### 1. Deploy Gluetun Stack First
-1. In Portainer App Templates, deploy "Gluetun VPN"
-2. Configure your VPN credentials:
-   - `VPN_SERVICE_PROVIDER` (surfshark, nordvpn, etc.)
-   - `WIREGUARD_PRIVATE_KEY`
-   - `WIREGUARD_ADDRESSES`
-
-### 2. Verify VPN Connection
-- Check gluetun logs: `docker logs gluetun`
-- Test IP: `docker exec gluetun curl ifconfig.me`
-- Should show VPN server IP, not your real IP
-
-### 3. Deploy Download Services
-- **metube**: Regular deployment (no VPN needed for YouTube downloads)
-- **qbittorrent**: Routes through gluetun VPN for security
-
-### 4. Access VPN-Protected Services
-
-**qBittorrent Access (Setup Only)**
-- **Normal operation**: No direct access needed - Sonarr/Radarr communicate automatically
-- **Initial setup**: Temporarily expose port in gluetun stack:
-  ```yaml
-  # Add to gluetun service temporarily
-  ports:
-    - "8080:8080"  # Remove after setup complete
-  ```
-- **After setup**: Remove port exposure for maximum security
-- **Troubleshooting**: Re-add port temporarily when needed
-
-**Workflow After Setup:**
-1. **Request media**: Jellyseerr → Sonarr/Radarr  
-2. **Automatic download**: *arr stack → qBittorrent (via VPN)
-3. **Watch content**: Jellyfin/Plex (local network speed)
-4. **Zero manual intervention**: qBittorrent operates invisibly through VPN
+### Workflow after setup
+1. **Request media**: Seerr → Sonarr/Radarr
+2. **Automatic download**: Prowlarr finds it, qBittorrent downloads it through the VPN
+3. **Import**: Sonarr/Radarr hardlink it into `/data/tv` or `/data/movies`, Bazarr adds subtitles
+4. **Watch**: Jellyfin
 
 ## Adding New Services
 
@@ -195,7 +183,6 @@ qbittorrent/metube → Gluetun VPN → Internet
 Perfect for deploying your own applications:
 
 ```yaml
-version: "3.8"
 services:
   my-app:
     build: .
@@ -216,6 +203,8 @@ networks:
     name: homeserver
     external: true
 ```
+If your service talks to another container, use its container name (`http://sonarr:8989`),
+not the public hostname.
 
 ### Method 3: Manual Stack Deployment
 1. **In Portainer**: Stacks → Add Stack → Git Repository
@@ -225,18 +214,15 @@ networks:
 
 ## External Access Configuration
 
-### Option 1: Cloudflare Tunnels (Secure)
-Configure tunnels for services needing external access:
-1. **Nextcloud**: File sync from anywhere
-2. **Jellyseerr**: Remote media requests  
-3. **Uptime Kuma**: Service monitoring
+Nothing is published outside the LAN by default.
 
-### Option 2: Port Forwarding (Basic)
-Forward ports 80/443 to your NAS:
-- **Pros**: Simple setup
-- **Cons**: Synology nginx port conflicts, security risks
+### Option 1: Cloudflare Tunnel (if you need it)
+Run `cloudflared` from the root compose with a tunnel token and add public hostnames for the
+services you want, origin `https://traefik:443`, and put Cloudflare Access in front of every
+hostname you publish.
 
-**Recommendation**: Use Cloudflare Tunnels for security
+### Option 2: Port Forwarding
+Not recommended: it exposes every routed hostname to the internet.
 
 ## Synology NAS Setup
 
@@ -274,7 +260,7 @@ Then access services via `https://service.example.com:8443`
 ### **VPN Issues**
 - **Check gluetun logs**: `docker logs gluetun`
 - **Verify credentials**: WireGuard keys must be valid
-- **Test connection**: `docker exec gluetun curl ifconfig.me`
+- **Test connection**: `docker exec gluetun cat /tmp/gluetun/ip`
 - **Port forwarding**: Check if VPN supports it
 
 ### **Service Not Accessible**
@@ -294,36 +280,32 @@ If Portainer shows "timeout.html" or security timeout message:
 - **Alternative**: Access directly via `http://nas-ip:9000` during setup
 - **Note**: This only happens on first setup - once admin is created, normal access works
 
-### **Services Not Routing Through Traefik**
-**Important**: If a service has exposed ports in docker-compose (e.g., `ports: - "9000:9000"`), it will bypass Traefik routing:
-
-- **Problem**: `portainer.example.com` returns 404, but `nas-ip:9000` works
-- **Cause**: Exposed ports take precedence over Traefik routing
-- **Solution**: 
-  1. **For initial setup**: Temporarily expose ports, access via `nas-ip:port`
-  2. **For production**: Comment out port mappings to force Traefik routing
-  ```yaml
-  # ports:
-  #   - "9000:9000"  # Disable for Traefik routing
-  ```
-- **When to expose ports**: Only for troubleshooting or when Traefik fails
+### **Published Ports Bypass Traefik**
+A `ports:` mapping makes a service reachable at `nas-ip:port` in plain HTTP, outside Traefik
+and TLS. Keep ports unpublished in production; if a hostname returns 404, check
+the router in the Traefik dashboard and the container's labels instead.
 
 ### **Performance Issues**
 - **Local vs External**: Use local URLs for best performance
-- **GPU transcoding**: Uncomment device mappings in media services
+- **GPU transcoding**: enabled in media-server (Jellyfin gets the render node); see `stacks/media-server/known-issues.md`
 - **Storage**: Ensure fast storage for media files
 
 ## Security Best Practices
 
 ### **Network Isolation**
-- Downloads isolated in VPN container
-- Services communicate only through defined networks
-- No direct port exposure (except Traefik 80/443)
+- Torrent traffic only leaves through the Gluetun kill switch
+- FlareSolverr (sandbox-less Chromium) sits on a stack-private network
+- No host ports published by the media-server stack (only Traefik 80/443)
 
 ### **Access Control**
-- Local network: Full access to all services
-- External: Only selected services via Cloudflare
-- Authentication: Cloudflare Access for sensitive services
+- Security headers on every media-server router. No IP allow-list: Synology's Docker presents every LAN client as the bridge gateway, so one cannot work (see `stacks/media-server/known-issues.md` item 8)
+- Every app keeps its own login enabled; Seerr's login page is rate-limited
+- External: nothing by default; opt-in per router (see External Access)
+
+### **Containers**
+- Images pinned to exact versions
+- LinuxServer apps run as your user with a read-only root filesystem and no capabilities
+- Memory and process limits, log rotation and health checks on every media-server service
 
 ### **Certificate Management**
 - Automatic Let's Encrypt renewal
@@ -335,23 +317,18 @@ If Portainer shows "timeout.html" or security timeout message:
 ### **Media Streaming**
 - **Local access only**: No tunnel overhead
 - **Direct file access**: Mount media directories properly
-- **GPU acceleration**: Enable for transcoding if available
+- **GPU acceleration**: on by default in the media-server stack (Intel QuickSync via the render node)
 
 ### **Resource Management**
-- **Health checks**: Services restart automatically
-- **Resource limits**: Configured for containers
+- **Health checks**: every media-server service has one; `deunhealth` restarts qBittorrent when it loses gluetun's network
+- **Resource limits**: memory limits on every media-server service (scale down on a small NAS; `cpus` and `pids` are not supported by the DSM kernel)
 - **Monitoring**: Use cAdvisor and Uptime Kuma
 
 ## Deployment Order (Important!)
 
 1. **Core services**: `docker-compose up -d` (Traefik + Portainer)
-2. **VPN stack**: Deploy gluetun via Portainer (for qBittorrent only)
-3. **Download services**: 
-   - Deploy metube (standalone - no VPN needed)
-   - Deploy media-server (qBittorrent uses gluetun VPN)
-4. **Other services**: Deploy in any order
-
-**Important**: Only qBittorrent requires VPN deployment order - metube can be deployed anytime
+2. **Media server**: deploy "Complete Media Server with VPN" (Gluetun is inside it; qBittorrent waits for it)
+3. **Other services**: Deploy in any order
 
 ## Contributing
 
