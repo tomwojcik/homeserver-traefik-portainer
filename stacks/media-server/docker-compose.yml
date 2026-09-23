@@ -82,11 +82,14 @@ services:
     container_name: gluetun
     # gluetun needs NET_ADMIN (routes, wg, tun) and NET_RAW (iptables). Everything else in Docker's
     # default set is dropped. CHOWN/DAC_OVERRIDE: gluetun chowns what it writes under /gluetun.
+    # NET_BIND_SERVICE: the DNS server (DNS_SERVER=on) listens on :53; without it the bind fails
+    # ("listen tcp :53: bind: permission denied"), DNS never comes up and gluetun goes unhealthy.
     cap_drop:
       - ALL
     cap_add:
       - NET_ADMIN
       - NET_RAW
+      - NET_BIND_SERVICE
       - CHOWN
       - DAC_OVERRIDE
     devices:
