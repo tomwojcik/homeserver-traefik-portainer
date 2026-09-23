@@ -21,7 +21,7 @@ environment in the compose file, so this page is mostly "why each value".
 | `HTTP_CONTROL_SERVER_ADDRESS` | `127.0.0.1:8000` | The control API is unauthenticated on this build and a PUT can stop the VPN; bound to loopback so no container on the bridge can reach it. |
 | `TZ` | form | Log timestamps only. |
 | image | `GLUETUN_IMAGE`, a digest of the master build | The last tagged release (v3.41.3) is from 2024. Bump by pasting a new `qmcgaw/gluetun@sha256:...` into the form. |
-| capabilities | `NET_ADMIN`, `NET_RAW`, `CHOWN`, `DAC_OVERRIDE`; everything else dropped | Routes/tun/WireGuard, iptables, chown of files it writes under `/gluetun`. |
+| capabilities | `NET_ADMIN`, `NET_RAW`, `NET_BIND_SERVICE`, `CHOWN`, `DAC_OVERRIDE`; everything else dropped | Routes/tun/WireGuard, iptables, the DNS server on :53, chown of files it writes under `/gluetun`. |
 | healthcheck | image's own (5 s), `start_period: 60s` | The previous custom 1-minute wget check made qBittorrent wait a minute at every boot. |
 | ports | none published | The qBittorrent WebUI is reached by Traefik over the bridge; gluetun's firewall accepts the local Docker subnet. |
 
