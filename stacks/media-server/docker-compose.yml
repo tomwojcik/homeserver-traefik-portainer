@@ -120,9 +120,15 @@ services:
       DNS_KEEP_NAMESERVER: "off"
       HTTPPROXY: "off"                       # was on + unauthenticated + logging every URL; nothing used it
       SHADOWSOCKS: "off"
-    # Keep the image's own HEALTHCHECK (gluetun's internal health server, 5s interval, 3 retries);
-    # only the start period is extended for a slow NAS. Do not replace `test`.
+    # Keep the image's own HEALTHCHECK `test` (gluetun's internal health server); do not replace it.
+    # The image default (5s interval, 5s timeout, 3 retries) flips to unhealthy after ~15s of a
+    # slow NAS or a userspace-WireGuard stall, and Traefik drops unhealthy containers: the
+    # qbittorrent router lives on this container, so qbittorrent.<domain> answers 404 meanwhile.
+    # Gluetun restarts a dead VPN by itself, so a patient Docker check loses nothing.
     healthcheck:
+      interval: 30s
+      timeout: 15s
+      retries: 5
       start_period: 60s
     networks:
       - homeserver
