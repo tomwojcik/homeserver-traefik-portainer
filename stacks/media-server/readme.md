@@ -56,7 +56,7 @@ Sonarr, Radarr and Lidarr see torrents and library on ONE mount, so imports are 
    until you do) and finish the *arr authentication wizards:
    ```sh
    cd /volume1/docker/media-server
-   mkdir -p data/torrents/{movies,tv,music,incomplete} data/movies data/tv data/music data/recycle/{movies,tv,music} gluetun/config jellyfin-cache
+   mkdir -p data/torrents/{movies,tv,music,incomplete} data/movies data/tv data/music data/recycle/{movies,tv,music} gluetun/config jellyfin-cache qbittorrent prowlarr sonarr radarr lidarr bazarr jellyfin jellyseerr navidrome
    chown -R 1000:1000 .
    ```
 5. Backups: snapshot or tar `/volume1/docker/media-server` excluding `data/torrents` and
