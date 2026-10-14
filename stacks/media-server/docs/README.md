@@ -30,4 +30,3 @@ Conventions that apply everywhere:
 | Jellyfin | [jellyfin.md](jellyfin.md) |
 | Seerr (Jellyseerr) | [jellyseerr.md](jellyseerr.md) |
 
-Upgrading an existing deployment to this state: `../manual_migration.md`.

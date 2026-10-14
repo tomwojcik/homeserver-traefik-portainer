@@ -14,7 +14,7 @@ streaming and requests, behind Traefik.
 | prowlarr | Indexer manager | `prowlarr.<domain>` | Syncs indexers to Sonarr/Radarr |
 | sonarr | TV shows | `sonarr.<domain>` | Root folder `/data/tv` |
 | radarr | Movies | `radarr.<domain>` | Root folder `/data/movies` |
-| bazarr | Subtitles | `bazarr.<domain>` | English + Polish (see manual_migration.md) |
+| bazarr | Subtitles | `bazarr.<domain>` | English + Polish |
 | jellyfin | Streaming | `jellyfin.<domain>` | Libraries `/data/movies`, `/data/tv` read-only; Intel QSV transcoding |
 | jellyseerr | Requests (Seerr) | `jellyseerr.<domain>` | Container name kept from Jellyseerr |
 
@@ -60,7 +60,6 @@ Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlink
    `jellyfin-cache` on a schedule (DSM Snapshot Replication or the Duplicati stack). App
    databases migrate forward only, so snapshot before every image bump.
 
-Upgrading an existing deployment from the old layout: follow `manual_migration.md`.
 Expected configuration of every service, in and out of the compose file: [`docs/`](docs/README.md).
 
 ## Template variables
