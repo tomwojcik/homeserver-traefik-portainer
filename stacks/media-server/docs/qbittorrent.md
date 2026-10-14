@@ -22,7 +22,7 @@ port `8080` by other containers, and at `https://qbittorrent.<domain>` by you.
 | `save_path` | `/data/torrents` | Default for uncategorised torrents. |
 | `temp_path` / `temp_path_enabled` | `/data/torrents/incomplete`, on | Incomplete downloads never sit in a category folder the *arrs watch. |
 | `auto_tmm_enabled` + the three `*_tmm_enabled` | on | Category decides the save path (Automatic Torrent Management). |
-| categories | `radarr` -> `/data/torrents/movies`, `tv-sonarr` -> `/data/torrents/tv` | Names match what Radarr/Sonarr are configured with; only the paths changed. |
+| categories | `radarr` -> `/data/torrents/movies`, `tv-sonarr` -> `/data/torrents/tv`, `lidarr` -> `/data/torrents/music` | Names match what Radarr/Sonarr/Lidarr are configured with; only the paths changed. |
 | `listen_port` / `random_port` / `upnp` | `6881`, off, off | Fixed port; UPnP/NAT-PMP do nothing through a VPN. |
 | `current_network_interface` | `tun0` | Second kill switch: if gluetun's firewall were ever wrong, qBittorrent still only uses the tunnel. |
 | `encryption` | `0` (prefer) | Compatible with the most peers. |
@@ -58,4 +58,4 @@ docker exec sonarr curl -s -o /dev/null -w '%{http_code}\n' http://gluetun:8080/
 docker exec qbittorrent curl -s -m 5 https://ipinfo.io/ip                       # VPN address
 ```
 In the WebUI: Options > Advanced > Network interface shows `tun0`; Options > Downloads shows
-`/data/torrents`; categories `radarr` and `tv-sonarr` show their save paths.
+`/data/torrents`; categories `radarr`, `tv-sonarr` and `lidarr` show their save paths.

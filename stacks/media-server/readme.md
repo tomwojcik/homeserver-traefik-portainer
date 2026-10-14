@@ -14,8 +14,10 @@ streaming and requests, behind Traefik.
 | prowlarr | Indexer manager | `prowlarr.<domain>` | Syncs indexers to Sonarr/Radarr |
 | sonarr | TV shows | `sonarr.<domain>` | Root folder `/data/tv` |
 | radarr | Movies | `radarr.<domain>` | Root folder `/data/movies` |
+| lidarr | Music | `lidarr.<domain>` | Root folder `/data/music`, qBittorrent category `lidarr` |
 | bazarr | Subtitles | `bazarr.<domain>` | English + Polish |
-| jellyfin | Streaming | `jellyfin.<domain>` | Libraries `/data/movies`, `/data/tv` read-only; Intel QSV transcoding |
+| jellyfin | Streaming | `jellyfin.<domain>` | Libraries `/data/movies`, `/data/tv`, `/data/music` read-only; Intel QSV transcoding |
+| navidrome | Music streaming (Subsonic API) | `navidrome.<domain>` | Library `/data/music` read-only; Seerr cannot request music, use Lidarr |
 | jellyseerr | Requests (Seerr) | `jellyseerr.<domain>` | Container name kept from Jellyseerr |
 
 Every UI keeps its own login; Traefik adds security headers. There is no IP allow-list:
@@ -29,15 +31,16 @@ created by Docker; see the prerequisites below).
 
 | Host | Container path | Purpose |
 |---|---|---|
-| `data/torrents/{movies,tv,incomplete}` | `/data/torrents/...` | qBittorrent staging, per category |
+| `data/torrents/{movies,tv,music,incomplete}` | `/data/torrents/...` | qBittorrent staging, per category |
 | `data/movies/<Movie (Year)>/` | `/data/movies` | Radarr library, Jellyfin "Movies" |
 | `data/tv/<Series>/Season N/` | `/data/tv` | Sonarr library, Jellyfin "Shows" |
-| `data/recycle/{movies,tv}` | `/data/recycle/...` | Sonarr/Radarr recycle bin, 14 days |
+| `data/music/<Artist>/<Album>/` | `/data/music` | Lidarr library, Navidrome, Jellyfin "Music" |
+| `data/recycle/{movies,tv,music}` | `/data/recycle/...` | Sonarr/Radarr/Lidarr recycle bin, 14 days |
 | `<app>/` | `/config` | Per-app state (`jellyseerr/` -> `/app/config`) |
 | `gluetun/config` | `/gluetun` | Server list |
 | `jellyfin-cache/` | `/config/cache` | Jellyfin cache and transcode segments |
 
-Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlinks
+Sonarr, Radarr and Lidarr see torrents and library on ONE mount, so imports are hardlinks
 (instant, no extra space) and the seeding copy stays in `data/torrents`.
 
 ## Prerequisites (Synology, as root)
@@ -53,7 +56,7 @@ Sonarr and Radarr see torrents and library on ONE mount, so imports are hardlink
    until you do) and finish the *arr authentication wizards:
    ```sh
    cd /volume1/docker/media-server
-   mkdir -p data/torrents/{movies,tv,incomplete} data/movies data/tv data/recycle/{movies,tv} gluetun/config jellyfin-cache
+   mkdir -p data/torrents/{movies,tv,music,incomplete} data/movies data/tv data/music data/recycle/{movies,tv,music} gluetun/config jellyfin-cache qbittorrent prowlarr sonarr radarr lidarr bazarr jellyfin jellyseerr navidrome
    chown -R 1000:1000 .
    ```
 5. Backups: snapshot or tar `/volume1/docker/media-server` excluding `data/torrents` and
@@ -81,19 +84,20 @@ Expected configuration of every service, in and out of the compose file: [`docs/
 Set once in each UI. The full per-service reference, with every expected value and the
 reason, is in [`docs/`](docs/README.md); the essentials:
 
-* **qBittorrent**: save path `/data/torrents`, categories `radarr`/`tv-sonarr` under it,
+* **qBittorrent**: save path `/data/torrents`, categories `radarr`/`tv-sonarr`/`lidarr` under it,
   network interface `tun0`, Host header list `qbittorrent.<domain>;gluetun`.
-* **Sonarr / Radarr**: download client host `gluetun`, port `8080`, no remote path mapping;
+* **Sonarr / Radarr / Lidarr**: download client host `gluetun`, port `8080`, no remote path mapping;
   rename on, hardlinks on, recycle bin under `/data/recycle`; Authentication Required = Enabled.
-* **Prowlarr**: Apps `http://sonarr:8989`, `http://radarr:7878`, Prowlarr server
+* **Prowlarr**: Apps `http://sonarr:8989`, `http://radarr:7878`, `http://lidarr:8686`, Prowlarr server
   `http://prowlarr:9696`; FlareSolverr proxy `http://flaresolverr:8191`, tagged on the
   indexers that need it; Authentication Required = Enabled.
 * **Bazarr**: Sonarr `sonarr:8989`, Radarr `radarr:7878`, no path mappings; languages profile
   en+pl; providers napiprojekt, podnapisi, opensubtitles.com.
-* **Jellyfin**: libraries `/data/movies`, `/data/tv` (read-only: keep "save artwork/NFO into
+* **Jellyfin**: libraries `/data/movies`, `/data/tv`, `/data/music` (read-only: keep "save artwork/NFO into
   media folders" and trickplay-next-to-media off, do not delete media from Jellyfin); Known
   proxies = the `homeserver` subnet (`docker network inspect homeserver`); UPnP off;
   Playback > Transcoding = Intel QuickSync.
+* **Navidrome**: create the admin user on the first visit; library is `/data/music`, rescan hourly.
 * **Seerr**: Jellyfin `jellyfin:8096`, Sonarr `sonarr:8989`, Radarr `radarr:7878`, root folders
   `/data/tv` and `/data/movies`.
 
@@ -106,10 +110,10 @@ and certificate dependency to every sync.
 * Only torrent transfer is VPN'd (Gluetun firewall = kill switch; `docker stop gluetun` must
   stall qbittorrent). Prowlarr, FlareSolverr and the *arrs use the NAS IP.
 * No host ports are published. Everything goes through Traefik with a wildcard certificate.
-* LinuxServer apps (qbittorrent, prowlarr, sonarr, radarr, bazarr) run as `PUID:PGID`,
+* LinuxServer apps (qbittorrent, prowlarr, sonarr, radarr, lidarr, bazarr) run as `PUID:PGID`,
   read-only root filesystem, all capabilities dropped. Gluetun keeps `NET_ADMIN`, `NET_RAW`,
   `CHOWN`, `DAC_OVERRIDE`; its control server is bound to loopback. Jellyfin keeps the handful
-  of capabilities its init needs. Seerr runs as uid 1000.
+  of capabilities its init needs. Seerr and Navidrome run as `PUID:PGID` (read-only root filesystem for Navidrome).
 * Known limitation: every service still shares the flat `homeserver` bridge with the other
   stacks, so their ports are reachable at L3 from any container on it. That is why every app
   keeps its own login. See `known-issues.md` item 5.

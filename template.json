@@ -303,7 +303,7 @@
             "type": 3,
             "name": "media_server_stack",
             "title": "Complete Media Server with VPN",
-            "description": "Full media server stack: Gluetun (WireGuard kill switch) + qBittorrent, Prowlarr + FlareSolverr, Sonarr, Radarr, Bazarr, Jellyfin, Seerr (Jellyseerr).",
+            "description": "Full media server stack: Gluetun (WireGuard kill switch) + qBittorrent, Prowlarr + FlareSolverr, Sonarr, Radarr, Lidarr, Bazarr, Jellyfin, Navidrome, Seerr (Jellyseerr).",
             "env": [
                 {
                     "label": "Server Domain",
@@ -367,7 +367,7 @@
                 "stackfile": "stacks/media-server/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             },
-            "note": "Read stacks/media-server/readme.md first. Synology prerequisites: 1) TUN + qbittorrent boot task from known-issues.md, 2) /volume1/docker/media-server owned by PUID:PGID, 3) data layout data/{torrents,movies,tv}."
+            "note": "Read stacks/media-server/readme.md first. Synology prerequisites: 1) TUN + qbittorrent boot task from known-issues.md, 2) /volume1/docker/media-server owned by PUID:PGID, 3) data layout data/{torrents,movies,tv,music}."
         },
         {
             "type": 3,

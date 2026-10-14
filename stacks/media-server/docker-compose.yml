@@ -1,9 +1,10 @@
 # Media server stack (Portainer App Template "Complete Media Server with VPN")
 #
 #   gluetun (WireGuard kill switch) -> qbittorrent (inside gluetun's network namespace)
-#   prowlarr + flaresolverr -> sonarr / radarr -> bazarr -> jellyfin <- jellyseerr
+#   prowlarr + flaresolverr -> sonarr / radarr / lidarr -> bazarr -> jellyfin <- jellyseerr
+#   lidarr -> navidrome (music)
 #
-# Host layout: /volume1/docker/media-server/data/{torrents,movies,tv,recycle} is mounted as
+# Host layout: /volume1/docker/media-server/data/{torrents,movies,tv,music,recycle} is mounted as
 # /data (one mount => hardlinks), per-app state under /volume1/docker/media-server/<app>.
 
 # ---- shared blocks ----------------------------------------------------------
@@ -363,6 +364,41 @@ services:
       traefik.http.services.radarr.loadbalancer.server.port: "7878"
 
   # ---------------------------------------------------------------------------
+  # Music manager. Download client: host `gluetun`, port 8080, category `lidarr`.
+  # Root folder /data/music; staging /data/torrents on the same mount (hardlinks).
+  # ---------------------------------------------------------------------------
+  lidarr:
+    <<: *lsio-hardened
+    image: lscr.io/linuxserver/lidarr:3.1.0.4875-ls43
+    container_name: lidarr
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - /volume1/docker/media-server/lidarr:/config
+      - /volume1/docker/media-server/data:/data      # /data/torrents (staging) + /data/music (library) on ONE mount = hardlinks
+    networks:
+      - homeserver
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8686/ping"]   # anonymous readiness endpoint
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    labels:
+      <<: *traefik-labels
+      traefik.http.routers.lidarr.rule: "Host(`lidarr.${SERVER_DOMAIN}`)"
+      traefik.http.routers.lidarr.entrypoints: "websecure"
+      traefik.http.routers.lidarr.tls.certresolver: "myresolver"
+      "traefik.http.routers.lidarr.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.lidarr.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.lidarr.middlewares: "media-headers"
+      traefik.http.services.lidarr.loadbalancer.server.port: "8686"
+
+  # ---------------------------------------------------------------------------
   # Subtitle manager. Sonarr http://sonarr:8989, Radarr http://radarr:7878,
   # no path mappings (everyone sees /data/tv and /data/movies).
   # ---------------------------------------------------------------------------
@@ -426,9 +462,10 @@ services:
     volumes:
       - /volume1/docker/media-server/jellyfin:/config
       # Library only, read-only. Jellyfin was scanning the torrent staging dir (downloads mounted as
-      # /data since 55f0a46), which is why every movie showed twice. Libraries: /data/movies, /data/tv.
+      # /data since 55f0a46), which is why every movie showed twice. Libraries: /data/movies, /data/tv, /data/music.
       - /volume1/docker/media-server/data/movies:/data/movies:ro
       - /volume1/docker/media-server/data/tv:/data/tv:ro
+      - /volume1/docker/media-server/data/music:/data/music:ro
       # Jellyfin keeps its cache and transcode segments under /config/cache (the old /cache mount
       # was never used). Mounting the dedicated host dir there keeps the existing
       # TranscodingTempPath=/config/cache/transcodes setting valid with no UI change.
@@ -459,6 +496,54 @@ services:
       "traefik.http.routers.jellyfin.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
       traefik.http.routers.jellyfin.middlewares: "media-headers"
       traefik.http.services.jellyfin.loadbalancer.server.port: "8096"
+
+  # ---------------------------------------------------------------------------
+  # Music streaming server (Subsonic API: use Symfonium, Substreamer, Feishin, ...).
+  # Library is read-only; its database and cache live under /data (the container's own, not the
+  # media /data). Own login, created on first visit: do that right after the first deploy.
+  # ---------------------------------------------------------------------------
+  navidrome:
+    <<: *common
+    image: deluan/navidrome:0.64.2
+    container_name: navidrome
+    user: "${PUID:-1000}:${PGID:-1000}"    # /data on the host must be owned by this uid
+    read_only: true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m
+    stop_grace_period: 30s
+    environment:
+      TZ: ${TZ:-UTC}
+      ND_MUSICFOLDER: /music
+      ND_DATAFOLDER: /data
+      ND_LOGLEVEL: info
+      ND_SCANSCHEDULE: 1h                  # Lidarr imports are picked up within the hour
+      ND_SESSIONTIMEOUT: 24h
+    volumes:
+      - /volume1/docker/media-server/navidrome:/data
+      - /volume1/docker/media-server/data/music:/music:ro
+    networks:
+      - homeserver
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:4533/ping"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    labels:
+      <<: *traefik-labels
+      traefik.http.routers.navidrome.rule: "Host(`navidrome.${SERVER_DOMAIN}`)"
+      traefik.http.routers.navidrome.entrypoints: "websecure"
+      traefik.http.routers.navidrome.tls.certresolver: "myresolver"
+      "traefik.http.routers.navidrome.tls.domains[0].main": "${SERVER_DOMAIN}"
+      "traefik.http.routers.navidrome.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
+      traefik.http.routers.navidrome.middlewares: "media-headers"
+      traefik.http.services.navidrome.loadbalancer.server.port: "4533"
 
   # ---------------------------------------------------------------------------
   # Seerr (formerly Jellyseerr; fallenbagel/jellyseerr stopped at 2.7.3 in Aug 2025). Container
