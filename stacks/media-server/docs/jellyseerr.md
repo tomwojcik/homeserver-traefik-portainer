@@ -21,12 +21,15 @@ The request front-end. The container is still named `jellyseerr` and served at
 | Where | Expected |
 |---|---|
 | Settings > Jellyfin | Hostname `jellyfin`, port `8096`, SSL off, external URL `https://jellyfin.<domain>`. Libraries `Movies` and `Shows` enabled for sync. |
-| Settings > Services > Radarr | One server, default, hostname `radarr`, port `7878`, SSL off, Radarr's API key, Quality Profile of your choice, **Root Folder `/data/movies`**, Minimum Availability `Released`, "Enable Scan" on. |
+| Settings > Services > Radarr | One server, default, hostname `radarr`, port `7878`, SSL off, external URL `https://radarr.<domain>`, Radarr's API key, Quality Profile of your choice, **Root Folder `/data/movies`**, Minimum Availability `Released`, "Enable Scan" on. |
 | Settings > Services > Sonarr | One server, default, hostname `sonarr`, port `8989`, Sonarr's API key, Quality Profile, **Root Folder `/data/tv`**, Season Folders on, "Enable Scan" on. |
 | Settings > Users | Your own user with auto-approve; other users (family) with request limits as you see fit. |
 
-Container names everywhere. A public hostname here would loop through Traefik for no
-benefit.
+Container names for the connection itself (Hostname/port): a public hostname there would loop
+through Traefik for no benefit. The **External URL** fields must hold the public
+`https://<app>.<domain>` address, because the browser uses them for the "Play on Jellyfin" and
+"Open in Radarr/Sonarr" buttons. With a container name there (`http://jellyfin:8096`) the links
+only resolve inside the Docker network and break in the browser.
 
 ## Left at defaults on purpose
 
