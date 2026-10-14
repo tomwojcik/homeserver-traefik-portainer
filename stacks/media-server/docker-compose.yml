@@ -103,6 +103,9 @@ services:
       VPN_TYPE: wireguard                    # only WireGuard is wired (no OPENVPN_* pass-through)
       WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY}     # from the Portainer form (this is a trusted, closed LAN)
       WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES:-}
+      # WireGuard is silent when idle and gluetun defaults to no keepalive: behind NAT the UDP mapping
+      # expires and the tunnel goes dead while looking up (health: "timed out waiting for ICMP echo reply").
+      WIREGUARD_PERSISTENT_KEEPALIVE_INTERVAL: 25s
       SERVER_COUNTRIES: ${SERVER_COUNTRIES:-Switzerland,Iceland}   # exact spelling: `docker run --rm qmcgaw/gluetun format-servers -surfshark`
       UPDATER_PERIOD: ${UPDATER_PERIOD:-720h}               # refresh the server list (persisted in /gluetun/servers); wiki floor is 360h
       TZ: ${TZ:-UTC}
