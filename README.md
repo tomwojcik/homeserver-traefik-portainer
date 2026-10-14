@@ -94,7 +94,7 @@ Deploy any of these through Portainer's App Templates:
 
 ### **Media & Entertainment**
 - **Complete Media Server with VPN** - one stack: Gluetun + qBittorrent (VPN), Prowlarr + FlareSolverr,
-  Sonarr, Radarr, Bazarr, Jellyfin, Seerr (Jellyseerr). See [stacks/media-server](stacks/media-server/readme.md)
+  Sonarr, Radarr, Lidarr, Bazarr, Jellyfin, Navidrome, Seerr (Jellyseerr). See [stacks/media-server](stacks/media-server/readme.md)
 - **MeTube** - YouTube downloader (not routed through the VPN)
 
 ### **Productivity**
@@ -169,8 +169,8 @@ Never publish port 8080 on the host: that bypasses Traefik and TLS.
 ### Workflow after setup
 1. **Request media**: Seerr → Sonarr/Radarr
 2. **Automatic download**: Prowlarr finds it, qBittorrent downloads it through the VPN
-3. **Import**: Sonarr/Radarr hardlink it into `/data/tv` or `/data/movies`, Bazarr adds subtitles
-4. **Watch**: Jellyfin
+3. **Import**: Sonarr/Radarr/Lidarr hardlink it into `/data/tv`, `/data/movies` or `/data/music`, Bazarr adds subtitles
+4. **Watch / listen**: Jellyfin (video), Navidrome (music)
 
 ## Adding New Services
 

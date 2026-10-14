@@ -1,6 +1,6 @@
 # Prowlarr (indexer manager) and FlareSolverr (challenge solver)
 
-Prowlarr owns the indexer list and pushes it to Sonarr and Radarr. Never add indexers in
+Prowlarr owns the indexer list and pushes it to Sonarr, Radarr and Lidarr. Never add indexers in
 Sonarr or Radarr directly.
 
 ## Compose / template
@@ -22,7 +22,7 @@ can reach it.
 | Where | Expected |
 |---|---|
 | Settings > General > Security | Authentication `Forms`, Authentication Required `Enabled`, a username and password. |
-| Settings > Apps | One entry per app, Sync Level `Full Sync`, no tags (every indexer goes to both apps). Radarr: Prowlarr Server `http://prowlarr:9696`, Radarr Server `http://radarr:7878`. Sonarr: Prowlarr Server `http://prowlarr:9696`, Sonarr Server `http://sonarr:8989`. Container names: the public hostnames would loop through Traefik for no benefit. |
+| Settings > Apps | One entry per app, Sync Level `Full Sync`, no tags (every indexer goes to every app). Radarr: Prowlarr Server `http://prowlarr:9696`, Radarr Server `http://radarr:7878`. Sonarr: Prowlarr Server `http://prowlarr:9696`, Sonarr Server `http://sonarr:8989`. Lidarr: Prowlarr Server `http://prowlarr:9696`, Lidarr Server `http://lidarr:8686`. Container names: the public hostnames would loop through Traefik for no benefit. |
 | Settings > Indexers > Indexer Proxies | One `FlareSolverr` entry, host `http://flaresolverr:8191`, request timeout 60 s, tag `flaresolverr`. |
 | Indexers | Your trackers. Add the `flaresolverr` tag only to the ones behind Cloudflare; every solve launches a browser. |
 

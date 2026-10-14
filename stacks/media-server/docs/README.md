@@ -26,7 +26,9 @@ Conventions that apply everywhere:
 | Prowlarr (+ FlareSolverr) | [prowlarr.md](prowlarr.md) |
 | Sonarr | [sonarr.md](sonarr.md) |
 | Radarr | [radarr.md](radarr.md) |
+| Lidarr | [lidarr.md](lidarr.md) |
 | Bazarr | [bazarr.md](bazarr.md) |
 | Jellyfin | [jellyfin.md](jellyfin.md) |
+| Navidrome | [navidrome.md](navidrome.md) |
 | Seerr (Jellyseerr) | [jellyseerr.md](jellyseerr.md) |
 
