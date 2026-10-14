@@ -150,6 +150,7 @@ services:
       "traefik.http.routers.qbittorrent.tls.domains[0].sans": "*.${SERVER_DOMAIN}"
       traefik.http.routers.qbittorrent.middlewares: "media-headers"
       traefik.http.services.qbittorrent.loadbalancer.server.port: "8080"
+      deunhealth.restart.on.unhealthy: "true"   # a tunnel that stays dead past the healthcheck retries is restarted
 
   # ---------------------------------------------------------------------------
   # Torrent client - shares gluetun's network stack (kill switch applies to it).
@@ -198,7 +199,7 @@ services:
 
   # ---------------------------------------------------------------------------
   # Restarts containers labelled deunhealth.restart.on.unhealthy=true when Docker marks them
-  # unhealthy (Docker itself never restarts on a failed healthcheck). Needed only for qbittorrent.
+  # unhealthy (Docker itself never restarts on a failed healthcheck). Used for gluetun (dead tunnel) and qbittorrent (lost its namespace after a gluetun restart).
   # Runs as root (upstream FROM scratch image, no USER) with the Docker socket: the one accepted
   # trust point in the stack, hence no network, read-only, cap_drop ALL, digest-pinned.
   # ---------------------------------------------------------------------------
