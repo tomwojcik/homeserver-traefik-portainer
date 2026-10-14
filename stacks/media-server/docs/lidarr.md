@@ -24,13 +24,13 @@ Identical model to Radarr; only the differences are spelled out.
 | Media Management > Import Extra Files | on, `lrc,cue,jpg,png` | Keep lyrics, cue sheets and cover art. |
 | Media Management > Delete empty folders | on | Clean staging after import moves. |
 | Metadata Profiles | Standard (Album); drop Singles/EPs/Live/Compilation types you do not want | Otherwise every artist pulls in hundreds of releases. |
-| Root folder | `/data/music` | Created if missing. |
+| Root folder | Settings > Media Management > Root Folders > Add: path `/data/music`, name `Music`, your default quality and metadata profiles | Not created automatically. Until it exists, Add Artist fails with "Invalid Path" / "Root folder '' does not exist". The folder must exist on the host and be owned by `PUID:PGID`. |
 
 ## Set once in the UI: the rest
 
 | Where | Expected |
 |---|---|
-| Settings > General > Security | Authentication `Forms`, Authentication Required **`Enabled`**. |
+| Settings > General > Security | Authentication `Forms`, Authentication Required **`Enabled`**; the password and its confirmation must match or the form is rejected. |
 | Settings > Download Clients | qBittorrent: host **`gluetun`**, port `8080`, WebUI credentials, category `lidarr`, Remove Completed on. **No** Remote Path Mapping. |
 | Settings > Indexers | Only what Prowlarr pushes (Prowlarr > Settings > Apps > add Lidarr). |
 | Settings > Profiles | Defaults, quality profile of your choice (e.g. FLAC preferred, MP3 320 accepted). |
