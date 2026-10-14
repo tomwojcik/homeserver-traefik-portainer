@@ -170,7 +170,7 @@ Never publish port 8080 on the host: that bypasses Traefik and TLS.
 1. **Request media**: Seerr → Sonarr/Radarr
 2. **Automatic download**: Prowlarr finds it, qBittorrent downloads it through the VPN
 3. **Import**: Sonarr/Radarr/Lidarr hardlink it into `/data/tv`, `/data/movies` or `/data/music`, Bazarr adds subtitles
-4. **Watch / listen**: Jellyfin (video), Navidrome (music)
+4. **Watch / listen**: Jellyfin (video and music, casts to Chromecast), Navidrome (music, for Subsonic apps)
 
 ## Adding New Services
 

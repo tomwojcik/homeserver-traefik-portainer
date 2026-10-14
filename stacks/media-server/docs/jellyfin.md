@@ -43,6 +43,10 @@ docker logs jellyfin 2>&1 | grep -i "permissions for /dev/dri"          # "... a
 docker exec jellyfin /usr/lib/jellyfin-ffmpeg/vainfo | head -8           # Intel iHD driver, VAProfile list
 docker exec jellyfin grep -oE "<(HardwareAccelerationType|VaapiDevice|TranscodingTempPath)>[^<]*" /config/encoding.xml
 docker exec jellyfin touch /data/movies/x 2>&1 | grep -q "Read-only" && echo "library is read-only"
+docker exec jellyfin touch /data/music/x 2>&1 | grep -q "Read-only" && echo "music library is read-only"
 ```
+In the UI: Dashboard > Libraries shows `Music` with the folder `/data/music`, and a scan lists the
+artists Lidarr imported (tags are read from the files).
+
 Play something that must transcode (force a low bitrate in the client): Dashboard shows the
 stream as transcoding with "(HW)", and `docker logs jellyfin` shows an ffmpeg line with `qsv`.

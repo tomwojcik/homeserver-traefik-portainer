@@ -23,6 +23,12 @@ Serves `/data/music` over the Subsonic API and its own web UI. Use a Subsonic cl
 | Personal > Settings | Per user: language/theme as you like. Other users via Settings > Users. |
 | Subsonic apps | Server URL `https://navidrome.<domain>` (public URL: apps run outside the Docker network), user and password. |
 
+## Same library in Jellyfin
+
+Jellyfin mounts the same `data/music` read-only (library type `Music`, see [jellyfin.md](jellyfin.md)).
+Navidrome is for Subsonic apps; Jellyfin is the one to use for Chromecast / Google TV playback.
+Both only read the files, so running both costs nothing but an extra scan.
+
 ## Left at defaults on purpose
 
 * Transcoding stays on the defaults (clients request what they need).
