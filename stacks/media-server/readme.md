@@ -16,7 +16,7 @@ streaming and requests, behind Traefik.
 | radarr | Movies | `radarr.<domain>` | Root folder `/data/movies` |
 | lidarr | Music | `lidarr.<domain>` | Root folder `/data/music`, qBittorrent category `lidarr` |
 | bazarr | Subtitles | `bazarr.<domain>` | English + Polish |
-| jellyfin | Streaming | `jellyfin.<domain>` | Libraries `/data/movies`, `/data/tv` read-only; Intel QSV transcoding |
+| jellyfin | Streaming | `jellyfin.<domain>` | Libraries `/data/movies`, `/data/tv`, `/data/music` read-only; Intel QSV transcoding |
 | navidrome | Music streaming (Subsonic API) | `navidrome.<domain>` | Library `/data/music` read-only; Seerr cannot request music, use Lidarr |
 | jellyseerr | Requests (Seerr) | `jellyseerr.<domain>` | Container name kept from Jellyseerr |
 
@@ -34,7 +34,7 @@ created by Docker; see the prerequisites below).
 | `data/torrents/{movies,tv,music,incomplete}` | `/data/torrents/...` | qBittorrent staging, per category |
 | `data/movies/<Movie (Year)>/` | `/data/movies` | Radarr library, Jellyfin "Movies" |
 | `data/tv/<Series>/Season N/` | `/data/tv` | Sonarr library, Jellyfin "Shows" |
-| `data/music/<Artist>/<Album>/` | `/data/music` | Lidarr library, Navidrome |
+| `data/music/<Artist>/<Album>/` | `/data/music` | Lidarr library, Navidrome, Jellyfin "Music" |
 | `data/recycle/{movies,tv,music}` | `/data/recycle/...` | Sonarr/Radarr/Lidarr recycle bin, 14 days |
 | `<app>/` | `/config` | Per-app state (`jellyseerr/` -> `/app/config`) |
 | `gluetun/config` | `/gluetun` | Server list |
@@ -93,7 +93,7 @@ reason, is in [`docs/`](docs/README.md); the essentials:
   indexers that need it; Authentication Required = Enabled.
 * **Bazarr**: Sonarr `sonarr:8989`, Radarr `radarr:7878`, no path mappings; languages profile
   en+pl; providers napiprojekt, podnapisi, opensubtitles.com.
-* **Jellyfin**: libraries `/data/movies`, `/data/tv` (read-only: keep "save artwork/NFO into
+* **Jellyfin**: libraries `/data/movies`, `/data/tv`, `/data/music` (read-only: keep "save artwork/NFO into
   media folders" and trickplay-next-to-media off, do not delete media from Jellyfin); Known
   proxies = the `homeserver` subnet (`docker network inspect homeserver`); UPnP off;
   Playback > Transcoding = Intel QuickSync.

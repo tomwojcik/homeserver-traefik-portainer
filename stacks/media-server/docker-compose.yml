@@ -462,9 +462,10 @@ services:
     volumes:
       - /volume1/docker/media-server/jellyfin:/config
       # Library only, read-only. Jellyfin was scanning the torrent staging dir (downloads mounted as
-      # /data since 55f0a46), which is why every movie showed twice. Libraries: /data/movies, /data/tv.
+      # /data since 55f0a46), which is why every movie showed twice. Libraries: /data/movies, /data/tv, /data/music.
       - /volume1/docker/media-server/data/movies:/data/movies:ro
       - /volume1/docker/media-server/data/tv:/data/tv:ro
+      - /volume1/docker/media-server/data/music:/data/music:ro
       # Jellyfin keeps its cache and transcode segments under /config/cache (the old /cache mount
       # was never used). Mounting the dedicated host dir there keeps the existing
       # TranscodingTempPath=/config/cache/transcodes setting valid with no UI change.
