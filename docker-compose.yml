@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # Traefik Reverse Proxy
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3.7.16
     container_name: traefik
     restart: always
     command:
@@ -22,7 +22,7 @@ services:
       - "--certificatesResolvers.myresolver.acme.dnsChallenge=true"
       - "--certificatesResolvers.myresolver.acme.dnschallenge.provider=${DNS_CHALLENGE_PROVIDER:-cloudflare}"
       - "--certificatesResolvers.myresolver.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
-      - "--certificatesresolvers.myresolver.acme.dnschallenge.delayBeforeCheck=30"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.propagation.delayBeforeChecks=30s"
       # Set and forget HTTPS reliability improvements
       - "--serverstransport.insecureskipverify=true"
       - "--providers.docker.constraints=Label(`my.zone`, `homeserver`)"
@@ -82,7 +82,7 @@ services:
 
   # Portainer for container management
   portainer:
-    image: portainer/portainer-ce:2.32.0
+    image: portainer/portainer-ce:2.45.3
     command: -H unix:///var/run/docker.sock
 #    ports:
 #      - 9000:9000  # Keep for direct access if Traefik fails
