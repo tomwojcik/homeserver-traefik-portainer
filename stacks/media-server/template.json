@@ -2,7 +2,7 @@
   "type": 3,
   "name": "Media Server Stack",
   "title": "Complete Media Server with VPN",
-  "description": "Full media server stack: Gluetun (WireGuard kill switch) + qBittorrent, Prowlarr + FlareSolverr, Sonarr, Radarr, Lidarr, Bazarr, Jellyfin, Navidrome, Seerr (Jellyseerr).",
+  "description": "Full media server stack: Gluetun (WireGuard kill switch) + qBittorrent, Prowlarr, Sonarr, Radarr, Lidarr, Bazarr, Jellyfin, Navidrome, Seerr (Jellyseerr).",
   "env": [
     {
       "label": "Server Domain",

@@ -10,7 +10,6 @@ streaming and requests, behind Traefik.
 | gluetun | WireGuard VPN with kill switch | (none) | qBittorrent runs inside its network namespace |
 | qbittorrent | Torrent client | `qbittorrent.<domain>` | Router lives on gluetun; only `/data/torrents` mounted |
 | deunhealth | Watchdog | (none) | Restarts qbittorrent when it loses gluetun's network |
-| flaresolverr | Cloudflare-challenge solver for Prowlarr | (none, API only) | Stack-private network |
 | prowlarr | Indexer manager | `prowlarr.<domain>` | Syncs indexers to Sonarr/Radarr |
 | sonarr | TV shows | `sonarr.<domain>` | Root folder `/data/tv` |
 | radarr | Movies | `radarr.<domain>` | Root folder `/data/movies` |
@@ -89,8 +88,7 @@ reason, is in [`docs/`](docs/README.md); the essentials:
 * **Sonarr / Radarr / Lidarr**: download client host `gluetun`, port `8080`, no remote path mapping;
   rename on, hardlinks on, recycle bin under `/data/recycle`; Authentication Required = Enabled.
 * **Prowlarr**: Apps `http://sonarr:8989`, `http://radarr:7878`, `http://lidarr:8686`, Prowlarr server
-  `http://prowlarr:9696`; FlareSolverr proxy `http://flaresolverr:8191`, tagged on the
-  indexers that need it; Authentication Required = Enabled.
+  `http://prowlarr:9696`; no indexer proxy; Authentication Required = Enabled.
 * **Bazarr**: Sonarr `sonarr:8989`, Radarr `radarr:7878`, no path mappings; languages profile
   en+pl; providers napiprojekt, podnapisi, opensubtitles.com.
 * **Jellyfin**: libraries `/data/movies`, `/data/tv`, `/data/music` (read-only: keep "save artwork/NFO into
@@ -108,7 +106,7 @@ and certificate dependency to every sync.
 ## Security model
 
 * Only torrent transfer is VPN'd (Gluetun firewall = kill switch; `docker stop gluetun` must
-  stall qbittorrent). Prowlarr, FlareSolverr and the *arrs use the NAS IP.
+  stall qbittorrent). Prowlarr and the *arrs use the NAS IP.
 * No host ports are published. Everything goes through Traefik with a wildcard certificate.
 * LinuxServer apps (qbittorrent, prowlarr, sonarr, radarr, lidarr, bazarr) run as `PUID:PGID`,
   read-only root filesystem, all capabilities dropped. Gluetun keeps `NET_ADMIN`, `NET_RAW`,
@@ -118,8 +116,8 @@ and certificate dependency to every sync.
   stacks, so their ports are reachable at L3 from any container on it. That is why every app
   keeps its own login. See `known-issues.md` item 5.
 * Images are pinned. Memory limits (the DSM kernel supports neither `cpus` nor `pids` limits), log rotation and health checks on every service.
-* FlareSolverr is unauthenticated and drives a sandbox-less Chromium, so it is isolated on
-  `media-internal` where only prowlarr can reach it.
+* FlareSolverr is disabled (commented out in `docker-compose.yml`): its sandbox-less Chromium
+  lags Chrome stable. Indexers behind a Cloudflare challenge do not work. See `docs/prowlarr.md`.
 
 ## Troubleshooting
 

@@ -93,7 +93,7 @@ This starts:
 Deploy any of these through Portainer's App Templates:
 
 ### **Media & Entertainment**
-- **Complete Media Server with VPN** - one stack: Gluetun + qBittorrent (VPN), Prowlarr + FlareSolverr,
+- **Complete Media Server with VPN** - one stack: Gluetun + qBittorrent (VPN), Prowlarr,
   Sonarr, Radarr, Lidarr, Bazarr, Jellyfin, Navidrome, Seerr (Jellyseerr). See [stacks/media-server](stacks/media-server/readme.md)
 - **MeTube** - YouTube downloader (not routed through the VPN)
 
@@ -294,7 +294,6 @@ the router in the Traefik dashboard and the container's labels instead.
 
 ### **Network Isolation**
 - Torrent traffic only leaves through the Gluetun kill switch
-- FlareSolverr (sandbox-less Chromium) sits on a stack-private network
 - No host ports published by the media-server stack (only Traefik 80/443)
 
 ### **Access Control**

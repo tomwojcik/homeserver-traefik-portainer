@@ -1,7 +1,7 @@
 # Media server stack (Portainer App Template "Complete Media Server with VPN")
 #
 #   gluetun (WireGuard kill switch) -> qbittorrent (inside gluetun's network namespace)
-#   prowlarr + flaresolverr -> sonarr / radarr / lidarr -> bazarr -> jellyfin <- jellyseerr
+#   prowlarr -> sonarr / radarr / lidarr -> bazarr -> jellyfin <- jellyseerr
 #   lidarr -> navidrome (music)
 #
 # Host layout: /volume1/docker/media-server/data/{torrents,movies,tv,music,recycle} is mounted as
@@ -223,44 +223,50 @@ services:
           memory: 64M
 
   # ---------------------------------------------------------------------------
+  # DISABLED since 2026-11-04. FlareSolverr's Chromium lags Chrome stable and runs with
+  # --no-sandbox: v3.5.2, the newest release, ships 152.0.7977.82, which lacks the fix for the
+  # actively exploited CVE-2026-87491 (fixed in 153.0.8010.36).
+  # To re-enable, after checking the Chromium version of a new release: uncomment this service
+  # and `media-internal` under prowlarr and under networks, then see docs/prowlarr.md.
+  #
   # Cloudflare-challenge solver used by Prowlarr. Headless API, no UI, no Traefik router on
   # purpose (unauthenticated). Chromium runs with --no-sandbox, so the container is kept OFF the
   # shared homeserver bridge: it lives on a stack-private network that only prowlarr joins.
   # Prowlarr talks to it at http://flaresolverr:8191.
   # ---------------------------------------------------------------------------
-  flaresolverr:
-    <<: *common
-    image: ghcr.io/flaresolverr/flaresolverr:v3.5.2
-    container_name: flaresolverr
-    cap_drop:
-      - ALL
-    # NOT read_only: undetected-chromedriver patches its driver binary under /app at start.
-    tmpfs:
-      - /tmp:size=512m,mode=1777           # Chromium profiles/scratch; sized so it counts against the limit predictably
-      - /config:size=16m                   # image declares VOLUME /config; tmpfs avoids an orphan volume per recreate
-    environment:
-      LOG_LEVEL: info
-      LOG_HTML: "false"
-      CAPTCHA_SOLVER: none
-      TZ: ${TZ:-UTC}
-    networks:
-      - media-internal
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8191/health"]   # /health does not log a line per probe; / does
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 2G                       # each request launches a browser
-    labels:
-      my.zone: "homeserver"
+  # flaresolverr:
+  #   <<: *common
+  #   image: ghcr.io/flaresolverr/flaresolverr:v3.5.2
+  #   container_name: flaresolverr
+  #   cap_drop:
+  #     - ALL
+  #   # NOT read_only: undetected-chromedriver patches its driver binary under /app at start.
+  #   tmpfs:
+  #     - /tmp:size=512m,mode=1777           # Chromium profiles/scratch; sized so it counts against the limit predictably
+  #     - /config:size=16m                   # image declares VOLUME /config; tmpfs avoids an orphan volume per recreate
+  #   environment:
+  #     LOG_LEVEL: info
+  #     LOG_HTML: "false"
+  #     CAPTCHA_SOLVER: none
+  #     TZ: ${TZ:-UTC}
+  #   networks:
+  #     - media-internal
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-fsS", "http://localhost:8191/health"]   # /health does not log a line per probe; / does
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 30s
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2G                       # each request launches a browser
+  #   labels:
+  #     my.zone: "homeserver"
 
   # ---------------------------------------------------------------------------
-  # Indexer manager. Talks to flaresolverr over media-internal and to
-  # sonarr/radarr over homeserver (Apps: http://sonarr:8989, http://radarr:7878).
+  # Indexer manager. Talks to sonarr/radarr over homeserver
+  # (Apps: http://sonarr:8989, http://radarr:7878).
   # ---------------------------------------------------------------------------
   prowlarr:
     <<: *lsio-hardened
@@ -272,7 +278,7 @@ services:
       - /volume1/docker/media-server/prowlarr:/config
     networks:
       - homeserver
-      - media-internal                      # to reach flaresolverr
+      # - media-internal                    # to reach flaresolverr (disabled)
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:9696/ping"]   # anonymous readiness endpoint
       interval: 1m
@@ -600,7 +606,7 @@ networks:
   homeserver:
     name: homeserver
     external: true
-  # Stack-private bridge for flaresolverr <-> prowlarr. Not `internal: true` (flaresolverr needs egress).
-  media-internal:
-    name: media-internal
+  # Stack-private bridge for flaresolverr <-> prowlarr (disabled with flaresolverr). Not `internal: true` (flaresolverr needs egress).
+  # media-internal:
+  #   name: media-internal
 

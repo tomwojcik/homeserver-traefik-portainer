@@ -23,7 +23,7 @@ Conventions that apply everywhere:
 |---|---|
 | gluetun (+ deunhealth) | [gluetun.md](gluetun.md) |
 | qBittorrent | [qbittorrent.md](qbittorrent.md) |
-| Prowlarr (+ FlareSolverr) | [prowlarr.md](prowlarr.md) |
+| Prowlarr | [prowlarr.md](prowlarr.md) |
 | Sonarr | [sonarr.md](sonarr.md) |
 | Radarr | [radarr.md](radarr.md) |
 | Lidarr | [lidarr.md](lidarr.md) |
