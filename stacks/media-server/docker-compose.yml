@@ -230,7 +230,7 @@ services:
   # ---------------------------------------------------------------------------
   flaresolverr:
     <<: *common
-    image: ghcr.io/flaresolverr/flaresolverr:v3.5.0
+    image: ghcr.io/flaresolverr/flaresolverr:v3.5.2
     container_name: flaresolverr
     cap_drop:
       - ALL
