@@ -23,6 +23,9 @@ services:
       - "--certificatesResolvers.myresolver.acme.dnschallenge.provider=${DNS_CHALLENGE_PROVIDER:-cloudflare}"
       - "--certificatesResolvers.myresolver.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.propagation.delayBeforeChecks=30s"
+      # The ISP intercepts outbound port 53 and REFUSEs non-recursive queries, so lego's check against
+      # Cloudflare's nameservers always fails. Wait 30s and let Let's Encrypt validate on its own.
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.propagation.disableChecks=true"
       # Set and forget HTTPS reliability improvements
       - "--serverstransport.insecureskipverify=true"
       - "--providers.docker.constraints=Label(`my.zone`, `homeserver`)"
