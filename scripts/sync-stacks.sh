@@ -38,7 +38,7 @@ required_vars() {
     | sed 's/^.\${\(.*\)}$/\1/' | sort -u
 }
 # service_images: `compose config --format json` on stdin -> "<service> <image>" lines (nothing
-# when neither jq nor python3 is installed; the image check is then skipped)
+# when neither jq nor python3 is installed; the image check then compares against the file's image list)
 service_images() {
   if command -v jq >/dev/null 2>&1; then
     jq -r '.services | to_entries[] | select(.value.image != null) | "\(.key) \(.value.image)"'
@@ -183,6 +183,9 @@ for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
   services=$(compose_for "$n" "$new" config --services 2>/dev/null | sort -u || true)
   # "<service> <image>" per line. (`config --images <service>` also lists its dependencies' images.)
   images=$(compose_for "$n" "$new" config --format json 2>/dev/null | service_images || true)
+  # Every image the file uses: the fallback check when there's no jq or python3 (DSM has no jq).
+  # Containers store the file's image string verbatim, so an exact match is safe.
+  imgset=$(compose_for "$n" "$new" config --images 2>/dev/null | sort -u || true)
   down="" outdated=""
   for svc in $services; do
     want=$(printf '%s\n' "$images" | awk -v s="$svc" '$1 == s {print $2; exit}')
@@ -190,7 +193,8 @@ for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
     if [ -z "$ids" ]; then down+="$svc: no container yet"$'\n'; continue; fi
     for id in $ids; do
       IFS='|' read -r cname running state code policy image err < <(docker inspect --type container \
-        -f '{{.Name}}|{{.State.Running}}|{{.State.Status}}|{{.State.ExitCode}}|{{.HostConfig.RestartPolicy.Name}}|{{.Config.Image}}|{{.State.Error}}' "$id")
+        -f '{{.Name}}|{{.State.Running}}|{{.State.Status}}|{{.State.ExitCode}}|{{.HostConfig.RestartPolicy.Name}}|{{.Config.Image}}|{{.State.Error}}' "$id" 2>/dev/null) \
+        || continue   # removed since `docker ps`; without this, set -e would end the script silently
       cname=${cname#/}
       if [ "$running" != true ]; then
         # A one-shot service that finished (exit 0, not meant to keep running) isn't down.
@@ -200,7 +204,11 @@ for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
           down+="$cname: $state, exit code $code${err:+ ($err)}"$'\n'
         fi
       fi
-      if [ -n "$want" ] && [ "$image" != "$want" ]; then outdated+="$cname: $image -> $want"$'\n'; fi
+      if [ -n "$want" ]; then
+        if [ "$image" != "$want" ]; then outdated+="$cname: $image -> $want"$'\n'; fi
+      elif [ -n "$imgset" ] && ! grep -qxF -- "$image" <<<"$imgset"; then
+        outdated+="$cname: $image (not what the file pins)"$'\n'
+      fi
     done
   done
   # Containers of services the repo's file no longer has: reported only (up -d leaves them be).
