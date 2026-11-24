@@ -1,7 +1,8 @@
 version: "3.8"
 services:
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor@sha256:ddadf3e2fd880deb4e0f3606d34a0d9da1165e3801116075d98a1901635dc9e8
+    # gcr.io/cadvisor is frozen; releases moved to ghcr.io. v0.56.x requires Docker >= 25, v0.57+ negotiates down to DSM's 24.
+    image: ghcr.io/google/cadvisor:v0.61.1@sha256:4929b70e82079d001d0028b85d6a4dd25ad4666b719455c9542b983489963916
     container_name: cadvisor
     restart: always
     volumes:

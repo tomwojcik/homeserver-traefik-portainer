@@ -23,6 +23,16 @@
       "label": "Timezone",
       "name": "TZ",
       "default": "UTC"
+    },
+    {
+      "label": "Settings Encryption Key",
+      "name": "SETTINGS_ENCRYPTION_KEY",
+      "description": "Encrypts Duplicati's settings database; at least 8 alphanumeric characters (generate with: openssl rand -hex 24). Keep it: the settings can't be read without it."
+    },
+    {
+      "label": "Web UI Password",
+      "name": "DUPLICATI__WEBSERVICE_PASSWORD",
+      "description": "Password for the Duplicati web UI"
     }
   ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/duplicati/logo.png",

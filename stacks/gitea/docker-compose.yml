@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   gitea:
-    image: gitea/gitea:1.21.5
+    image: gitea/gitea:28.4.0
     container_name: gitea
     restart: always
     environment:
@@ -13,7 +13,6 @@ services:
       - GITEA__database__NAME=${GITEA_DB_NAME:-gitea}
       - GITEA__database__USER=${GITEA_DB_USER:-gitea}
       - GITEA__database__PASSWD=${GITEA_DB_PASS:-gitea}
-      - GITEA__server__DOMAIN=${GITEA_DOMAIN:-git.localhost}
       - GITEA__server__SSH_DOMAIN=${GITEA_DOMAIN:-git.localhost}
       - GITEA__server__ROOT_URL=https://${GITEA_DOMAIN:-git.localhost}/
     volumes:
@@ -48,7 +47,7 @@ services:
       - traefik.docker.network=homeserver
 
   gitea-db:
-    image: postgres:15.5-alpine
+    image: postgres:19.0-alpine
     container_name: gitea-db
     restart: always
     environment:
@@ -56,7 +55,8 @@ services:
       - POSTGRES_PASSWORD=${GITEA_DB_PASS:-gitea}
       - POSTGRES_DB=${GITEA_DB_NAME:-gitea}
     volumes:
-      - /volume1/docker/gitea/postgres:/var/lib/postgresql/data
+      # 18+ keeps PGDATA in a versioned subdir (/var/lib/postgresql/<major>/docker) and refuses a mount at .../data.
+      - /volume1/docker/gitea/postgres:/var/lib/postgresql
     networks:
       - homeserver
     security_opt:

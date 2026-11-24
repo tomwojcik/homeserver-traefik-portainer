@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   homeassistant:
-    image: ghcr.io/home-assistant/home-assistant:2024.1.6
+    image: ghcr.io/home-assistant/home-assistant:2026.11.3
     container_name: homeassistant
     restart: always
     environment:
@@ -37,7 +37,7 @@ services:
 
   # Optional: MQTT Broker for IoT communication
   mosquitto:
-    image: eclipse-mosquitto:2.0.18
+    image: eclipse-mosquitto:2.1.4-alpine   # the 2.1 line is published only with the -alpine suffix
     container_name: homeassistant-mqtt
     restart: always
     volumes:
@@ -59,7 +59,9 @@ services:
         reservations:
           memory: 32M
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t '$SYS/#' -C 1 | grep -v Error || exit 1"]
+      # $$ so compose passes a literal $SYS (a single $ was interpolated away, leaving topic /#, which never answers).
+      # Needs anonymous access on the localhost listener, or add -u/-P.
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/uptime' -C 1 -W 5 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

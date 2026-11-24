@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   syncthing:
-    image: lscr.io/linuxserver/syncthing:1.27.2
+    image: lscr.io/linuxserver/syncthing:v2.1.7-ls238
     container_name: syncthing
     restart: always
     environment:
@@ -21,7 +21,6 @@ services:
       - homeserver
     security_opt:
       - no-new-privileges:true
-    user: "1000:1000"
     deploy:
       resources:
         limits:

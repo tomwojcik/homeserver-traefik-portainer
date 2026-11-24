@@ -2,11 +2,11 @@ version: "3.8"
 
 services:
   pypi-server:
-    image: pypiserver/pypiserver:v1.5.2
+    image: pypiserver/pypiserver:v2.4.3
     container_name: pypiserver
     volumes:
       - /volume1/docker/pypiserver/packages:/data/packages
-    command: -P . -a . /data/packages
+    command: run -P . -a . /data/packages
     restart: always
     user: "1000:1000"
     environment:
@@ -26,7 +26,7 @@ services:
         reservations:
           memory: 64M
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080"]   # listens on IPv4 only; localhost tries ::1 first
       interval: 30s
       timeout: 10s
       retries: 3

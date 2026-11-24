@@ -2,14 +2,15 @@ version: "3.8"
 
 services:
   duplicati:
-    image: lscr.io/linuxserver/duplicati:2.0.6
+    image: lscr.io/linuxserver/duplicati:v2.4.1.0_stable_2026-10-29-ls319
     container_name: duplicati
     restart: always
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - TZ=${TZ:-UTC}
-      - CLI_ARGS=--webservice-interface=any --webservice-port=8200
+      - SETTINGS_ENCRYPTION_KEY=${SETTINGS_ENCRYPTION_KEY}   # required since 2.1; a new install stops without it
+      - DUPLICATI__WEBSERVICE_PASSWORD=${DUPLICATI__WEBSERVICE_PASSWORD}   # otherwise the UI password is "changeme"
     volumes:
       - /volume1/docker/duplicati/config:/config
       - /volume1/docker/duplicati/backups:/backups
@@ -18,10 +19,8 @@ services:
       - homeserver
     security_opt:
       - no-new-privileges:true
-    read_only: true
     tmpfs:
       - /tmp
-    user: "1000:1000"
     deploy:
       resources:
         limits:
