@@ -92,7 +92,7 @@ This starts:
 On the NAS, in this checkout:
 ```bash
 git pull
-sudo bash scripts/sync-stacks.sh
+make sync    # or: sudo bash scripts/sync-stacks.sh
 ```
 It finds which of the repo's stacks run on the NAS and shows how each deployed compose file differs
 from the repo. After one confirmation it writes the repo's version and runs `docker compose up -d`
