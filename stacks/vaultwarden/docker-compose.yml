@@ -6,7 +6,9 @@ services:
     restart: unless-stopped
     environment:
       - DOMAIN=https://vaultwarden.${SERVER_DOMAIN}
-      - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED:-true}
+      # Fixed, not a variable: a value saved in Portainer (its form used to default to true) can't reopen
+      # registration. Add people with invitations from /admin.
+      - SIGNUPS_ALLOWED=false
       - INVITATIONS_ALLOWED=${INVITATIONS_ALLOWED:-true}
       - SHOW_PASSWORD_HINT=${SHOW_PASSWORD_HINT:-false}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
