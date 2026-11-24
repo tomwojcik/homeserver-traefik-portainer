@@ -2,8 +2,8 @@
 # Bring the stacks running on this host in line with the compose files in this repo checkout.
 #
 #   git pull
-#   sudo bash scripts/sync-stacks.sh       # shows what will change, asks once, then applies
-#   sudo bash scripts/sync-stacks.sh -y    # applies without asking (skips stacks with blank variables)
+#   scripts/sync-stacks.sh       # shows what will change, asks once, then applies (re-runs itself with sudo)
+#   scripts/sync-stacks.sh -y    # applies without asking (skips stacks with blank variables)
 #
 # The repo's stacks are the root docker-compose.yml and stacks/*/docker-compose.yml. A stack counts
 # as deployed when a container its compose file names (container_name) is running; the rest are
@@ -41,11 +41,18 @@ env_value() {
     | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'\$/\1/"
 }
 
+# Portainer's data volume (/volume1/@docker/volumes/...) is readable by root only. Without root its
+# stack files look missing even when docker itself works for this user.
+if [ "$(id -u)" -ne 0 ]; then
+  command -v sudo >/dev/null 2>&1 || die "run this as root"
+  exec sudo bash "${BASH_SOURCE[0]}" "$@"
+fi
+
 yes=0
 case "${1:-}" in
   "") ;;
   -y) yes=1 ;;
-  *) die "usage: sudo bash $0 [-y]" ;;
+  *) die "usage: $0 [-y]" ;;
 esac
 
 [ -f "$repo/docker-compose.yml" ] && [ -d "$repo/stacks" ] || die "$repo doesn't look like the homeserver repo"
@@ -122,7 +129,7 @@ for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
   case $wd in /data/compose/*) if [ -n "$pdata" ]; then wd="$pdata${wd#/data}"; fi ;; esac
   owner=hand
   if [ -n "$pdata" ] && [[ $cfg == "$pdata"/compose/* ]]; then owner=Portainer; fi
-  if [ ! -f "$cfg" ]; then skipped+=("$name: its compose file $cfg is missing"); continue; fi
+  if [ ! -f "$cfg" ]; then skipped+=("$name: its compose file $cfg doesn't exist or can't be read"); continue; fi
   if [ $owner = hand ] && ! [ "$cfg" -ef "$new" ]; then
     skipped+=("$name: started by hand from $cfg, not from this checkout; left alone")
     continue
