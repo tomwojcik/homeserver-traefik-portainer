@@ -314,33 +314,6 @@
         },
         {
             "type": 3,
-            "name": "minio",
-            "title": "MinIO",
-            "description": "S3 alternative.",
-            "env": [
-                {
-                    "name": "SERVER_DOMAIN",
-                    "label": "Server Domain",
-                    "description": "Your domain name (e.g., example.com)"
-                },
-                {
-                    "label": "MINIO_ROOT_USER",
-                    "name": "MINIO_ROOT_USER"
-                },
-                {
-                    "label": "MINIO_ROOT_PASSWORD",
-                    "name": "MINIO_ROOT_PASSWORD"
-                }
-            ],
-            "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/17225eb614a986de9cbf33512d4b1395376b684f/stacks/minio/logo.png",
-            "platform": "linux",
-            "repository": {
-                "stackfile": "stacks/minio/docker-compose.yml",
-                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
-            }
-        },
-        {
-            "type": 3,
             "name": "nextcloud",
             "title": "Nextcloud",
             "description": "Google drive/Dropbox alternative with secure file sync and sharing.",
@@ -456,6 +429,34 @@
                 "stackfile": "stacks/pypiserver/docker-compose.yml",
                 "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
             }
+        },
+        {
+            "type": 3,
+            "name": "rustfs",
+            "title": "RustFS",
+            "description": "S3-compatible object storage (Apache-2.0). Replaces MinIO.",
+            "env": [
+                {
+                    "name": "SERVER_DOMAIN",
+                    "label": "Server Domain",
+                    "description": "Your domain name (e.g., example.com)"
+                },
+                {
+                    "label": "Access key (admin user)",
+                    "name": "RUSTFS_ACCESS_KEY"
+                },
+                {
+                    "label": "Secret key (admin password)",
+                    "name": "RUSTFS_SECRET_KEY",
+                    "description": "At least 8 characters; an empty value makes RustFS refuse to start"
+                }
+            ],
+            "platform": "linux",
+            "repository": {
+                "stackfile": "stacks/rustfs/docker-compose.yml",
+                "url": "https://github.com/tomwojcik/homeserver-traefik-portainer"
+            },
+            "note": "Before deploying: chown -R 10001:10001 /volume1/docker/rustfs/data. Console at https://rustfs.<domain>, S3 API at https://s3.<domain>."
         },
         {
             "type": 3,

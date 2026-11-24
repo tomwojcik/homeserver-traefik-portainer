@@ -111,7 +111,7 @@ Deploy any of these through Portainer's App Templates:
 ### **Utilities**
 - **Dozzle** - Container log viewer
 - **CyberChef** - Data transformation tools
-- **MinIO** - S3-compatible object storage
+- **RustFS** - S3-compatible object storage (replaces MinIO)
 
 ## Service URLs
 
