@@ -71,8 +71,8 @@ docker-compose up -d
 ```
 
 This starts:
-- **Traefik v3.7.16** (reverse proxy with automatic HTTPS)
-- **Portainer 2.45.3** (container management)
+- **Traefik v3.8.0** (reverse proxy with automatic HTTPS)
+- **Portainer 2.45.4** (container management)
 - **Cloudflared** (optional; only used if you set up a Cloudflare Tunnel)
 
 ### 4. Deploy Services via Portainer
