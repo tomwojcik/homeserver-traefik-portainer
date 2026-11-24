@@ -15,12 +15,6 @@
       "description": "Admin panel access token (generate with: openssl rand -base64 48)"
     },
     {
-      "label": "Allow Signups",
-      "name": "SIGNUPS_ALLOWED",
-      "default": "true",
-      "description": "Allow new user registrations (true/false)"
-    },
-    {
       "label": "Allow Invitations",
       "name": "INVITATIONS_ALLOWED",
       "default": "true",
