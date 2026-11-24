@@ -96,8 +96,9 @@ sudo bash scripts/sync-stacks.sh
 ```
 It finds which of the repo's stacks run on the NAS and shows how each deployed compose file differs
 from the repo. After one confirmation it writes the repo's version and runs `docker compose up -d`
-for each, which recreates only the containers that changed. Portainer stacks keep their
-variables, and Portainer's editor shows the new file. Stacks that aren't deployed are left alone.
+for each stack that differs. Portainer stacks keep their variables, and Portainer's editor shows
+the new file. Stacks that aren't deployed are left alone, and so are services you stopped. It
+stops at the first stack that fails and prints how to roll back.
 
 ## Available Services
 
