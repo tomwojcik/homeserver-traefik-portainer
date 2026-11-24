@@ -13,14 +13,14 @@ environment in the compose file, so this page is mostly "why each value".
 | `WIREGUARD_PRIVATE_KEY` | form field | The key lives in the Portainer stack environment (closed LAN; accepted). Rotate by editing the stack. |
 | `SERVER_COUNTRIES` | `Switzerland,Iceland` (form) | Random server from this pool per start instead of anywhere in the world. Spelling must match `docker run --rm qmcgaw/gluetun format-servers -surfshark`. |
 | `UPDATER_PERIOD` | `720h` | Refreshes the embedded server list monthly (persisted in `/gluetun/servers.json`). |
-| `FIREWALL` | `on` | The kill switch. `FIREWALL_OUTBOUND_SUBNETS` stays **unset**: adding the LAN would let the torrent client reach DSM. |
+| `FIREWALL_ENABLED_DISABLING_IT_SHOOTS_YOU_IN_YOUR_FOOT` | `on` | The kill switch (gluetun's real variable name; a plain `FIREWALL` is ignored). `FIREWALL_OUTBOUND_SUBNETS` stays **unset**: adding the LAN would let the torrent client reach DSM. |
 | `DNS_SERVER` | `on` | gluetun's DNS-over-TLS forwarder inside the tunnel; qBittorrent's DNS never leaks. |
 | `BLOCK_MALICIOUS` | `on` | Default blocklist in that forwarder. |
 | `DNS_KEEP_NAMESERVER` | `off` | Do not keep Docker's resolver alongside the tunnel one. |
 | `HTTPPROXY`, `SHADOWSOCKS` | `off` | Were on (proxy unauthenticated, logging every URL); nothing used them. |
 | `HTTP_CONTROL_SERVER_ADDRESS` | `127.0.0.1:8000` | The control API is unauthenticated on this build and a PUT can stop the VPN; bound to loopback so no container on the bridge can reach it. |
 | `TZ` | form | Log timestamps only. |
-| image | `GLUETUN_IMAGE`, a digest of the master build | The last tagged release (v3.41.3) is from 2024. Bump by pasting a new `qmcgaw/gluetun@sha256:...` into the form. |
+| image | `GLUETUN_IMAGE`, `qmcgaw/gluetun:v3.41.3@sha256:fa19cc76...` | A tagged release pinned by digest (`latest` is master, the next minor). Portainer keeps the value in the stack environment, so bump it there, to a newer tagged release. |
 | capabilities | `NET_ADMIN`, `NET_RAW`, `NET_BIND_SERVICE`, `CHOWN`, `DAC_OVERRIDE`; everything else dropped | Routes/tun/WireGuard, iptables, the DNS server on :53, chown of files it writes under `/gluetun`. |
 | healthcheck | image's own (5 s), `start_period: 60s` | The previous custom 1-minute wget check made qBittorrent wait a minute at every boot. |
 | ports | none published | The qBittorrent WebUI is reached by Traefik over the bridge; gluetun's firewall accepts the local Docker subnet. |

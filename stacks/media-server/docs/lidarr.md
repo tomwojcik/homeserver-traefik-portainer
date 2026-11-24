@@ -10,7 +10,7 @@ Identical model to Radarr; only the differences are spelled out.
 | mounts | `/config`; `data` at `/data` | Staging (`/data/torrents`) and library (`/data/music`) on ONE mount so imports are hardlinks. |
 | healthcheck | `GET /ping` | Anonymous readiness endpoint. |
 | router | `lidarr.<domain>`, `media-headers` | |
-| image | `3.1.0.4875-ls43` | Pinned. |
+| image | `3.1.6.5079-ls49` | Pinned. |
 
 ## Set once in the UI: Media Management
 

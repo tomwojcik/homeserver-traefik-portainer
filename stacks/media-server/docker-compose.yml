@@ -74,11 +74,10 @@ services:
   # ---------------------------------------------------------------------------
   gluetun:
     <<: *common
-    # The last tagged release (v3.41.3) is from July 2024; the master build is what has the
-    # current healthcheck and server lists. Pin the exact build that is known to work on the
-    # NAS by digest (docker image inspect qmcgaw/gluetun:latest --format '{{index .RepoDigests 0}}')
-    # and bump it deliberately.
-    image: ${GLUETUN_IMAGE:-qmcgaw/gluetun@sha256:7b1dafa3d25cfd891deae52c7973c499f619f7d8eac52fad84f9aa1e5e6e01ca}
+    # Pinned to a tagged release by tag + digest; `latest` is the master branch (next minor).
+    # Portainer stores GLUETUN_IMAGE in the stack's environment: bump it there, this default only
+    # applies to new deployments.
+    image: ${GLUETUN_IMAGE:-qmcgaw/gluetun:v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027}
     container_name: gluetun
     # gluetun needs NET_ADMIN (routes, wg, tun) and NET_RAW (iptables). Everything else in Docker's
     # default set is dropped. CHOWN/DAC_OVERRIDE: gluetun chowns what it writes under /gluetun.
@@ -111,7 +110,9 @@ services:
       UPDATER_PERIOD: ${UPDATER_PERIOD:-720h}               # refresh the server list (persisted in /gluetun/servers); wiki floor is 360h
       TZ: ${TZ:-UTC}
       # Secure defaults made explicit (all are gluetun defaults):
-      FIREWALL: "on"                         # kill switch; never set FIREWALL_OUTBOUND_SUBNETS to the LAN
+      # Kill switch. gluetun ignores a plain FIREWALL variable; this is the name it reads.
+      # Never set FIREWALL_OUTBOUND_SUBNETS to the LAN.
+      FIREWALL_ENABLED_DISABLING_IT_SHOOTS_YOU_IN_YOUR_FOOT: "on"
       # gluetun's firewall accepts everything from the local Docker subnet on eth0, so Traefik and
       # the *arrs reach qbittorrent's :8080 without FIREWALL_INPUT_PORTS (and :6881 is reachable
       # from the bridge too). The HTTP control server (:8000) is unauthenticated on this build and
@@ -158,7 +159,7 @@ services:
   # ---------------------------------------------------------------------------
   qbittorrent:
     <<: *lsio-hardened
-    image: lscr.io/linuxserver/qbittorrent:5.2.3_v2.0.14-ls475
+    image: lscr.io/linuxserver/qbittorrent:5.3.1_v2.1.3-ls490
     container_name: qbittorrent
     network_mode: "service:gluetun"
     depends_on:
@@ -270,7 +271,7 @@ services:
   # ---------------------------------------------------------------------------
   prowlarr:
     <<: *lsio-hardened
-    image: lscr.io/linuxserver/prowlarr:2.5.2.5491-ls159
+    image: lscr.io/linuxserver/prowlarr:3.1.0.5799-ls170
     container_name: prowlarr
     environment:
       TZ: ${TZ:-UTC}
@@ -305,7 +306,7 @@ services:
   # ---------------------------------------------------------------------------
   sonarr:
     <<: *lsio-hardened
-    image: lscr.io/linuxserver/sonarr:4.0.19.2979-ls323
+    image: lscr.io/linuxserver/sonarr:4.0.20.3014-ls6   # LinuxServer restarted the build counter in Oct 2026: ls6 > ls329
     container_name: sonarr
     environment:
       TZ: ${TZ:-UTC}
@@ -340,7 +341,7 @@ services:
   # ---------------------------------------------------------------------------
   radarr:
     <<: *lsio-hardened
-    image: lscr.io/linuxserver/radarr:6.3.0.10514-ls315
+    image: lscr.io/linuxserver/radarr:7.0.3.10918-ls328
     container_name: radarr
     environment:
       TZ: ${TZ:-UTC}
@@ -375,7 +376,7 @@ services:
   # ---------------------------------------------------------------------------
   lidarr:
     <<: *lsio-hardened
-    image: lscr.io/linuxserver/lidarr:3.1.0.4875-ls43
+    image: lscr.io/linuxserver/lidarr:3.1.6.5079-ls49
     container_name: lidarr
     environment:
       TZ: ${TZ:-UTC}
@@ -410,7 +411,7 @@ services:
   # ---------------------------------------------------------------------------
   bazarr:
     <<: *lsio-hardened
-    image: lscr.io/linuxserver/bazarr:v1.6.0-ls363
+    image: lscr.io/linuxserver/bazarr:v1.6.2-ls373
     container_name: bazarr
     environment:
       TZ: ${TZ:-UTC}
@@ -448,7 +449,7 @@ services:
   # ---------------------------------------------------------------------------
   jellyfin:
     <<: *common
-    image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
+    image: lscr.io/linuxserver/jellyfin:12.4ubu2604-ls60
     container_name: jellyfin
     cap_drop:
       - ALL
@@ -564,7 +565,7 @@ services:
   # ---------------------------------------------------------------------------
   jellyseerr:
     <<: *common
-    image: ghcr.io/seerr-team/seerr:v3.4.1
+    image: ghcr.io/seerr-team/seerr:v3.5.2
     container_name: jellyseerr
     init: true
     user: "${PUID:-1000}:${PGID:-1000}"    # /app/config on the host must be owned by this uid

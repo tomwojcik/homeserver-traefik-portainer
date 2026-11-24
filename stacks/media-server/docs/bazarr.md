@@ -12,7 +12,7 @@ subtitle download stays available as an on-demand fallback.
 | mounts | `/config`; `data/movies` at `/data/movies`; `data/tv` at `/data/tv` | Library only; the same container paths Sonarr and Radarr report, so no path mappings. |
 | healthcheck | `GET /` | Liveness only; Bazarr has no anonymous readiness endpoint. |
 | router | `bazarr.<domain>`, `media-headers` | |
-| image | `v1.6.0-ls363` | Pinned. |
+| image | `v1.6.2-ls373` | Pinned. >= 1.6.1 fixes the Form-login session bypass (GHSA-jcpg-cp8q-738f, unauthenticated RCE). |
 
 ## Set once in the UI
 
@@ -22,7 +22,7 @@ subtitle download stays available as an on-demand fallback.
 | Settings > Languages | English and Polish enabled. One Languages Profile `en+pl` containing both, set as the default profile for Series and for Movies. |
 | Settings > Sonarr | Enabled, address `sonarr`, port `8989`, base URL empty, Sonarr's API key, **Path Mappings empty**. |
 | Settings > Radarr | Enabled, address `radarr`, port `7878`, Radarr's API key, **Path Mappings empty**. |
-| Settings > Providers | `napiprojekt` (Polish, no account), `podnapisi` (no account), `opensubtitles.com` (free account; best English coverage). |
+| Settings > Providers | `napiprojekt` (Polish, no account), `opensubtitles.com` (free account; best English coverage). |
 | Settings > Subtitles | "Upgrade previously downloaded subtitles" on; Hearing Impaired off. |
 
 ## Left at defaults on purpose

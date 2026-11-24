@@ -4,7 +4,7 @@
 
 | Setting | Value | Why |
 |---|---|---|
-| image | `lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48` | Pinned. LinuxServer's root-init + `PUID`/`PGID` model (no documented non-root mode for this image). |
+| image | `lscr.io/linuxserver/jellyfin:12.4ubu2604-ls60` | Pinned. LinuxServer's root-init + `PUID`/`PGID` model (no documented non-root mode for this image). |
 | capabilities | `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETGID`, `SETUID`, `KILL`; rest dropped | What the init needs to fix ownership and drop to `abc`. |
 | mounts | `/config`; `data/movies` at `/data/movies` **ro**; `data/tv` at `/data/tv` **ro**; `data/music` at `/data/music` **ro**; `jellyfin-cache` at `/config/cache` | Library read-only (Radarr/Sonarr/Lidarr own the files). Cache and transcode segments on the dedicated host dir, matching the existing `TranscodingTempPath`. |
 | devices | `JELLYFIN_RENDER_DEVICE` (`/dev/dri/renderD128`) | Only the render node; `card0` (DRM master) is not passed. The init fixes the node's permissions inside the container. |
