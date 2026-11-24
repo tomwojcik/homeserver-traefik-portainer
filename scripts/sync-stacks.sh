@@ -6,22 +6,25 @@
 #   scripts/sync-stacks.sh -y    # applies without asking (skips stacks with blank variables)
 #
 # The repo's stacks are the root docker-compose.yml and stacks/*/docker-compose.yml. A stack counts
-# as deployed when a container its compose file names (container_name) is running; the rest are
-# left alone. The containers' compose labels say which project they belong to and which compose
-# file started them.
+# as deployed when a container of it exists here, running or not; the rest are left alone. The
+# containers' compose labels say which project they belong to and which compose file started them.
+#
+# The repo decides what runs: services that are down (stopped, crashed, or never started) are
+# started, whole stacks that are down included, and containers running a different image than the
+# file pins are recreated. The plan lists each of them. To keep a service off, comment it out in
+# the repo (its old container is then reported, not touched).
 #
 # Stacks deployed by Portainer: their compose file is Portainer's own copy in its data volume.
 # When it differs from the repo's, it gets the repo's version (the old one stays next to it as
 # <file>.bak-<time>), so Portainer's editor shows the new file, and `docker compose up -d` runs
 # with the stack's variables from Portainer's stack.env. Portainer stacks that already match the
-# repo aren't touched.
+# repo, and whose containers are all up on the pinned images, aren't touched.
 #
 # Stacks started by hand are only handled when they run from this checkout (the root stack); for
 # those `docker compose up -d` runs after every `git pull`, with the .env next to the file.
 #
-# Services you stopped yourself stay stopped. Variables the new file uses without a default and
-# that would be blank are shown in the plan; with -y those stacks are skipped. The first failed
-# stack stops the run.
+# Variables the new file uses without a default and that would be blank are shown in the plan;
+# with -y those stacks are skipped. The first failed stack stops the run.
 set -euo pipefail
 
 repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -33,6 +36,19 @@ first_line() { printf '%s' "${1%%$'\n'*}"; }
 required_vars() {
   { sed -e '/^[[:space:]]*#/d' -e 's/[[:space:]]#.*$//' -e 's/^/ /' "$1" | grep -o '[^$]\${[A-Za-z_][A-Za-z0-9_]*}' || true; } \
     | sed 's/^.\${\(.*\)}$/\1/' | sort -u
+}
+# service_images: `compose config --format json` on stdin -> "<service> <image>" lines (nothing
+# when neither jq nor python3 is installed; the image check then compares against the file's image list)
+service_images() {
+  if command -v jq >/dev/null 2>&1; then
+    jq -r '.services | to_entries[] | select(.value.image != null) | "\(.key) \(.value.image)"'
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -I -c 'import json, sys
+for k, v in json.load(sys.stdin)["services"].items():
+    if v.get("image"): print(k, v["image"])'
+  else
+    cat >/dev/null
+  fi
 }
 # env_value <env file> <name>: the last value the file assigns to name, without surrounding quotes
 env_value() {
@@ -76,7 +92,7 @@ fi
 
 # One entry per stack to update
 S_NAME=() S_PROJECT=() S_OWNER=() S_WD=() S_CFG=() S_ENV=() S_NEW=() S_CHANGED=() S_DROP=()
-S_BLANK=() S_STOPPED=() S_SVCS=() S_NOTE=()
+S_BLANK=() S_DOWN=() S_OUTDATED=() S_NOTE=()
 
 # compose_for <i> <compose file> <compose args...>: run compose for stack i with only the stack's
 # own variables (the caller's environment, e.g. sudo's TZ, would override them)
@@ -94,6 +110,7 @@ declare -A seen=()
 not_deployed=()
 up_to_date=()
 skipped=()
+leftovers=()
 n=0
 # The root stack goes last: it restarts Portainer and Traefik.
 for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
@@ -112,8 +129,10 @@ for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
     done
   fi
   if [ -z "$project" ]; then not_deployed+=("$name"); continue; fi
+  # Prefer a running container for the labels; a stack that is down entirely still counts.
   cid=$(first_line "$(docker ps -q --filter "label=com.docker.compose.project=$project")")
-  if [ -z "$cid" ]; then skipped+=("$name: stopped, left alone"); continue; fi
+  if [ -z "$cid" ]; then cid=$(first_line "$(docker ps -aq --filter "label=com.docker.compose.project=$project")"); fi
+  if [ -z "$cid" ]; then not_deployed+=("$name"); continue; fi
   if [ -n "${seen[$project]:-}" ]; then skipped+=("$name: compose project '$project' is already handled as ${seen[$project]}"); continue; fi
   seen[$project]=$name
 
@@ -150,7 +169,6 @@ for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
   # Portainer saved the old Gluetun image as a stack variable; it would override the version pinned in the file.
   drop=""
   if [ "$name" = media-server ] && [ -n "$envf" ] && grep -q '^GLUETUN_IMAGE=' "$envf"; then drop=GLUETUN_IMAGE; fi
-  if [ $owner = Portainer ] && [ $changed = 0 ] && [ -z "$drop" ]; then up_to_date+=("$name"); continue; fi
 
   S_NAME[n]=$name S_PROJECT[n]=$project S_OWNER[n]=$owner S_WD[n]=$wd S_CFG[n]=$cfg
   S_ENV[n]=$envf S_NEW[n]=$new S_CHANGED[n]=$changed S_DROP[n]=$drop
@@ -159,22 +177,57 @@ for new in "$repo"/stacks/*/docker-compose.yml "$repo/docker-compose.yml"; do
     continue
   fi
 
+  # Compare each service in the repo's file with its containers here. `up -d` starts the down ones
+  # and recreates the ones on another image; a container left without the network namespace it
+  # shared (network_mode: service:x, after x was recreated) is recreated too.
+  services=$(compose_for "$n" "$new" config --services 2>/dev/null | sort -u || true)
+  # "<service> <image>" per line. (`config --images <service>` also lists its dependencies' images.)
+  images=$(compose_for "$n" "$new" config --format json 2>/dev/null | service_images || true)
+  # Every image the file uses: the fallback check when there's no jq or python3 (DSM has no jq).
+  # Containers store the file's image string verbatim, so an exact match is safe.
+  imgset=$(compose_for "$n" "$new" config --images 2>/dev/null | sort -u || true)
+  down="" outdated=""
+  for svc in $services; do
+    want=$(printf '%s\n' "$images" | awk -v s="$svc" '$1 == s {print $2; exit}')
+    ids=$(docker ps -aq --filter "label=com.docker.compose.project=$project" --filter "label=com.docker.compose.service=$svc")
+    if [ -z "$ids" ]; then down+="$svc: no container yet"$'\n'; continue; fi
+    for id in $ids; do
+      IFS='|' read -r cname running state code policy image err < <(docker inspect --type container \
+        -f '{{.Name}}|{{.State.Running}}|{{.State.Status}}|{{.State.ExitCode}}|{{.HostConfig.RestartPolicy.Name}}|{{.Config.Image}}|{{.State.Error}}' "$id" 2>/dev/null) \
+        || continue   # removed since `docker ps`; without this, set -e would end the script silently
+      cname=${cname#/}
+      if [ "$running" != true ]; then
+        # A one-shot service that finished (exit 0, not meant to keep running) isn't down.
+        if [ "$state" = exited ] && [ "$code" = 0 ] && [ "$policy" != always ] && [ "$policy" != unless-stopped ]; then
+          :
+        else
+          down+="$cname: $state, exit code $code${err:+ ($err)}"$'\n'
+        fi
+      fi
+      if [ -n "$want" ]; then
+        if [ "$image" != "$want" ]; then outdated+="$cname: $image -> $want"$'\n'; fi
+      elif [ -n "$imgset" ] && ! grep -qxF -- "$image" <<<"$imgset"; then
+        outdated+="$cname: $image (not what the file pins)"$'\n'
+      fi
+    done
+  done
+  # Containers of services the repo's file no longer has: reported only (up -d leaves them be).
+  extra=$(comm -13 <(printf '%s\n' "$services") \
+    <(docker ps -a --filter "label=com.docker.compose.project=$project" --format '{{.Label "com.docker.compose.service"}}' | sort -u) \
+    | sed '/^$/d' | tr '\n' ' ')
+  if [ -n "$extra" ]; then leftovers+=("$name: ${extra% } (not in the repo's file; remove with docker rm if unused)"); fi
+  S_DOWN[n]=${down%$'\n'} S_OUTDATED[n]=${outdated%$'\n'}
+
+  if [ $owner = Portainer ] && [ $changed = 0 ] && [ -z "$drop" ] && [ -z "$down" ] && [ -z "$outdated" ]; then
+    up_to_date+=("$name")
+    continue
+  fi
+
   blank=""
   for v in $(required_vars "$new"); do
     if [ -z "$(env_value "$varsf" "$v")" ]; then blank+="$v "; fi
   done
   S_BLANK[n]=${blank% }
-
-  # Services with containers that are all stopped were stopped on purpose: leave them out of `up`.
-  existing=$(docker ps -a --filter "label=com.docker.compose.project=$project" --format '{{.Label "com.docker.compose.service"}}' | sort -u)
-  running=$(docker ps --filter "label=com.docker.compose.project=$project" --format '{{.Label "com.docker.compose.service"}}' | sort -u)
-  stopped=$(comm -23 <(printf '%s\n' "$existing") <(printf '%s\n' "$running") | sed '/^$/d' | tr '\n' ' ')
-  S_STOPPED[n]=${stopped% }
-  S_SVCS[n]=""
-  if [ -n "$stopped" ]; then
-    all=$(compose_for "$n" "$new" config --services 2>/dev/null | sort -u || true)
-    S_SVCS[n]=$(comm -23 <(printf '%s\n' "$all") <(printf '%s\n' $stopped | sort -u) | sed '/^$/d' | tr '\n' ' ')
-  fi
 
   S_NOTE[n]=""
   created_by=$(label "$cid" com.docker.compose.version)
@@ -188,6 +241,7 @@ echo
 if [ ${#not_deployed[@]} -gt 0 ]; then echo "Not deployed here: ${not_deployed[*]}"; fi
 if [ ${#up_to_date[@]} -gt 0 ]; then echo "Already match the repo: ${up_to_date[*]}"; fi
 for s in ${skipped[@]+"${skipped[@]}"}; do echo "Skipped $s"; done
+for s in ${leftovers[@]+"${leftovers[@]}"}; do echo "Left over: $s"; done
 if [ $n = 0 ]; then echo "Nothing to update."; exit 0; fi
 
 for ((i = 0; i < n; i++)); do
@@ -202,7 +256,14 @@ for ((i = 0; i < n; i++)); do
     echo "   The file differs from the repo ('diff' isn't installed to show how)."
   fi
   if [ -n "${S_DROP[i]}" ]; then echo "   ${S_DROP[i]} is removed from ${S_ENV[i]}, so the version pinned in the file applies."; fi
-  if [ -n "${S_STOPPED[i]}" ]; then echo "   Left stopped: ${S_STOPPED[i]}"; fi
+  if [ -n "${S_DOWN[i]}" ]; then
+    echo "   Down, will be started:"
+    printf '%s\n' "${S_DOWN[i]}" | sed 's/^/     /'
+  fi
+  if [ -n "${S_OUTDATED[i]}" ]; then
+    echo "   On another image than the file pins, will be recreated:"
+    printf '%s\n' "${S_OUTDATED[i]}" | sed 's/^/     /'
+  fi
   if [ -n "${S_NOTE[i]}" ]; then echo "   ${S_NOTE[i]}"; fi
   if [ -n "${S_BLANK[i]}" ]; then
     echo "   WARNING: ${S_BLANK[i]} would be blank (set in ${S_ENV[i]:-${S_WD[i]}/.env}).$([ $yes = 1 ] && echo ' Skipped because of -y.')"
@@ -252,8 +313,7 @@ for ((i = 0; i < n; i++)); do
     restore+=("cp -p '${S_ENV[i]}.bak-$ts' '${S_ENV[i]}'")
     sed -i "/^${S_DROP[i]}=/d" "${S_ENV[i]}"
   fi
-  read -r -a svcs <<<"${S_SVCS[i]}"
-  if compose_for "$i" "${S_CFG[i]}" up -d ${svcs[@]+"${svcs[@]}"}; then
+  if compose_for "$i" "${S_CFG[i]}" up -d; then
     ok+=("${S_NAME[i]}")
   else
     failed=${S_NAME[i]}
