@@ -88,6 +88,17 @@ This starts:
    prerequisites (TUN boot task, directory ownership).
 4. **Deploy other services**: Any order
 
+### 5. Keep Running Stacks Up to Date
+On the NAS, in this checkout:
+```bash
+git pull
+sudo bash scripts/sync-stacks.sh
+```
+It finds which of the repo's stacks run on the NAS and shows how each deployed compose file differs
+from the repo. After one confirmation it writes the repo's version and runs `docker compose up -d`
+for each, which recreates only the containers that changed. Portainer stacks keep their
+variables, and Portainer's editor shows the new file. Stacks that aren't deployed are left alone.
+
 ## Available Services
 
 Deploy any of these through Portainer's App Templates:
