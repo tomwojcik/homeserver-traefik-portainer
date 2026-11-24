@@ -8,7 +8,7 @@ The request front-end. The container is still named `jellyseerr` and served at
 
 | Setting | Value | Why |
 |---|---|---|
-| image | `ghcr.io/seerr-team/seerr:v3.4.1` | The old image stopped at 2.7.3 (Aug 2025) and ran as root. |
+| image | `ghcr.io/seerr-team/seerr:v3.5.2` | The old image stopped at 2.7.3 (Aug 2025) and ran as root. |
 | `user` | `PUID:PGID` (the image's own `node` user is uid 1000) | `/app/config` on the host must be owned by that uid; the old image left root-owned files, hence the chown in the migration. |
 | `init: true` | | The new image ships no init process. |
 | `cap_drop` | ALL | Nothing needed. |

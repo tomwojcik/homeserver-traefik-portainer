@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   nextcloud:
-    image: nextcloud:apache
+    image: nextcloud:35.0.3-apache
     container_name: nextcloud
     restart: always
     environment:
@@ -12,6 +12,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_HOST=nextcloud-mariadb   # autoconfig only fills the DB settings when all four MYSQL_* are set
       - OVERWRITEPROTOCOL=https
     security_opt:
       - no-new-privileges:true
@@ -32,7 +33,7 @@ services:
       - "traefik.docker.network=homeserver"
 
   nextcloud-mariadb:
-    image: mariadb:10.5
+    image: mariadb:12.3.3
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     container_name: nextcloud-mariadb
     networks:
@@ -45,9 +46,10 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
+      - MARIADB_AUTO_UPGRADE=1   # run mariadb-upgrade on the data dir after an image bump
 
   nextcloud-redis:
-    image: redis:alpine
+    image: redis:8.12.0-alpine
     restart: always
     container_name: nextcloud-redis
     networks:
@@ -55,18 +57,23 @@ services:
     volumes:
       - /volume1/docker/nextcloud/redis:/data
 
+  # rcdailey/nextcloud-cronjob is archived. The official image's /cron.sh runs cron.php every 5 min as
+  # www-data; it needs the network (DB, Redis) and REDIS_HOST, but no docker.sock.
   nextcloud-cron:
-    image: rcdailey/nextcloud-cronjob
+    image: nextcloud:35.0.3-apache
+    container_name: nextcloud-cron
+    entrypoint: /cron.sh
     restart: always
-    network_mode: none
+    environment:
+      - REDIS_HOST=nextcloud-redis
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       - nextcloud
+    networks:
+      - homeserver
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - NEXTCLOUD_CONTAINER_NAME=nextcloud
-      - NEXTCLOUD_EXEC_SHELL=sh
+      - /volume1/docker/nextcloud/data:/var/www/html
 
 networks:
   homeserver:

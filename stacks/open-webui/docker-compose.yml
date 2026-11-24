@@ -2,22 +2,22 @@ version: "3.8"
 
 services:
   open-webui:
-    image: ghcr.io/open-webui/open-webui:0.1.121
+    image: ghcr.io/open-webui/open-webui:0.13.4
     container_name: open-webui
     restart: always
     environment:
       # API Configuration
       - OPENAI_API_BASE_URL=${OPENAI_API_BASE_URL:-https://api.openai.com/v1}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      
-      # Anthropic Configuration
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # Anthropic and other providers: add them as connections in Admin Settings (Open WebUI never read ANTHROPIC_API_KEY).
+      - ENABLE_OLLAMA_API=false
       
       # General Configuration
-      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:-your-secret-key-here}
-      - WEBUI_JWT_SECRET_KEY=${WEBUI_JWT_SECRET_KEY:-your-jwt-secret-here}
-      - DEFAULT_USER_ROLE=${DEFAULT_USER_ROLE:-user}
-      - ENABLE_SIGNUP=${ENABLE_SIGNUP:-true}
+      # Empty WEBUI_SECRET_KEY: start.sh generates one and keeps it in the data dir (the rootfs is read-only).
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:-}
+      - WEBUI_SECRET_KEY_FILE=/app/backend/data/.webui_secret_key
+      - DEFAULT_USER_ROLE=${DEFAULT_USER_ROLE:-pending}
+      - ENABLE_SIGNUP=${ENABLE_SIGNUP:-false}
       - WEBUI_AUTH=${WEBUI_AUTH:-true}
       
       # Database
@@ -25,7 +25,8 @@ services:
       
       # Security & Privacy
       - WEBUI_NAME=Private AI Chat
-      - WEBUI_URL=https://chat.${DOMAIN:-localhost}
+      - WEBUI_URL=https://chat.${SERVER_DOMAIN}
+      - CORS_ALLOW_ORIGIN=https://chat.${SERVER_DOMAIN}
     volumes:
       - /volume1/docker/open-webui/data:/app/backend/data
     networks:
@@ -35,16 +36,17 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-      - /app/backend/static/cache
+      # The app rewrites its static dir at start; only the /docs page's swagger-ui assets go missing.
+      - /app/backend/open_webui/static:uid=1000,gid=1000
     user: "1000:1000"
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G                     # the full image loads a local embedding model
         reservations:
           memory: 256M
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]   # the image has no wget
       interval: 30s
       timeout: 10s
       retries: 3

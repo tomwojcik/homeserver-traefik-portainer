@@ -3,10 +3,9 @@ version: "3.8"
 services:
   gogs:
     restart: always
-    image: gogs/gogs:0.12
-    environment:
-      - PUID=1000
-      - PGID=1000
+    # "next" image: runs as git (1000:1000) without s6, has its own healthcheck; PUID/PGID are ignored.
+    # The host data dir must be owned by 1000:1000.
+    image: gogs/gogs:next-0.14.4
     volumes:
       - /volume1/docker/gogs/data:/data
     container_name: gogs

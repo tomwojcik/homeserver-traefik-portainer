@@ -1,6 +1,6 @@
 services:
   forgejo:
-    image: codeberg.org/forgejo/forgejo:14
+    image: codeberg.org/forgejo/forgejo:17.0.2
     container_name: forgejo
     restart: always
     environment:
@@ -41,7 +41,7 @@ services:
       - traefik.docker.network=homeserver
 
   git-mirror-sync:
-    image: ghcr.io/raylabshq/gitea-mirror:latest
+    image: ghcr.io/raylabshq/gitea-mirror:v3.56.1
     container_name: git-mirror-sync
     restart: always
     environment:

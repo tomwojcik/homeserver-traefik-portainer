@@ -2,13 +2,14 @@ version: "3.8"
 services:
   freshrss-db:
     container_name: freshrss-db
-    image: postgres:15-alpine
+    image: postgres:19.0-alpine
     environment:
       POSTGRES_DB: freshrss
       POSTGRES_USER: freshrss
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - /volume1/docker/freshrss/db:/var/lib/postgresql/data
+      # 18+ keeps PGDATA in a versioned subdir (/var/lib/postgresql/<major>/docker) and refuses a mount at .../data.
+      - /volume1/docker/freshrss/db:/var/lib/postgresql
     restart: always
     security_opt:
       - no-new-privileges:true
@@ -27,17 +28,16 @@ services:
 
   freshrss:
     container_name: freshrss
-    image: freshrss/freshrss:latest
+    image: freshrss/freshrss:1.31.0
     environment:
       CRON_MIN: '1,31'
-      TZ: ${TZ}
+      TZ: ${TZ:-UTC}
     volumes:
       - /volume1/docker/freshrss/data:/var/www/FreshRSS/data
       - /volume1/docker/freshrss/extensions:/var/www/FreshRSS/extensions
     restart: always
     security_opt:
       - no-new-privileges:true
-    user: "${PUID}:${PGID}"
     deploy:
       resources:
         limits:

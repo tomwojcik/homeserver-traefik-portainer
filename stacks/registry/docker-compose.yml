@@ -1,6 +1,6 @@
 services:
   registry:
-    image: registry:2.8.3
+    image: registry:3.1.2
     container_name: registry
     restart: always
     security_opt:
@@ -9,6 +9,9 @@ services:
       - /volume1/docker/registry/data:/var/lib/registry/
     environment:
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      # The v3 image ships log.level debug and a pprof/metrics debug server on :5001.
+      REGISTRY_LOG_LEVEL: info
+      REGISTRY_HTTP_DEBUG_ADDR: localhost:5001
     networks:
       - homeserver
     labels:

@@ -1,0 +1,61 @@
+services:
+  # S3-compatible object storage (Apache-2.0). Replaces MinIO, whose community images stopped in 2025.
+  rustfs:
+    image: rustfs/rustfs:1.0.6
+    container_name: rustfs
+    restart: always
+    volumes:
+      # The image runs as rustfs (10001:10001) and exits on a root-owned dir:
+      # chown -R 10001:10001 /volume1/docker/rustfs/data before the first start.
+      - /volume1/docker/rustfs/data:/data
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+      # One volume: RustFS rejects several "drives" on the same disk; the NAS RAID provides redundancy.
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_REGION: us-east-1
+      RUSTFS_OBS_LOG_DIRECTORY: ""   # log to stdout (docker logs) instead of /logs inside the container
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - homeserver
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/health && curl -fsS http://127.0.0.1:9001/rustfs/console/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - my.zone=homeserver
+      # RustFS Console (Web UI)
+      - traefik.enable=true
+      - traefik.http.routers.rustfs-console.rule=Host(`rustfs.${SERVER_DOMAIN}`)
+      - traefik.http.routers.rustfs-console.entrypoints=websecure
+      - traefik.http.routers.rustfs-console.tls.certresolver=myresolver
+      - traefik.http.routers.rustfs-console.service=rustfs-console
+      - traefik.http.services.rustfs-console.loadbalancer.server.port=9001
+      # S3 API
+      - traefik.http.routers.rustfs-api.rule=Host(`s3.${SERVER_DOMAIN}`)
+      - traefik.http.routers.rustfs-api.entrypoints=websecure
+      - traefik.http.routers.rustfs-api.tls.certresolver=myresolver
+      - traefik.http.routers.rustfs-api.service=rustfs-api
+      - traefik.http.services.rustfs-api.loadbalancer.server.port=9000
+      - traefik.docker.network=homeserver
+
+# for Debugging (the image ships the rc CLI):
+#  docker exec -it rustfs rc alias set s3 https://s3.<yourdomain>.<tld> <access key> <secret key>
+#  docker exec -it rustfs rc bucket create s3/test-bucket
+
+#  rc:
+#    image: rustfs/rc:v0.1.38
+#    depends_on:
+#      - rustfs
+#    entrypoint: ["tail", "-f", "/dev/null"]
+
+networks:
+  homeserver:
+    name: homeserver
+    external: true

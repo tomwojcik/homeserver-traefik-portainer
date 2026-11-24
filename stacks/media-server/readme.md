@@ -90,7 +90,7 @@ reason, is in [`docs/`](docs/README.md); the essentials:
 * **Prowlarr**: Apps `http://sonarr:8989`, `http://radarr:7878`, `http://lidarr:8686`, Prowlarr server
   `http://prowlarr:9696`; no indexer proxy; Authentication Required = Enabled.
 * **Bazarr**: Sonarr `sonarr:8989`, Radarr `radarr:7878`, no path mappings; languages profile
-  en+pl; providers napiprojekt, podnapisi, opensubtitles.com.
+  en+pl; providers napiprojekt, opensubtitles.com.
 * **Jellyfin**: libraries `/data/movies`, `/data/tv`, `/data/music` (read-only: keep "save artwork/NFO into
   media folders" and trickplay-next-to-media off, do not delete media from Jellyfin); Known
   proxies = the `homeserver` subnet (`docker network inspect homeserver`); UPnP off;

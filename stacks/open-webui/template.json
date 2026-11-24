@@ -2,7 +2,7 @@
   "type": 3,
   "name": "Open WebUI",
   "title": "Private AI Chat Interface",
-  "description": "Self-hosted ChatGPT-like interface supporting OpenAI, Anthropic Claude, Google, and more. All conversations stored locally with user management.",
+  "description": "Self-hosted ChatGPT-like interface for OpenAI-compatible APIs; add Anthropic, Google and others as connections in Admin Settings. All conversations stored locally with user management.",
   "env": [
     {
       "name": "SERVER_DOMAIN",
@@ -15,27 +15,9 @@
       "description": "Your OpenAI API key (optional if using other providers)"
     },
     {
-      "label": "Anthropic API Key",
-      "name": "ANTHROPIC_API_KEY",
-      "description": "Your Anthropic Claude API key (optional)"
-    },
-    {
       "label": "WebUI Secret Key",
       "name": "WEBUI_SECRET_KEY",
-      "default": "generate-a-random-secret-key-here",
-      "description": "Secret key for session management (change this!)"
-    },
-    {
-      "label": "JWT Secret Key",
-      "name": "WEBUI_JWT_SECRET_KEY",
-      "default": "generate-a-different-jwt-secret-here",
-      "description": "JWT secret for authentication (change this!)"
-    },
-    {
-      "label": "Domain",
-      "name": "DOMAIN",
-      "default": "yourdomain.com",
-      "description": "Your domain for proper URL configuration"
+      "description": "Session/JWT signing key. Leave empty to have one generated and stored in the data dir."
     },
     {
       "label": "Enable User Signup",
@@ -46,8 +28,8 @@
     {
       "label": "Default User Role",
       "name": "DEFAULT_USER_ROLE",
-      "default": "user",
-      "description": "Default role for new users (user/admin)"
+      "default": "pending",
+      "description": "Role for new sign-ups (pending/user/admin); pending means an admin must approve them"
     }
   ],
   "logo": "https://raw.githubusercontent.com/tomwojcik/homeserver-traefik-portainer/master/stacks/open-webui/logo.png",

@@ -3,7 +3,7 @@
 version: "3.8"
 services:
   tubesync:
-    image: ghcr.io/meeb/tubesync:latest
+    image: ghcr.io/meeb/tubesync:v0.19.3
     container_name: tubesync
     restart: always
     networks:

@@ -10,7 +10,7 @@ Identical model to Sonarr; only the differences are spelled out.
 | mounts | `/config`; `data` at `/data` | Staging (`/data/torrents`) and library (`/data/movies`) on ONE mount so imports are hardlinks. |
 | healthcheck | `GET /ping` | Anonymous readiness endpoint. |
 | router | `radarr.<domain>`, `media-headers` | |
-| image | `6.3.0.10514-ls315` | Pinned. |
+| image | `7.0.3.10918-ls328` | Pinned. 7.0 is .NET 10 and runs a one-way MediaInfo migration (243) with a full metadata refresh on first start. |
 
 ## Set once in the UI: Media Management and Naming
 

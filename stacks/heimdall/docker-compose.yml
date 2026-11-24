@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   heimdall:
-    image: lscr.io/linuxserver/heimdall:latest
+    image: lscr.io/linuxserver/heimdall:v2.8.4-ls375
     environment:
       - PUID=1000
       - PGID=1000

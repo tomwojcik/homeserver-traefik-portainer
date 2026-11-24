@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   metube:
-    image: ghcr.io/alexta69/metube
+    image: ghcr.io/alexta69/metube:2026.11.24
     container_name: metube
     restart: always
     networks:

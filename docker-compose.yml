@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # Traefik Reverse Proxy
   traefik:
-    image: traefik:v3.7.16
+    image: traefik:v3.8.0
     container_name: traefik
     restart: always
     command:
@@ -64,12 +64,15 @@ services:
 
   # Cloudflare Tunnel - Private (selective external access)
   cloudflared-private:
-    image: cloudflare/cloudflared:2024.6.1
+    image: cloudflare/cloudflared:2026.11.2
     container_name: cloudflared-private
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN_PRIVATE}
+    # Token comes from TUNNEL_TOKEN, so it stays out of the process args (visible in /proc and pprof).
+    command: tunnel --no-autoupdate run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN_PRIVATE}
+      # Since 2024.12 container builds serve /metrics, /diag and pprof on 0.0.0.0:20241; keep them off the bridge.
+      - TUNNEL_METRICS=127.0.0.1:20241
     security_opt:
       - no-new-privileges:true
     read_only: true
@@ -85,7 +88,7 @@ services:
 
   # Portainer for container management
   portainer:
-    image: portainer/portainer-ce:2.45.3
+    image: portainer/portainer-ce:2.45.4
     command: -H unix:///var/run/docker.sock
 #    ports:
 #      - 9000:9000  # Keep for direct access if Traefik fails
